@@ -2,9 +2,9 @@ import Phaser from 'phaser'
 import type { HeroState } from './types'
 
 export const HERO_RADIUS = 14
-export const HERO_MAX_HP = 100
+export const HERO_BASE_HP = 100
 export const HERO_SPEED = 220
-export const AURA_RADIUS = 120
+export const AURA_RADIUS = 50
 
 export function createHero(scene: Phaser.Scene): HeroState {
   const sprite = scene.add.circle(0, 0, HERO_RADIUS, 0x4caf50)
@@ -20,8 +20,8 @@ export function createHero(scene: Phaser.Scene): HeroState {
     aura,
     radius: HERO_RADIUS,
     auraRadius: AURA_RADIUS,
-    maxHp: HERO_MAX_HP,
-    hp: HERO_MAX_HP,
+    maxHp: HERO_BASE_HP,
+    hp: HERO_BASE_HP,
     hasAura: false,
   }
 }
