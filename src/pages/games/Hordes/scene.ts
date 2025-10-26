@@ -380,6 +380,7 @@ export class HordesScene extends Phaser.Scene {
         enemy.setData('mob', mob)
         enemy.setData('hp', mob.health)
         enemy.setData('lastAuraTick', 0)
+        enemy.setData('auraKnockback', 40)
 
         const hpText = this.add
             .text(enemy.x, enemy.y, `${mob.health}`, {

@@ -119,7 +119,7 @@ export class CombatSystem {
     enemy: Phaser.GameObjects.Arc,
     distanceToHero: number,
     mob: SimpleMob,
-  ) {
+  ): boolean {
     const auraWeapon = this.config.auraWeapon
     if (!auraWeapon) return false
 
@@ -133,7 +133,25 @@ export class CombatSystem {
     }
 
     enemy.setData('lastAuraTick', now)
-    return this.damageEnemy(enemy, auraWeapon.damage, mob)
+    const killed = this.damageEnemy(enemy, auraWeapon.damage, mob)
+    if (!killed) {
+      const heroSprite = this.context.hero.sprite
+      const dx = enemy.x - heroSprite.x
+      const dy = enemy.y - heroSprite.y
+      const length = Math.hypot(dx, dy) || 1
+      const knockback =
+        (enemy.getData('auraKnockback') as number | undefined) ?? 40
+      const nextKnockback = Math.max(knockback / 2, 5)
+      enemy.setData('auraKnockback', nextKnockback)
+      enemy.x += (dx / length) * knockback
+      enemy.y += (dy / length) * knockback
+
+      const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
+      if (hpText && hpText.active) {
+        hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
+      }
+    }
+    return killed
   }
 
   private damageEnemy(enemy: Phaser.GameObjects.Arc, amount: number, mob: SimpleMob) {
