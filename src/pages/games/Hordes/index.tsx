@@ -1,7 +1,6 @@
-import {useEffect, useRef} from 'react'
+import {useCallback, useEffect, useRef, useState} from 'react'
 import Phaser from 'phaser'
 import {HordesScene} from './scene'
-import {useNavigate} from "react-router";
 
 const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -18,33 +17,99 @@ const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     },
 }
 
+type ExitStats = {kills: number; waves: number}
+
+type HighScore = ExitStats & {timestamp: number}
+
+const HIGH_SCORE_STORAGE_KEY = 'hordesHighScores'
+const MAX_HIGH_SCORES = 5
+
+const readHighScores = (): HighScore[] => {
+    try {
+        const raw = window.localStorage.getItem(HIGH_SCORE_STORAGE_KEY)
+        if (!raw) return []
+        const parsed = JSON.parse(raw) as HighScore[]
+        if (!Array.isArray(parsed)) return []
+        return parsed
+            .filter((entry) => typeof entry?.kills === 'number' && typeof entry?.waves === 'number' && typeof entry?.timestamp === 'number')
+            .sort((a, b) => {
+                if (b.kills !== a.kills) return b.kills - a.kills
+                if (b.waves !== a.waves) return b.waves - a.waves
+                return b.timestamp - a.timestamp
+            })
+            .slice(0, MAX_HIGH_SCORES)
+    } catch (error) {
+        console.warn('Failed to read Hordes high scores', error)
+        return []
+    }
+}
+
+const persistHighScores = (scores: HighScore[]) => {
+    if (typeof window === 'undefined' || !window.localStorage) return
+    try {
+        window.localStorage.setItem(HIGH_SCORE_STORAGE_KEY, JSON.stringify(scores))
+    } catch (error) {
+        console.warn('Failed to save Hordes high scores', error)
+    }
+}
+
+const mergeHighScores = (current: HighScore[], stats: ExitStats): HighScore[] => {
+    const next: HighScore[] = [
+        ...current,
+        {
+            ...stats,
+            timestamp: Date.now(),
+        },
+    ]
+    next.sort((a, b) => {
+        if (b.kills !== a.kills) return b.kills - a.kills
+        if (b.waves !== a.waves) return b.waves - a.waves
+        return b.timestamp - a.timestamp
+    })
+    return next.slice(0, MAX_HIGH_SCORES)
+}
+
 const HordesPage = () => {
     const containerRef = useRef<HTMLDivElement | null>(null)
-    const navigate = useNavigate()
+    const gameRef = useRef<Phaser.Game | null>(null)
+    const [isPlaying, setIsPlaying] = useState(false)
+    const [lastStats, setLastStats] = useState<ExitStats | null>(null)
+    const [highScores, setHighScores] = useState<HighScore[]>([])
 
     useEffect(() => {
+        setHighScores(readHighScores())
+    }, [])
+
+    const handleExit = useCallback((stats: ExitStats) => {
+        setLastStats(stats)
+        setIsPlaying(false)
+        setHighScores((prev) => {
+            const updated = mergeHighScores(prev, stats)
+            persistHighScores(updated)
+            return updated
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!isPlaying) {
+            HordesScene.registerExitHandler(undefined)
+            if (gameRef.current) {
+                gameRef.current.destroy(true)
+                gameRef.current = null
+            }
+            return undefined
+        }
+
         const parent = containerRef.current
         if (!parent) return undefined
 
-        const onExit = (stats: {kills: number; waves: number}) => {
-            if (typeof window !== 'undefined' && window.localStorage) {
-                try {
-                    window.localStorage.setItem('hordesLastStats', JSON.stringify(stats))
-                } catch (error) {
-                    console.warn('Failed to save Hordes stats', error)
-                }
-            }
-
-            window.alert(`You defeated ${stats.kills} mobs and survived ${stats.waves} waves.`)
-            navigate('/')
-        }
-
-        HordesScene.registerExitHandler(onExit)
+        HordesScene.registerExitHandler(handleExit)
 
         const game = new Phaser.Game({
             parent,
             ...GAME_CONFIG,
         })
+        gameRef.current = game
 
         const resizeGame = () => {
             const width = parent.clientWidth
@@ -56,25 +121,76 @@ const HordesPage = () => {
 
         resizeGame()
 
-        const observer = new ResizeObserver(resizeGame)
-        observer.observe(parent)
+        let observer: ResizeObserver | undefined
+        if (typeof ResizeObserver !== 'undefined') {
+            observer = new ResizeObserver(resizeGame)
+            observer.observe(parent)
+        }
 
         return () => {
             HordesScene.registerExitHandler(undefined)
-            observer.disconnect()
+            observer?.disconnect()
             game.destroy(true)
+            gameRef.current = null
         }
-    }, [navigate])
+    }, [handleExit, isPlaying])
+
+    const handlePlayClick = useCallback(() => {
+        setLastStats(null)
+        setIsPlaying(true)
+    }, [])
+
+    if (isPlaying) {
+        return (
+            <div className="h-screen w-screen overflow-hidden bg-[#101014] text-gray-100">
+                <div ref={containerRef} className="h-full w-full" />
+            </div>
+        )
+    }
 
     return (
-        <div
-            ref={containerRef}
-            style={{
-                width: '100vw',
-                height: '100vh',
-                overflow: 'hidden',
-            }}
-        />
+        <div className="flex min-h-screen flex-col items-center justify-start bg-[#101014] px-6 py-6 text-gray-100">
+            <h1 className="mb-4 text-3xl font-semibold">Hordes</h1>
+            <div className="flex w-full max-w-[1100px] flex-col gap-6 lg:flex-row">
+                <div className="flex-1 rounded-lg border border-[#252545] bg-[#161626] p-5">
+                    <h2 className="mb-3 text-xl font-semibold">High Scores</h2>
+                    {highScores.length === 0 ? (
+                        <p className="text-sm opacity-70">No runs recorded yet. Be the first!</p>
+                    ) : (
+                        <table className="w-full border-collapse text-sm">
+                            <thead>
+                                <tr className="border-b border-[#2c2c45] text-left">
+                                    <th className="px-1 py-1">#</th>
+                                    <th className="px-1 py-1">Kills</th>
+                                    <th className="px-1 py-1">Waves</th>
+                                    <th className="px-1 py-1">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {highScores.map((score, index) => (
+                                    <tr key={`${score.timestamp}-${index}`} className="border-b border-white/5">
+                                        <td className="px-1 py-2">{index + 1}</td>
+                                        <td className="px-1 py-2">{score.kills}</td>
+                                        <td className="px-1 py-2">{score.waves}</td>
+                                        <td className="px-1 py-2">
+                                            {new Date(score.timestamp).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                    {highScores.length > 0 && (
+                        <button
+                            onClick={handlePlayClick}
+                            className="mt-4 w-full rounded-md bg-[#43a047] px-4 py-2 text-base font-semibold text-white transition hover:bg-[#4caf50]"
+                        >
+                            Play Again
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
     )
 }
 

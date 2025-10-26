@@ -441,7 +441,7 @@ export class HordesScene extends Phaser.Scene {
 
         if (hp <= 0) {
             this.cameras.main.shake(250, 0.02)
-            this.time.delayedCall(260, () => this.scene.restart())
+            this.time.delayedCall(260, () => this.handleExit())
         }
     }
 
