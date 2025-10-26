@@ -301,7 +301,7 @@ export class HordesScene extends Phaser.Scene {
      * @param powerMultiplier between 0 and +infinity. usually between 1 and 10.
      */
     private generateMobStats(powerMultiplier: number): SimpleMob {
-        const MAX_SPEED = HERO_SPEED - 10;
+        const MAX_SPEED = HERO_SPEED * 0.7 - 10;
         const MAX_HEALTH = 100 * powerMultiplier;
         const MAX_DAMAGE = MOB_MAX_DAMAGE * powerMultiplier;
         const mob: SimpleMob = {
