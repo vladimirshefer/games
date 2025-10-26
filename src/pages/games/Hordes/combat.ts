@@ -60,7 +60,7 @@ export class CombatSystem {
         if (!enemy.active || !mob) continue
         if (
           Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y) <
-          mob.size + bullet.radius
+          mob.size / 2 + bullet.radius
         ) {
           const killed = this.damageEnemy(enemy, bulletDamage, mob)
           if (!killed) {
@@ -78,6 +78,10 @@ export class CombatSystem {
 
       return true
     })
+
+    if (this.context.hero.hp > 0) {
+      this.tickAutoFire(dt)
+    }
   }
 
   tickAutoFire(dt: number) {
@@ -107,20 +111,19 @@ export class CombatSystem {
       vx,
       vy,
       radius,
-      piercesLeft: this.config.bulletWeapon.pierce ?? 1,
+      piercesLeft: this.config.bulletWeapon.pierce,
     })
   }
 
   applyAuraDamage(
     enemy: Phaser.GameObjects.Arc,
-    enemyRadius: number,
     distanceToHero: number,
     mob: SimpleMob,
   ) {
     const auraWeapon = this.config.auraWeapon
     if (!auraWeapon) return false
 
-    if (distanceToHero > this.context.hero.auraRadius + enemyRadius) return false
+    if (distanceToHero > auraWeapon.area + mob.size / 2) return false
 
     const now = this.scene.time.now
     const lastTick = enemy.getData('lastAuraTick') as number | undefined

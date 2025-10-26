@@ -18,18 +18,18 @@ export function createHero(scene: Phaser.Scene): HeroState {
     sprite,
     aura,
     radius: HERO_RADIUS,
-    auraRadius: AURA_RADIUS,
     maxHp: HERO_BASE_HP,
     hp: HERO_BASE_HP,
     hasAura: false,
     upgrades: ["pistolMk1"],
+    weaponIds: ["pistol"],
   }
 }
 
 export function resetHeroState(hero: HeroState) {
   hero.sprite.setPosition(0, 0)
   hero.aura.setPosition(0, 0)
-  hero.aura.setVisible(hero.hasAura)
+  hero.aura.setVisible(hero.weaponIds.includes('aura'))
   hero.hp = hero.maxHp
 }
 

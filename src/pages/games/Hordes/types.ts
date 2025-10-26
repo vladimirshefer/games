@@ -12,11 +12,11 @@ export interface HeroState {
   sprite: Phaser.GameObjects.Arc
   aura: Phaser.GameObjects.Arc
   radius: number
-  auraRadius: number
   maxHp: number
   hp: number
   hasAura: boolean,
   upgrades: string[],
+  weaponIds: string[],
 }
 
 export interface SimpleMob {
