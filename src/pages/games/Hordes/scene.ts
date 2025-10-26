@@ -246,6 +246,7 @@ export class HordesScene extends Phaser.Scene {
             const speed = mob.speed
             enemy.x += (dx / dist) * speed * dt
             enemy.y += (dy / dist) * speed * dt
+            this.positionEnemyHpText(enemy, mob)
 
             if (dist < heroRadius + enemyRadius) {
                 this.handleHeroHit(enemy, mob)
@@ -373,7 +374,26 @@ export class HordesScene extends Phaser.Scene {
         enemy.setData('mob', mob)
         enemy.setData('hp', mob.health)
         enemy.setData('lastAuraTick', 0)
+
+        const hpText = this.add
+            .text(enemy.x, enemy.y, `${mob.health}`, {
+                color: '#ffffff',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+            })
+            .setOrigin(0.5)
+            .setDepth(1)
+        enemy.setData('hpText', hpText)
+        enemy.once('destroy', () => hpText.destroy())
+        this.positionEnemyHpText(enemy, mob)
+
         this.enemies.push(enemy)
+    }
+
+    private positionEnemyHpText(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
+        const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
+        if (!hpText || !hpText.active) return
+        hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
     }
 
     /**

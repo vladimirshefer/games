@@ -144,6 +144,11 @@ export class CombatSystem {
     const nextHp = currentHp - amount
     enemy.setData('hp', nextHp)
 
+    const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
+    if (hpText && hpText.active) {
+      hpText.setText(`${Math.max(nextHp, 0)}`)
+    }
+
     if (nextHp <= 0) {
       this.context.onEnemyKilled(enemy, mob)
       enemy.setActive(false)
