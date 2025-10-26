@@ -55,6 +55,7 @@ export class HordesScene extends Phaser.Scene {
   private inputController!: InputController
   private enemies: Phaser.GameObjects.Arc[] = []
   private healPacks: Phaser.GameObjects.Arc[] = []
+  private xpCrystals: Phaser.GameObjects.Arc[] = []
     private spawnBuffer = 60
     private cleanupPadding = 260
     private background!: Phaser.GameObjects.TileSprite
@@ -113,6 +114,7 @@ export class HordesScene extends Phaser.Scene {
 
         this.enemies = []
         this.healPacks = []
+        this.xpCrystals = []
         this.kills = 0
         this.wave = 0
         this.totalXp = 0
@@ -137,9 +139,9 @@ export class HordesScene extends Phaser.Scene {
             {
                 hero: this.hero,
                 getEnemies: () => this.enemies,
-                onEnemyKilled: (_enemy, mob) => {
+                onEnemyKilled: (enemy, mob) => {
                     this.kills += 1
-                    this.awardXp(mob.xp)
+                    this.spawnXpCrystal(enemy.x, enemy.y, mob.xp)
                 },
             },
         )
@@ -271,6 +273,20 @@ export class HordesScene extends Phaser.Scene {
         })
 
         this.combat.update(dt, view, this.cleanupPadding)
+
+        this.xpCrystals = this.xpCrystals.filter((crystal) => {
+            if (!crystal.active) return false
+
+            const dist = Phaser.Math.Distance.Between(crystal.x, crystal.y, heroX, heroY)
+            if (dist <= 100) {
+                this.collectXpCrystal(crystal)
+                return false
+            }
+
+            return true
+        })
+
+        this.mergeOutOfBoundsCrystals(view, heroX, heroY)
 
         this.healPacks = this.healPacks.filter((pack) => {
             if (!pack.active) return false
@@ -410,6 +426,28 @@ export class HordesScene extends Phaser.Scene {
         this.enemies.push(enemy)
     }
 
+    private spawnXpCrystal(x: number, y: number, amount: number) {
+        const xp = Math.max(1, Math.round(amount))
+        const offsetX = Phaser.Math.FloatBetween(-6, 6)
+        const offsetY = Phaser.Math.FloatBetween(-6, 6)
+        const crystal = this.add.circle(x + offsetX, y + offsetY, 8, 0x64b5f6, 0.7)
+        crystal.setDepth(-0.2)
+        crystal.setStrokeStyle(1.2, 0xffffff, 0.5)
+        crystal.setData('xp', xp)
+        this.updateCrystalVisual(crystal)
+        this.xpCrystals.push(crystal)
+    }
+
+    private updateCrystalVisual(crystal: Phaser.GameObjects.Arc) {
+        const xp = (crystal.getData('xp') as number | undefined) ?? 0
+        const radius = Phaser.Math.Clamp(6 + Math.sqrt(xp) * 1.1, 6, 28)
+        crystal.setRadius(radius)
+        crystal.setData('radius', radius)
+        const alpha = Phaser.Math.Clamp(0.45 + xp / 180, 0.45, 0.9)
+        crystal.setFillStyle(0x64b5f6, alpha)
+        crystal.setStrokeStyle(1.2, 0xffffff, 0.45 + Math.min(0.4, xp / 120))
+    }
+
     private positionEnemyHpText(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
         const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
         if (!hpText || !hpText.active) return
@@ -467,6 +505,62 @@ export class HordesScene extends Phaser.Scene {
         this.cameras.main.flash(100, 80, 180, 255, false)
         this.updateHud()
         pack.destroy()
+    }
+
+    private collectXpCrystal(crystal: Phaser.GameObjects.Arc) {
+        const xp = Math.max(1, Math.round((crystal.getData('xp') as number | undefined) ?? 0))
+        crystal.destroy()
+        if (xp > 0) {
+            this.awardXp(xp)
+        }
+    }
+
+    private mergeOutOfBoundsCrystals(view: Phaser.Geom.Rectangle, heroX: number, heroY: number) {
+        const MAX_CRYSTALS = 100
+        if (this.xpCrystals.length <= MAX_CRYSTALS) return
+
+        const padding = this.cleanupPadding
+        let safety = 0
+        while (this.xpCrystals.length > MAX_CRYSTALS && safety < 20) {
+            const offscreen = this.xpCrystals.filter((crystal) =>
+                crystal.x < view.left - padding ||
+                crystal.x > view.right + padding ||
+                crystal.y < view.top - padding ||
+                crystal.y > view.bottom + padding
+            )
+
+            if (offscreen.length < 2) break
+
+            offscreen.sort((a, b) => {
+                const distA = Phaser.Math.Distance.Between(heroX, heroY, a.x, a.y)
+                const distB = Phaser.Math.Distance.Between(heroX, heroY, b.x, b.y)
+                return distB - distA
+            })
+
+            const primary = offscreen[0]
+            const secondary = offscreen[1]
+
+            if (!primary.active || !secondary.active) {
+                [primary, secondary].forEach((crystal) => {
+                    if (!crystal.active) {
+                        crystal.destroy()
+                        this.xpCrystals = this.xpCrystals.filter((c) => c !== crystal)
+                    }
+                })
+                safety += 1
+                continue
+            }
+
+            const xpPrimary = Math.max(0, Math.round((primary.getData('xp') as number | undefined) ?? 0))
+            const xpSecondary = Math.max(0, Math.round((secondary.getData('xp') as number | undefined) ?? 0))
+            primary.setData('xp', xpPrimary + xpSecondary)
+            primary.setPosition((primary.x + secondary.x) / 2, (primary.y + secondary.y) / 2)
+            this.updateCrystalVisual(primary)
+
+            secondary.destroy()
+            this.xpCrystals = this.xpCrystals.filter((crystal) => crystal !== secondary)
+            safety += 1
+        }
     }
 
     private awardXp(amount: number) {
