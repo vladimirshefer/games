@@ -19,6 +19,10 @@ export const AURA_MK3_WEAPON: Weapon = {damage: 20, cooldown: 0.42, pierce: 1, a
 export const AURA_MK4_WEAPON: Weapon = {damage: 30, cooldown: 0.38, pierce: 1, area: AURA_RADIUS * 1.7}
 export const AURA_MK5_WEAPON: Weapon = {damage: 50, cooldown: 0.35, pierce: 1, area: AURA_RADIUS * 2.0}
 
+export const BOMB_WEAPON: Weapon = {cooldown: 5, damage: 40, area: 40, pierce: 0}
+export const BOMB_MK2_WEAPON: Weapon = {cooldown: 3, damage: 60, area: 60, pierce: 0}
+export const BOMB_MK3_WEAPON: Weapon = {cooldown: 2, damage: 80, area: 100, pierce: 0}
+
 export interface UpgradeOption {
     id: string
     label: string
@@ -79,6 +83,23 @@ export const upgrades: UpgradeOption[] = [
         label: 'Pistol Mk V',
         description: 'Ultimate pistol damage and pierce.',
         requires: ['pistolMk4'],
+    },
+    {
+        id: 'bomb',
+        label: 'Deploy Bombs',
+        description: 'Drop timed explosives dealing area damage.',
+    },
+    {
+        id: 'bombMk2',
+        label: 'Bombs Mk II',
+        description: 'Bombs spawn faster with bigger blasts.',
+        requires: ['bomb'],
+    },
+    {
+        id: 'bombMk3',
+        label: 'Bombs Mk III',
+        description: 'Maximum bomb power and frequency.',
+        requires: ['bombMk2'],
     },
     {
         id: 'area1',

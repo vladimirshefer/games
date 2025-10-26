@@ -6,6 +6,7 @@ export interface CombatConfig {
   bulletSpeed: number
   bulletWeapon: Weapon
   auraWeapon?: Weapon | null
+  bombWeapon?: Weapon | null
   enemyBaseHp: number
 }
 
@@ -15,12 +16,20 @@ export interface CombatContext {
   onEnemyKilled(enemy: Phaser.GameObjects.Arc, mob: SimpleMob): void
 }
 
+const BOMB_FUSE_DELAY = 2000;
+
 export class CombatSystem {
   private bullets: Bullet[] = []
   private shootElapsed = 0
+  private bombElapsed = 0
   private scene: Phaser.Scene
   private config: CombatConfig
   private context: CombatContext
+  private bombs: {
+    sprite: Phaser.GameObjects.Arc
+    detonateAt: number
+    weapon: Weapon
+  }[] = []
 
   constructor(scene: Phaser.Scene, config: CombatConfig, context: CombatContext) {
     this.scene = scene
@@ -32,6 +41,9 @@ export class CombatSystem {
     this.bullets.forEach((bullet) => bullet.sprite.destroy())
     this.bullets = []
     this.shootElapsed = 0
+    this.bombElapsed = 0
+    this.bombs.forEach((bomb) => bomb.sprite.destroy())
+    this.bombs = []
   }
 
   update(dt: number, worldView: Phaser.Geom.Rectangle, cleanupPadding: number) {
@@ -78,6 +90,8 @@ export class CombatSystem {
 
       return true
     })
+
+    this.updateBombs(dt, enemies)
 
     if (this.context.hero.hp > 0) {
       this.tickAutoFire(dt)
@@ -186,6 +200,11 @@ export class CombatSystem {
     this.config.auraWeapon = weapon ?? null
   }
 
+  setBombWeapon(weapon: Weapon | null | undefined) {
+    this.config.bombWeapon = weapon ?? null
+    this.bombElapsed = 0
+  }
+
   private findNearestEnemy() {
     const { sprite } = this.context.hero
     const enemies = this.context.getEnemies()
@@ -202,5 +221,79 @@ export class CombatSystem {
     }
 
     return nearest
+  }
+
+  private updateBombs(dt: number, enemies: Phaser.GameObjects.Arc[]) {
+    const bombWeapon = this.config.bombWeapon ?? null
+    if (bombWeapon) {
+      this.bombElapsed += dt
+      while (this.bombElapsed >= bombWeapon.cooldown) {
+        this.bombElapsed -= bombWeapon.cooldown
+        this.spawnBomb(bombWeapon)
+      }
+    }
+
+    const now = this.scene.time.now
+    this.bombs = this.bombs.filter((bomb) => {
+      if (!bomb.sprite.active) {
+        bomb.sprite.destroy()
+        return false
+      }
+
+      const { detonateAt } = bomb
+      const timeRemaining = detonateAt - now
+      const fuseMs = BOMB_FUSE_DELAY
+      if (timeRemaining <= 0) {
+        this.detonateBomb(bomb, enemies)
+        return false
+      }
+
+      const progress = 1 - timeRemaining / fuseMs
+      bomb.sprite.setScale(1 + progress * 0.4)
+      bomb.sprite.setAlpha(0.6 + Math.sin(progress * Math.PI * 4) * 0.2)
+      return true
+    })
+  }
+
+  private spawnBomb(weapon: Weapon) {
+    const { sprite } = this.context.hero
+    const bombCircle = this.scene.add.circle(sprite.x, sprite.y, 14, 0xff7043, 0.9)
+    bombCircle.setDepth(-0.5)
+    const detonateAt = this.scene.time.now + BOMB_FUSE_DELAY;
+    this.bombs.push({
+      sprite: bombCircle,
+      detonateAt,
+      weapon,
+    })
+  }
+
+  private detonateBomb(
+    bomb: { sprite: Phaser.GameObjects.Arc; weapon: Weapon },
+    enemies: Phaser.GameObjects.Arc[],
+  ) {
+    const { sprite, weapon } = bomb
+    const explosion = this.scene.add.circle(sprite.x, sprite.y, weapon.area, 0xffab40, 0.35)
+    explosion.setDepth(-0.4)
+    this.scene.tweens.add({
+      targets: explosion,
+      alpha: 0,
+      scale: 1.4,
+      duration: 320,
+      onComplete: () => explosion.destroy(),
+    })
+
+    const radius = weapon.area
+    const damage = weapon.damage
+    for (const enemy of enemies) {
+      const mob = enemy.getData('mob') as SimpleMob | undefined
+      if (!enemy.active || !mob) continue
+
+      const dist = Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y)
+      if (dist <= radius + mob.size / 2) {
+        this.damageEnemy(enemy, damage, mob)
+      }
+    }
+
+    sprite.destroy()
   }
 }

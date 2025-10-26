@@ -10,6 +10,9 @@ import {
   AURA_MK4_WEAPON,
   AURA_MK5_WEAPON,
   AURA_WEAPON,
+  BOMB_MK2_WEAPON,
+  BOMB_MK3_WEAPON,
+  BOMB_WEAPON,
   PISTOL_MK2_WEAPON,
   PISTOL_MK3_WEAPON,
   PISTOL_MK4_WEAPON,
@@ -128,6 +131,7 @@ export class HordesScene extends Phaser.Scene {
                 bulletSpeed: 480,
                 bulletWeapon: PISTOL_WEAPON,
                 auraWeapon: null,
+                bombWeapon: null,
                 enemyBaseHp: DEFAULT_MOB.health,
             },
             {
@@ -604,6 +608,18 @@ export class HordesScene extends Phaser.Scene {
                 this.handlePistolUpgrade(PISTOL_MK5_WEAPON, 'Pistol Mk V ready!')
                 break
             }
+            case 'bomb': {
+                this.handleBombUpgrade(BOMB_WEAPON, 'Bomb launcher deployed!')
+                break
+            }
+            case 'bombMk2': {
+                this.handleBombUpgrade(BOMB_MK2_WEAPON, 'Bombs Mk II primed!')
+                break
+            }
+            case 'bombMk3': {
+                this.handleBombUpgrade(BOMB_MK3_WEAPON, 'Bombs Mk III unleashed!')
+                break
+            }
             default:
                 break
         }
@@ -625,6 +641,14 @@ export class HordesScene extends Phaser.Scene {
 
     private handlePistolUpgrade(weapon: Weapon, message: string) {
         this.combat.setBulletWeapon(weapon)
+        this.showWeaponUpgrade(message)
+    }
+
+    private handleBombUpgrade(weapon: Weapon, message: string) {
+        if (!this.hero.weaponIds.includes('bomb')) {
+            this.hero.weaponIds.push('bomb')
+        }
+        this.combat.setBombWeapon(weapon)
         this.showWeaponUpgrade(message)
     }
 
