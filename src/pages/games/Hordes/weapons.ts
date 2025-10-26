@@ -14,10 +14,10 @@ export const PISTOL_MK4_WEAPON: Weapon = { damage: 95, cooldown: 0.24, pierce: 6
 export const PISTOL_MK5_WEAPON: Weapon = { damage: 120, cooldown: 0.22, pierce: 7, area: 12 }
 
 export const AURA_WEAPON: Weapon = { damage: 5, cooldown: 0.5, pierce: 1, area: AURA_RADIUS }
-export const AURA_MK2_WEAPON: Weapon = { damage: 8, cooldown: 0.45, pierce: 1, area: AURA_RADIUS + 6 }
-export const AURA_MK3_WEAPON: Weapon = { damage: 12, cooldown: 0.42, pierce: 2, area: AURA_RADIUS + 10 }
-export const AURA_MK4_WEAPON: Weapon = { damage: 16, cooldown: 0.38, pierce: 2, area: AURA_RADIUS + 14 }
-export const AURA_MK5_WEAPON: Weapon = { damage: 22, cooldown: 0.35, pierce: 3, area: AURA_RADIUS + 18 }
+export const AURA_MK2_WEAPON: Weapon = { damage: 10, cooldown: 0.45, pierce: 1, area: AURA_RADIUS + 10 }
+export const AURA_MK3_WEAPON: Weapon = { damage: 20, cooldown: 0.42, pierce: 2, area: AURA_RADIUS + 20 }
+export const AURA_MK4_WEAPON: Weapon = { damage: 40, cooldown: 0.38, pierce: 2, area: AURA_RADIUS + 30 }
+export const AURA_MK5_WEAPON: Weapon = { damage: 80, cooldown: 0.35, pierce: 3, area: AURA_RADIUS + 40 }
 
 export interface UpgradeOption {
     id: string
