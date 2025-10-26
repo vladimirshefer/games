@@ -1,7 +1,7 @@
 import {useEffect, useRef} from 'react'
 import Phaser from 'phaser'
 import {HordesScene} from './scene'
-import {Link} from "react-router";
+import {useNavigate} from "react-router";
 
 const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -20,10 +20,13 @@ const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
 
 const HordesPage = () => {
     const containerRef = useRef<HTMLDivElement | null>(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const parent = containerRef.current
         if (!parent) return undefined
+
+        HordesScene.registerExitHandler(() => navigate('/'))
 
         const game = new Phaser.Game({
             parent,
@@ -44,44 +47,21 @@ const HordesPage = () => {
         observer.observe(parent)
 
         return () => {
+            HordesScene.registerExitHandler(undefined)
             observer.disconnect()
             game.destroy(true)
         }
-    }, [])
+    }, [navigate])
 
     return (
         <div
+            ref={containerRef}
             style={{
-                position: 'relative',
                 width: '100vw',
                 height: '100vh',
                 overflow: 'hidden',
             }}
-        >
-            <Link
-                to={"/"}
-                style={{
-                    position: 'absolute',
-                    top: '16px',
-                    left: '16px',
-                    zIndex: 10,
-                    color: '#fff',
-                    textDecoration: 'none',
-                    background: '#30304888',
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                }}
-            >
-                Exit
-            </Link>
-            <div
-                ref={containerRef}
-                style={{
-                    width: '100%',
-                    height: '100%',
-                }}
-            />
-        </div>
+        />
     )
 }
 

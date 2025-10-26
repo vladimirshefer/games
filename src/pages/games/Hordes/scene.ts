@@ -28,10 +28,11 @@ function grbToHex(r1: number, g1: number, b1: number) {
  * auto-shooting, and camera-following infinite background.
  */
 export class HordesScene extends Phaser.Scene {
-    private hero!: HeroState
-    private inputController!: InputController
-    private enemies: Phaser.GameObjects.Arc[] = []
-    private healPacks: Phaser.GameObjects.Arc[] = []
+  private static exitHandler?: () => void
+  private hero!: HeroState
+  private inputController!: InputController
+  private enemies: Phaser.GameObjects.Arc[] = []
+  private healPacks: Phaser.GameObjects.Arc[] = []
     private spawnBuffer = 60
     private cleanupPadding = 260
     private background!: Phaser.GameObjects.TileSprite
@@ -39,15 +40,20 @@ export class HordesScene extends Phaser.Scene {
     private infoText!: Phaser.GameObjects.Text
     private kills = 0
     private wave = 0
-    private combat!: CombatSystem
-    private pauseButton!: Phaser.GameObjects.Text
+  private combat!: CombatSystem
+  private pauseButton!: Phaser.GameObjects.Text
+  private exitButton!: Phaser.GameObjects.Text
     private isPaused = false
     private totalXp = 0
     private level = 1
     private nextLevelXp = 100
     private pendingLevelUps = 0
-    private upgradeOverlay: Phaser.GameObjects.GameObject[] = []
-    private upgradeInProgress = false
+  private upgradeOverlay: Phaser.GameObjects.GameObject[] = []
+  private upgradeInProgress = false
+
+  static registerExitHandler(handler?: () => void) {
+    HordesScene.exitHandler = handler
+  }
 
     /**
      * Bootstraps the scene: build background, hero, input, camera, and the first wave timer.
@@ -153,6 +159,20 @@ export class HordesScene extends Phaser.Scene {
             .setScrollFactor(0)
             .setInteractive({useHandCursor: true})
         this.pauseButton.on('pointerdown', () => this.togglePause())
+
+        this.exitButton = this.add
+            .text(width - 16, this.pauseButton.y + this.pauseButton.displayHeight + 12, 'Exit', {
+                color: '#ff8a80',
+                fontFamily: 'monospace',
+                fontSize: '18px',
+                backgroundColor: '#30304888',
+                padding: {x: 8, y: 4},
+            })
+            .setOrigin(1, 0)
+            .setDepth(2)
+            .setScrollFactor(0)
+            .setInteractive({useHandCursor: true})
+        this.exitButton.on('pointerdown', () => this.handleExit())
 
         this.time.addEvent({
             delay: 1700,
@@ -528,12 +548,19 @@ export class HordesScene extends Phaser.Scene {
         this.finishUpgradeSelection()
     }
 
-    private finishUpgradeSelection() {
-        this.clearUpgradeOverlay()
-        this.resumeFromUpgrade()
-        this.upgradeInProgress = false
-        this.tryOpenUpgradeMenu()
+  private finishUpgradeSelection() {
+    this.clearUpgradeOverlay()
+    this.resumeFromUpgrade()
+    this.upgradeInProgress = false
+    this.tryOpenUpgradeMenu()
+  }
+
+  private handleExit() {
+    const handler = HordesScene.exitHandler
+    if (handler) {
+      handler()
     }
+  }
 
     private clearUpgradeOverlay() {
         this.upgradeOverlay.forEach((obj) => obj.destroy())
