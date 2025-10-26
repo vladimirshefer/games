@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type { Bullet, HeroState, SimpleMob } from './types'
+import type {Bullet, HeroState, SimpleMob} from './types'
 import type {Weapon} from "./weapons.ts";
 
 export interface CombatConfig {
@@ -12,7 +12,7 @@ export interface CombatConfig {
 export interface CombatContext {
   hero: HeroState
   getEnemies(): Phaser.GameObjects.Arc[]
-  onEnemyKilled(enemy: Phaser.GameObjects.Arc, mob?: SimpleMob): void
+  onEnemyKilled(enemy: Phaser.GameObjects.Arc, mob: SimpleMob): void
 }
 
 export class CombatSystem {
@@ -56,13 +56,12 @@ export class CombatSystem {
       }
 
       for (const enemy of enemies) {
-        if (!enemy.active) continue
-        const enemyRadius = enemy.getData('radius') as number
+        const mob = enemy.getData('mob') as SimpleMob | undefined
+        if (!enemy.active || !mob) continue
         if (
           Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y) <
-          enemyRadius + bullet.radius
+          mob.size + bullet.radius
         ) {
-          const mob = enemy.getData('mob') as SimpleMob | undefined
           const killed = this.damageEnemy(enemy, bulletDamage, mob)
           if (!killed) {
             sprite.x += bullet.vx * dt * 0.3
@@ -116,7 +115,7 @@ export class CombatSystem {
     enemy: Phaser.GameObjects.Arc,
     enemyRadius: number,
     distanceToHero: number,
-    mob?: SimpleMob,
+    mob: SimpleMob,
   ) {
     const auraWeapon = this.config.auraWeapon
     if (!auraWeapon) return false
@@ -134,17 +133,16 @@ export class CombatSystem {
     return this.damageEnemy(enemy, auraWeapon.damage, mob)
   }
 
-  private damageEnemy(enemy: Phaser.GameObjects.Arc, amount: number, mob?: SimpleMob) {
+  private damageEnemy(enemy: Phaser.GameObjects.Arc, amount: number, mob: SimpleMob) {
     if (!enemy.active) return false
 
     const currentHp =
-      (enemy.getData('hp') as number | undefined) ?? mob?.health ?? this.config.enemyBaseHp
+      (enemy.getData('hp') as number | undefined) ?? mob.health
     const nextHp = currentHp - amount
     enemy.setData('hp', nextHp)
 
     if (nextHp <= 0) {
-      const resolvedMob = mob ?? (enemy.getData('mob') as SimpleMob | undefined)
-      this.context.onEnemyKilled(enemy, resolvedMob)
+      this.context.onEnemyKilled(enemy, mob)
       enemy.setActive(false)
       enemy.destroy()
       return true

@@ -23,5 +23,6 @@ export interface SimpleMob {
   damage: number
   speed: number
   xp: number
+  size: number
 }
 

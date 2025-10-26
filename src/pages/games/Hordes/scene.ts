@@ -10,9 +10,9 @@ const DEFAULT_MOB: SimpleMob = {
   health: 16,
   damage: 2,
   speed: 90,
-  xp: 16 + 2 + 90,
+  xp: (16 + 2 + 90) / 100,
+  size: 20,
 }
-
 
 type UpgradeId = 'aura' | 'pistolMk2'
 
@@ -112,7 +112,7 @@ export class HordesScene extends Phaser.Scene {
         getEnemies: () => this.enemies,
         onEnemyKilled: (_enemy, mob) => {
           this.kills += 1
-          this.awardXp(mob?.xp ?? 0)
+          this.awardXp(mob.xp)
         },
       },
     )
@@ -196,10 +196,10 @@ export class HordesScene extends Phaser.Scene {
     const view = this.cameras.main.worldView
 
     this.enemies = this.enemies.filter((enemy) => {
-      if (!enemy.active) return false
-
-      const enemyRadius = enemy.getData('radius') as number
       const mob = enemy.getData('mob') as SimpleMob | undefined
+      if (!enemy.active || !mob) return false
+
+      const enemyRadius = mob.size
       const dx = heroX - enemy.x
       const dy = heroY - enemy.y
       const dist = Math.hypot(dx, dy) || 0.001
@@ -208,7 +208,7 @@ export class HordesScene extends Phaser.Scene {
         return false
       }
 
-      const speed = mob?.speed ?? DEFAULT_MOB.speed
+      const speed = mob.speed
       enemy.x += (dx / dist) * speed * dt
       enemy.y += (dy / dist) * speed * dt
 
@@ -320,7 +320,6 @@ export class HordesScene extends Phaser.Scene {
 
     const enemy = this.add.circle(x, y, radius, 0xe91e63)
     enemy.setActive(true)
-    enemy.setData('radius', radius)
     enemy.setData('lastHit', 0)
     const mob: SimpleMob = { ...DEFAULT_MOB }
     enemy.setData('mob', mob)
@@ -350,7 +349,7 @@ export class HordesScene extends Phaser.Scene {
   /**
    * Applies damage from an enemy to the hero with per-enemy cooldown and restarts on death.
    */
-  private handleHeroHit(enemy: Phaser.GameObjects.Arc, mob?: SimpleMob) {
+  private handleHeroHit(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
     if (this.hero.hp <= 0) return
 
     const now = this.time.now
@@ -360,7 +359,7 @@ export class HordesScene extends Phaser.Scene {
     }
 
     enemy.setData('lastHit', now)
-    const damage = mob?.damage ?? 1
+    const damage = mob.damage
     const hp = damageHero(this.hero, damage)
     this.cameras.main.flash(120, 255, 64, 64, false)
     this.updateHud()
