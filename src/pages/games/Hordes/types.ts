@@ -15,7 +15,8 @@ export interface HeroState {
   auraRadius: number
   maxHp: number
   hp: number
-  hasAura: boolean
+  hasAura: boolean,
+  upgrades: string[],
 }
 
 export interface SimpleMob {

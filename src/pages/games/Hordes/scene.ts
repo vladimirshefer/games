@@ -1,10 +1,10 @@
 import Phaser from 'phaser'
-import { CombatSystem } from './combat'
-import { createHero, damageHero, healHero, moveHero, HERO_SPEED } from './hero'
-import { createInputController } from './input'
-import type { InputController } from './input'
-import type { HeroState, SimpleMob } from './types'
-import {AURA_WEAPON, PISTOL_MK2_WEAPON, PISTOL_WEAPON} from "./weapons.ts";
+import {CombatSystem} from './combat'
+import {createHero, damageHero, healHero, HERO_SPEED, moveHero} from './hero'
+import type {InputController} from './input'
+import {createInputController} from './input'
+import type {HeroState, SimpleMob} from './types'
+import {AURA_WEAPON, PISTOL_MK2_WEAPON, PISTOL_WEAPON, type UpgradeOption, upgrades} from "./weapons.ts";
 
 const DEFAULT_MOB: SimpleMob = {
   health: 16,
@@ -12,14 +12,6 @@ const DEFAULT_MOB: SimpleMob = {
   speed: 90,
   xp: Math.round((16 + 2 + 90) / 100) + 1,
   size: 20,
-}
-
-type UpgradeId = 'aura' | 'pistolMk2'
-
-interface UpgradeOption {
-  id: UpgradeId
-  label: string
-  description: string
 }
 
 /**
@@ -412,22 +404,7 @@ export class HordesScene extends Phaser.Scene {
   }
 
   private getAvailableUpgrades(): UpgradeOption[] {
-    const options: UpgradeOption[] = []
-    if (!this.hero.hasAura) {
-      options.push({
-        id: 'aura',
-        label: 'Unlock Aura',
-        description: 'Activate a damaging circle around you.',
-      })
-    }
-    if (!this.upgradedPistol) {
-      options.push({
-        id: 'pistolMk2',
-        label: 'Pistol Mk II',
-        description: 'Increase bullet damage and pierce.',
-      })
-    }
-    return options
+    return upgrades.filter(it => !this.hero.upgrades.includes(it.id))
   }
 
   private openUpgradeMenu(options: UpgradeOption[]) {
@@ -499,23 +476,20 @@ export class HordesScene extends Phaser.Scene {
     })
   }
 
-  private applyUpgrade(id: UpgradeId) {
+  private applyUpgrade(id: string) {
+    this.hero.upgrades.push(id)
     switch (id) {
       case 'aura': {
-        if (!this.hero.hasAura) {
           this.hero.hasAura = true
           this.hero.aura.setVisible(true)
           this.combat.setAuraWeapon(AURA_WEAPON)
           this.showWeaponUpgrade('Aura weapon activated!')
-        }
         break
       }
       case 'pistolMk2': {
-        if (!this.upgradedPistol) {
           this.upgradedPistol = true
           this.combat.setBulletWeapon(PISTOL_MK2_WEAPON)
           this.showWeaponUpgrade('Pistol Mk II ready!')
-        }
         break
       }
       default:
@@ -620,7 +594,8 @@ export class HordesScene extends Phaser.Scene {
    */
   private updateHud() {
     this.infoText.setText(
-      `Wave ${this.wave} | HP ${this.hero.hp} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp}) | Gun ${this.upgradedPistol ? 'Mk II' : 'Mk I'} | Aura ${this.hero.hasAura ? 'On' : 'Off'} | Kills ${this.kills}`,
+        `Wave ${this.wave} | HP ${this.hero.hp} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` +
+        `Gun ${this.upgradedPistol ? 'Mk II' : 'Mk I'} | Aura ${this.hero.hasAura ? 'On' : 'Off'} | Kills ${this.kills}`,
     )
   }
 }
