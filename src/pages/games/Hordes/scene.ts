@@ -10,7 +10,7 @@ const DEFAULT_MOB: SimpleMob = {
   health: 16,
   damage: 2,
   speed: 90,
-  xp: (16 + 2 + 90) / 100,
+  xp: Math.round((16 + 2 + 90) / 100) + 1,
   size: 20,
 }
 
