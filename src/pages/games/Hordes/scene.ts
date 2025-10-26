@@ -180,7 +180,7 @@ export class HordesScene extends Phaser.Scene {
         this.exitButton.on('pointerdown', () => this.handleExit())
 
         this.time.addEvent({
-            delay: 1700,
+            delay: 5000,
             callback: this.spawnWave,
             callbackScope: this,
             loop: true,
@@ -193,8 +193,6 @@ export class HordesScene extends Phaser.Scene {
             loop: true,
             startAt: 4000,
         })
-
-        this.spawnWave()
     }
 
     /**
@@ -285,22 +283,14 @@ export class HordesScene extends Phaser.Scene {
      * Increments the wave counter and spawns the next batch of enemies.
      */
     private spawnWave() {
-        if (this.hasLivingEnemies()) {
-            return
-        }
-
         this.wave += 1
         this.updateHud()
         const count = Math.max(2 + this.wave, 10)
+        const edge = Phaser.Math.Between(0, 3)
         for (let i = 0; i < count; i += 1) {
-            this.spawnEnemy()
+            this.spawnEnemy(edge)
         }
     }
-
-    private hasLivingEnemies() {
-        return this.enemies.some((enemy) => enemy.active)
-    }
-
 
     /**
      * @param powerMultiplier between 0 and +infinity. usually between 1 and 10.
@@ -325,7 +315,7 @@ export class HordesScene extends Phaser.Scene {
     /**
      * Spawns a single enemy just outside the camera viewport on a random edge.
      */
-    private spawnEnemy() {
+    private spawnEnemy(edge: number) {
         const heroX = this.hero.sprite.x
         const heroY = this.hero.sprite.y
         const halfWidth = this.cameras.main.width / 2
@@ -337,7 +327,6 @@ export class HordesScene extends Phaser.Scene {
         const mobDamageRelative = mob.damage / MOB_MAX_DAMAGE * powerMultiplier;
         const color = grbToHex(0.7 + (mobDamageRelative / 3), 0.4, 0.7 + ((1 - mobDamageRelative) / 3));
 
-        const edge = Phaser.Math.Between(0, 3)
         let x = 0
         let y = 0
 
