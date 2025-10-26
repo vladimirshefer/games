@@ -1,4 +1,5 @@
 import {useState, useCallback} from 'react';
+import {Link} from "react-router";
 
 type CellValue = 'X' | 'O' | null;
 type GameStatus = 'playing' | 'draw' | 'won';
@@ -85,6 +86,7 @@ const TicTacToe = () => {
             >
                 Reset Game
             </button>
+            <Link to={'/'}>Back</Link>
         </div>
     );
 };
