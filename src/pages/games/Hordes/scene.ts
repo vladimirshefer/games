@@ -3,7 +3,8 @@ import { CombatSystem } from './combat'
 import { createHero, damageHero, healHero, moveHero, HERO_SPEED } from './hero'
 import { createInputController } from './input'
 import type { InputController } from './input'
-import type { HeroState, SimpleMob, Weapon } from './types'
+import type { HeroState, SimpleMob } from './types'
+import {AURA_WEAPON, PISTOL_MK2_WEAPON, PISTOL_WEAPON} from "./weapons.ts";
 
 const DEFAULT_MOB: SimpleMob = {
   health: 16,
@@ -12,9 +13,6 @@ const DEFAULT_MOB: SimpleMob = {
   xp: 16 + 2 + 90,
 }
 
-const PISTOL_WEAPON: Weapon = { damage: 30, cooldown: 0.3, pierce: 2 }
-const PISTOL_LEVEL2_WEAPON: Weapon = { damage: 50, cooldown: 0.3, pierce: 5 }
-const AURA_WEAPON: Weapon = { damage: 5, cooldown: 0.5 }
 
 type UpgradeId = 'aura' | 'pistolMk2'
 
@@ -516,7 +514,7 @@ export class HordesScene extends Phaser.Scene {
       case 'pistolMk2': {
         if (!this.upgradedPistol) {
           this.upgradedPistol = true
-          this.combat.setBulletWeapon(PISTOL_LEVEL2_WEAPON)
+          this.combat.setBulletWeapon(PISTOL_MK2_WEAPON)
           this.showWeaponUpgrade('Pistol Mk II ready!')
         }
         break

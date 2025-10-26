@@ -25,8 +25,3 @@ export interface SimpleMob {
   xp: number
 }
 
-export interface Weapon {
-  damage: number
-  cooldown: number
-  pierce?: number
-}

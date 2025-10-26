@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
-import type { Bullet, HeroState, SimpleMob, Weapon } from './types'
+import type { Bullet, HeroState, SimpleMob } from './types'
+import type {Weapon} from "./weapons.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
@@ -97,7 +98,7 @@ export class CombatSystem {
     const length = Math.hypot(dx, dy)
     if (!length) return
 
-    const radius = 6
+    const radius = this.config.bulletWeapon?.area
     const bulletSprite = this.scene.add.circle(sprite.x, sprite.y, radius, 0xffeb3b)
     const vx = (dx / length) * this.config.bulletSpeed
     const vy = (dy / length) * this.config.bulletSpeed
