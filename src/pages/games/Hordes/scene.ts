@@ -306,7 +306,16 @@ export class HordesScene extends Phaser.Scene {
         this.updateHud()
         const count = Math.max(2 + this.wave, 10)
         const edge = Phaser.Math.Between(0, 3)
-        for (let i = 0; i < count; i += 1) {
+        // to make it feel like enemies are spawned from different directions, while main amount is still from one direction.
+        this.spawnEnemy(1)
+        this.spawnEnemy(1)
+        this.spawnEnemy(2)
+        this.spawnEnemy(2)
+        this.spawnEnemy(3)
+        this.spawnEnemy(3)
+        this.spawnEnemy(4)
+        this.spawnEnemy(4)
+        for (let i = 0; i < count-8; i += 1) {
             this.spawnEnemy(edge)
         }
     }
