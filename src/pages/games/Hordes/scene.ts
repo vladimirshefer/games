@@ -6,6 +6,8 @@ import {createInputController} from './input'
 import type {HeroState, SimpleMob} from './types'
 import {AURA_WEAPON, PISTOL_MK2_WEAPON, PISTOL_WEAPON, type UpgradeOption, upgrades} from "./weapons.ts";
 
+const MOB_MAX_DAMAGE = 16;
+
 const DEFAULT_MOB: SimpleMob = {
     health: 16,
     damage: 2,
@@ -274,18 +276,14 @@ export class HordesScene extends Phaser.Scene {
         return this.enemies.some((enemy) => enemy.active)
     }
 
+
     /**
-     * Spawns a single enemy just outside the camera viewport on a random edge.
+     * @param powerMultiplier between 0 and +infinity. usually between 1 and 10.
      */
-    private spawnEnemy() {
-        const heroX = this.hero.sprite.x
-        const heroY = this.hero.sprite.y
-        const halfWidth = this.cameras.main.width / 2
-        const halfHeight = this.cameras.main.height / 2
-        const buffer = this.spawnBuffer
-        const MAX_DAMAGE = 16;
+    private generateMobStats(powerMultiplier: number): SimpleMob {
         const MAX_SPEED = HERO_SPEED - 10;
-        const MAX_HEALTH = 100;
+        const MAX_HEALTH = 100 * powerMultiplier;
+        const MAX_DAMAGE = MOB_MAX_DAMAGE * powerMultiplier;
         const mob: SimpleMob = {
             size: DEFAULT_MOB.size,
             speed: Phaser.Math.Between(MAX_SPEED / 3, MAX_SPEED),
@@ -296,7 +294,22 @@ export class HordesScene extends Phaser.Scene {
         const mobStrength = mob.health / MAX_HEALTH + mob.speed / MAX_SPEED + mob.damage / MAX_DAMAGE;
         mob.xp = Math.round(mobStrength) + 1;
         mob.size = mob.size + (mob.health / 4);
-        const mobDamageRelative = mob.damage / MAX_DAMAGE;
+        return mob;
+    }
+
+    /**
+     * Spawns a single enemy just outside the camera viewport on a random edge.
+     */
+    private spawnEnemy() {
+        const heroX = this.hero.sprite.x
+        const heroY = this.hero.sprite.y
+        const halfWidth = this.cameras.main.width / 2
+        const halfHeight = this.cameras.main.height / 2
+        const buffer = this.spawnBuffer
+
+        const powerMultiplier = 1 + (this.wave / 10);
+        const mob = this.generateMobStats(powerMultiplier);
+        const mobDamageRelative = mob.damage / MOB_MAX_DAMAGE * powerMultiplier;
         const color = grbToHex(0.7 + (mobDamageRelative / 3), 0.4, 0.7 + ((1 - mobDamageRelative) / 3));
 
         const edge = Phaser.Math.Between(0, 3)
