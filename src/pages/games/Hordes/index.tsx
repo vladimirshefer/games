@@ -183,7 +183,7 @@ const HordesPage = () => {
                     {highScores.length > 0 && (
                         <button
                             onClick={handlePlayClick}
-                            className="mt-4 w-full rounded-md bg-[#43a047] px-4 py-2 text-base font-semibold text-white transition hover:bg-[#4caf50]"
+                            className="mt-4 w-full rounded-md bg-green-600 px-4 py-2 text-base font-semibold text-white transition hover:bg-green-500"
                         >
                             Play Again
                         </button>
