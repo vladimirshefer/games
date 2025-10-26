@@ -4,7 +4,21 @@ import {createHero, damageHero, healHero, HERO_SPEED, moveHero} from './hero'
 import type {InputController} from './input'
 import {createInputController} from './input'
 import type {HeroState, SimpleMob} from './types'
-import {AURA_WEAPON, PISTOL_MK2_WEAPON, PISTOL_WEAPON, type UpgradeOption, upgrades} from "./weapons.ts";
+import {
+  AURA_MK2_WEAPON,
+  AURA_MK3_WEAPON,
+  AURA_MK4_WEAPON,
+  AURA_MK5_WEAPON,
+  AURA_WEAPON,
+  PISTOL_MK2_WEAPON,
+  PISTOL_MK3_WEAPON,
+  PISTOL_MK4_WEAPON,
+  PISTOL_MK5_WEAPON,
+  PISTOL_WEAPON,
+  type UpgradeOption,
+  upgrades,
+  type Weapon,
+} from "./weapons.ts";
 
 const MOB_MAX_DAMAGE = 16;
 
@@ -446,7 +460,13 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private getAvailableUpgrades(): UpgradeOption[] {
-        return upgrades.filter(it => !this.hero.upgrades.includes(it.id))
+        return upgrades.filter(option => {
+            if (this.hero.upgrades.includes(option.id)) return false
+            if (option.requires && !option.requires.every(req => this.hero.upgrades.includes(req))) {
+                return false
+            }
+            return true
+        })
     }
 
     private openUpgradeMenu(options: UpgradeOption[]) {
@@ -522,16 +542,39 @@ export class HordesScene extends Phaser.Scene {
         this.hero.upgrades.push(id)
         switch (id) {
             case 'aura': {
-                this.hero.hasAura = true
-                this.hero.weaponIds.push('aura')
-                this.hero.aura.setVisible(true)
-                this.combat.setAuraWeapon(AURA_WEAPON)
-                this.showWeaponUpgrade('Aura weapon activated!')
+                this.handleAuraUpgrade(AURA_WEAPON, 'Aura weapon activated!')
+                break
+            }
+            case 'auraMk2': {
+                this.handleAuraUpgrade(AURA_MK2_WEAPON, 'Aura Mk II empowered!')
+                break
+            }
+            case 'auraMk3': {
+                this.handleAuraUpgrade(AURA_MK3_WEAPON, 'Aura Mk III intensified!')
+                break
+            }
+            case 'auraMk4': {
+                this.handleAuraUpgrade(AURA_MK4_WEAPON, 'Aura Mk IV radiates farther!')
+                break
+            }
+            case 'auraMk5': {
+                this.handleAuraUpgrade(AURA_MK5_WEAPON, 'Aura Mk V unleashed!')
                 break
             }
             case 'pistolMk2': {
-                this.combat.setBulletWeapon(PISTOL_MK2_WEAPON)
-                this.showWeaponUpgrade('Pistol Mk II ready!')
+                this.handlePistolUpgrade(PISTOL_MK2_WEAPON, 'Pistol Mk II ready!')
+                break
+            }
+            case 'pistolMk3': {
+                this.handlePistolUpgrade(PISTOL_MK3_WEAPON, 'Pistol Mk III ready!')
+                break
+            }
+            case 'pistolMk4': {
+                this.handlePistolUpgrade(PISTOL_MK4_WEAPON, 'Pistol Mk IV ready!')
+                break
+            }
+            case 'pistolMk5': {
+                this.handlePistolUpgrade(PISTOL_MK5_WEAPON, 'Pistol Mk V ready!')
                 break
             }
             default:
@@ -540,6 +583,22 @@ export class HordesScene extends Phaser.Scene {
 
         this.updateHud()
         this.finishUpgradeSelection()
+    }
+
+    private handleAuraUpgrade(weapon: Weapon, message: string) {
+        this.hero.hasAura = true
+        if (!this.hero.weaponIds.includes('aura')) {
+            this.hero.weaponIds.push('aura')
+        }
+        this.hero.aura.setVisible(true)
+        this.hero.aura.setRadius(weapon.area)
+        this.combat.setAuraWeapon(weapon)
+        this.showWeaponUpgrade(message)
+    }
+
+    private handlePistolUpgrade(weapon: Weapon, message: string) {
+        this.combat.setBulletWeapon(weapon)
+        this.showWeaponUpgrade(message)
     }
 
   private finishUpgradeSelection() {
