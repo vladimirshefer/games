@@ -26,7 +26,20 @@ const HordesPage = () => {
         const parent = containerRef.current
         if (!parent) return undefined
 
-        HordesScene.registerExitHandler(() => navigate('/'))
+        const onExit = (stats: {kills: number; waves: number}) => {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                try {
+                    window.localStorage.setItem('hordesLastStats', JSON.stringify(stats))
+                } catch (error) {
+                    console.warn('Failed to save Hordes stats', error)
+                }
+            }
+
+            window.alert(`You defeated ${stats.kills} mobs and survived ${stats.waves} waves.`)
+            navigate('/')
+        }
+
+        HordesScene.registerExitHandler(onExit)
 
         const game = new Phaser.Game({
             parent,

@@ -8,6 +8,11 @@ import {AURA_WEAPON, PISTOL_MK2_WEAPON, PISTOL_WEAPON, type UpgradeOption, upgra
 
 const MOB_MAX_DAMAGE = 16;
 
+interface ExitStats {
+  kills: number
+  waves: number
+}
+
 const DEFAULT_MOB: SimpleMob = {
     health: 16,
     damage: 2,
@@ -28,7 +33,7 @@ function grbToHex(r1: number, g1: number, b1: number) {
  * auto-shooting, and camera-following infinite background.
  */
 export class HordesScene extends Phaser.Scene {
-  private static exitHandler?: () => void
+  private static exitHandler?: (stats: ExitStats) => void
   private hero!: HeroState
   private inputController!: InputController
   private enemies: Phaser.GameObjects.Arc[] = []
@@ -51,7 +56,7 @@ export class HordesScene extends Phaser.Scene {
   private upgradeOverlay: Phaser.GameObjects.GameObject[] = []
   private upgradeInProgress = false
 
-  static registerExitHandler(handler?: () => void) {
+  static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
   }
 
@@ -558,7 +563,10 @@ export class HordesScene extends Phaser.Scene {
   private handleExit() {
     const handler = HordesScene.exitHandler
     if (handler) {
-      handler()
+      handler({
+        kills: this.kills,
+        waves: this.wave,
+      })
     }
   }
 
