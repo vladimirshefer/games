@@ -15,11 +15,10 @@ const DEFAULT_MOB: SimpleMob = {
 }
 
 function grbToHex(r1: number, g1: number, b1: number) {
-    const r = 0xff * r1;
-    const g = 0xff * g1;
-    const b = 0xff * b1;
-    const color = (r * 0x10000 & 0xff0000) | (g * 0x100 & 0xff00) | b;
-    return color;
+    const r = 0xff * Math.min(Math.max(r1, 0.0), 1.0);
+    const g = 0xff * Math.min(Math.max(g1, 0.0), 1.0);
+    const b = 0xff * Math.min(Math.max(b1, 0.0), 1.0);
+    return (r * 0x10000 & 0xff0000) | (g * 0x100 & 0xff00) | b;
 }
 
 /**
@@ -284,19 +283,21 @@ export class HordesScene extends Phaser.Scene {
         const halfWidth = this.cameras.main.width / 2
         const halfHeight = this.cameras.main.height / 2
         const buffer = this.spawnBuffer
+        const MAX_DAMAGE = 16;
+        const MAX_SPEED = HERO_SPEED - 10;
+        const MAX_HEALTH = 100;
         const mob: SimpleMob = {
             size: DEFAULT_MOB.size,
-            speed: Phaser.Math.Between(HERO_SPEED / 3, HERO_SPEED - 10),
-            health: Phaser.Math.Between(5, 100),
+            speed: Phaser.Math.Between(MAX_SPEED / 3, MAX_SPEED),
+            health: Phaser.Math.Between(5, MAX_HEALTH),
             xp: 0,
-            damage: Phaser.Math.Between(1, 16)
+            damage: Phaser.Math.Between(1, MAX_DAMAGE)
         }
-        const mobStrength = mob.health / 100 + mob.speed / HERO_SPEED + mob.damage / 16;
+        const mobStrength = mob.health / MAX_HEALTH + mob.speed / MAX_SPEED + mob.damage / MAX_DAMAGE;
         mob.xp = Math.round(mobStrength) + 1;
         mob.size = mob.size + (mob.health / 4);
-        const mobDamageRelative = mob.damage / 16;
-        const r1 = 0.5 + (mobDamageRelative / 2);
-        const color = grbToHex(r1, 0.4, 0.4);
+        const mobDamageRelative = mob.damage / MAX_DAMAGE;
+        const color = grbToHex(0.7 + (mobDamageRelative / 3), 0.4, 0.7 + ((1 - mobDamageRelative) / 3));
 
         const edge = Phaser.Math.Between(0, 3)
         let x = 0
