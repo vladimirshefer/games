@@ -730,7 +730,9 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private getNextLevelXp(level: number) {
-        return level * 100
+        const baseXp = 20
+        const growthRate = 1.3
+        return Math.ceil(baseXp * Math.pow(growthRate, level - 1))
     }
 
     private togglePause() {
