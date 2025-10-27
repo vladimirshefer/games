@@ -312,6 +312,8 @@ export class HordesScene extends Phaser.Scene {
             return true
         })
 
+        this.resolveEnemyOverlaps()
+
     }
 
     /**
@@ -566,6 +568,51 @@ export class HordesScene extends Phaser.Scene {
             secondary.destroy()
             this.xpCrystals = this.xpCrystals.filter((crystal) => crystal !== secondary)
             safety += 1
+        }
+    }
+
+    private resolveEnemyOverlaps() {
+        const enemies = this.enemies
+        for (let i = 0; i < enemies.length; i += 1) {
+            const enemyA = enemies[i]
+            if (!enemyA.active) continue
+            const mobA = enemyA.getData('mob') as SimpleMob | undefined
+            if (!mobA) continue
+            const radiusA = mobA.size / 2
+
+            for (let j = i + 1; j < enemies.length; j += 1) {
+                const enemyB = enemies[j]
+                if (!enemyB.active) continue
+                const mobB = enemyB.getData('mob') as SimpleMob | undefined
+                if (!mobB) continue
+
+                const radiusB = mobB.size / 2
+                const dx = enemyB.x - enemyA.x
+                const dy = enemyB.y - enemyA.y
+                const dist = Math.hypot(dx, dy)
+                const minDistance = radiusA + radiusB + 2
+                if (dist === 0) {
+                    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2)
+                    enemyA.x += Math.cos(angle)
+                    enemyA.y += Math.sin(angle)
+                    enemyB.x -= Math.cos(angle)
+                    enemyB.y -= Math.sin(angle)
+                    this.positionEnemyHpText(enemyA, mobA)
+                    this.positionEnemyHpText(enemyB, mobB)
+                    continue
+                }
+                if (dist < minDistance) {
+                    const overlap = (minDistance - dist) / 2
+                    const nx = dx / dist
+                    const ny = dy / dist
+                    enemyA.x -= nx * overlap
+                    enemyA.y -= ny * overlap
+                    enemyB.x += nx * overlap
+                    enemyB.y += ny * overlap
+                    this.positionEnemyHpText(enemyA, mobA)
+                    this.positionEnemyHpText(enemyB, mobB)
+                }
+            }
         }
     }
 
