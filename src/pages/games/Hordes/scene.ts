@@ -370,12 +370,15 @@ export class HordesScene extends Phaser.Scene {
      * @param powerMultiplier between 0 and +infinity. usually between 1 and 10.
      */
     private generateMobStats(powerMultiplier: number): SimpleMob {
-        const MAX_SPEED = HERO_SPEED;
+        const MAX_SPEED = HERO_SPEED * 1.1;
         const MAX_HEALTH = 100 * powerMultiplier;
         const MAX_DAMAGE = MOB_MAX_DAMAGE * powerMultiplier;
-        const relativeDamage = Phaser.Math.FloatBetween(0.1, 1);
-        const relativeHealth = Phaser.Math.FloatBetween(0.1, Math.max(0.3, 1 - relativeDamage));
-        const relativeSpeed = Math.max(0.3, 1 - relativeHealth - relativeDamage);
+        const min_relative_damage = 0.1;
+        const min_relative_health = 0.1;
+        const min_relative_speed = 0.3;
+        const relativeDamage = Phaser.Math.FloatBetween(min_relative_damage, 1);
+        const relativeHealth = Phaser.Math.FloatBetween(min_relative_health, Math.max(0.3, 1 - relativeDamage));
+        const relativeSpeed = Math.max(min_relative_speed, 1 + min_relative_damage + min_relative_health - relativeHealth - relativeDamage);
         const speed = Math.round(relativeSpeed * MAX_SPEED);
         const health = Math.round(relativeHealth * MAX_HEALTH);
         const damage = Math.round(relativeDamage * MAX_DAMAGE);
