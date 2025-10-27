@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 
-const AUTO_PICKUP_RADIUS = 100
-const MAGNET_PICKUP_RADIUS = 140
+const MAGNET_TRIGGER_RADIUS = 100
+const MAGNET_COLLECT_RADIUS = 28
 const MAGNET_SPEED = 280
 const MAX_CRYSTALS = 100
 const BASE_SIZE = 8
@@ -51,7 +51,18 @@ export class XpCrystalManager {
         return false
       }
 
-      if (crystal.getData('magnetized')) {
+      const isMagnetized = crystal.getData('magnetized')
+
+      if (!isMagnetized) {
+        const triggerDist = Phaser.Math.Distance.Between(crystal.x, crystal.y, heroX, heroY)
+        if (triggerDist <= MAGNET_TRIGGER_RADIUS) {
+          crystal.setData('magnetized', true)
+        }
+      }
+
+      const magnetized = crystal.getData('magnetized')
+
+      if (magnetized) {
         const magnetSpeed = (crystal.getData('magnetSpeed') as number | undefined) ?? MAGNET_SPEED
         const dx = heroX - crystal.x
         const dy = heroY - crystal.y
@@ -62,7 +73,7 @@ export class XpCrystalManager {
       }
 
       const dist = Phaser.Math.Distance.Between(crystal.x, crystal.y, heroX, heroY)
-      if (dist <= AUTO_PICKUP_RADIUS || (crystal.getData('magnetized') && dist <= MAGNET_PICKUP_RADIUS)) {
+      if (magnetized && dist <= MAGNET_COLLECT_RADIUS) {
         const xp = Math.max(1, Math.round((crystal.getData('xp') as number | undefined) ?? 0))
         crystal.destroy()
         if (xp > 0) onCollect(xp)
