@@ -57,6 +57,7 @@ export class HordesScene extends Phaser.Scene {
   private inputController!: InputController
   private enemies: Phaser.GameObjects.Arc[] = []
   private healPacks: Phaser.GameObjects.Arc[] = []
+  private magnetPickups: Phaser.GameObjects.Arc[] = []
   private spawnBuffer = 60
   private cleanupPadding = 260
     private background!: Phaser.GameObjects.TileSprite
@@ -117,6 +118,7 @@ export class HordesScene extends Phaser.Scene {
 
         this.enemies = []
         this.healPacks = []
+        this.magnetPickups = []
         this.xpManager = new XpCrystalManager(this, this.cleanupPadding)
         this.enemyManager = new EnemyManager(this, this.enemies)
         this.kills = 0
@@ -218,6 +220,13 @@ export class HordesScene extends Phaser.Scene {
             loop: true,
             startAt: 4000,
         })
+        this.time.addEvent({
+            delay: 60000, // every minute
+            callback: this.spawnMagnetPickup,
+            callbackScope: this,
+            loop: true,
+            startAt: 0,
+        })
     }
 
     /**
@@ -300,6 +309,30 @@ export class HordesScene extends Phaser.Scene {
                 pack.y > view.bottom + this.cleanupPadding
             ) {
                 pack.destroy()
+                return false
+            }
+
+            return true
+        })
+
+        this.magnetPickups = this.magnetPickups.filter((pickup) => {
+            if (!pickup.active) return false
+
+            if (
+                Phaser.Math.Distance.Between(pickup.x, pickup.y, heroX, heroY) <
+                (pickup.getData('radius') as number) + heroRadius
+            ) {
+                this.collectMagnetPickup(pickup)
+                return false
+            }
+
+            if (
+                pickup.x < view.left - this.cleanupPadding ||
+                pickup.x > view.right + this.cleanupPadding ||
+                pickup.y < view.top - this.cleanupPadding ||
+                pickup.y > view.bottom + this.cleanupPadding
+            ) {
+                pickup.destroy()
                 return false
             }
 
@@ -414,6 +447,22 @@ export class HordesScene extends Phaser.Scene {
         this.healPacks.push(pack)
     }
 
+    private spawnMagnetPickup() {
+        if (this.magnetPickups.some((pickup) => pickup.active)) return
+
+        const view = this.cameras.main.worldView
+        const margin = 60
+        const radius = 12
+        const x = Phaser.Math.FloatBetween(view.left + margin, view.right - margin)
+        const y = Phaser.Math.FloatBetween(view.top + margin, view.bottom - margin)
+
+        const pickup = this.add.circle(x, y, radius, 0xffca28)
+        pickup.setStrokeStyle(2, 0xffffff, 0.85)
+        pickup.setData('radius', radius)
+        pickup.setDepth(0.2)
+        this.magnetPickups.push(pickup)
+    }
+
     /**
      * Applies damage from an enemy to the hero with per-enemy cooldown and restarts on death.
      */
@@ -447,6 +496,13 @@ export class HordesScene extends Phaser.Scene {
         this.cameras.main.flash(100, 80, 180, 255, false)
         this.updateHud()
         pack.destroy()
+    }
+
+    private collectMagnetPickup(pickup: Phaser.GameObjects.Arc) {
+        this.xpManager.activateMagnet()
+        this.showMagnetPickup()
+        this.cameras.main.flash(140, 120, 200, 255, false)
+        pickup.destroy()
     }
 
     private awardXp(amount: number) {
@@ -723,6 +779,29 @@ export class HordesScene extends Phaser.Scene {
             targets: text,
             alpha: 0,
             y: text.y - 28,
+            duration: 900,
+            ease: 'Sine.easeOut',
+            onComplete: () => text.destroy(),
+        })
+    }
+
+    private showMagnetPickup() {
+        const text = this.add
+            .text(this.scale.width / 2, 180, 'Magnet activated!', {
+                color: '#8c9eff',
+                fontFamily: 'monospace',
+                fontSize: '20px',
+                backgroundColor: '#1f1f32dd',
+                padding: {x: 10, y: 4},
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(5)
+
+        this.tweens.add({
+            targets: text,
+            alpha: 0,
+            y: text.y - 24,
             duration: 900,
             ease: 'Sine.easeOut',
             onComplete: () => text.destroy(),

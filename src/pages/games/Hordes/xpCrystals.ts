@@ -1,6 +1,8 @@
 import Phaser from 'phaser'
 
 const AUTO_PICKUP_RADIUS = 100
+const MAGNET_PICKUP_RADIUS = 140
+const MAGNET_SPEED = 280
 const MAX_CRYSTALS = 100
 const BASE_SIZE = 8
 
@@ -30,6 +32,8 @@ export class XpCrystalManager {
     crystal.setStrokeStyle(1.2, 0xffffff, 0.5)
     crystal.setData('xp', xp)
     crystal.setData('baseSize', BASE_SIZE)
+    crystal.setData('magnetized', false)
+    crystal.setData('magnetSpeed', MAGNET_SPEED)
     this.updateCrystalVisual(crystal)
     this.crystals.push(crystal)
   }
@@ -40,14 +44,25 @@ export class XpCrystalManager {
     view: Phaser.Geom.Rectangle,
     onCollect: (xp: number) => void,
   ) {
+    const dt = Phaser.Math.Clamp(this.scene.game.loop.delta ?? 16, 8, 48) / 1000
     this.crystals = this.crystals.filter((crystal) => {
       if (!crystal.active) {
         crystal.destroy()
         return false
       }
 
+      if (crystal.getData('magnetized')) {
+        const magnetSpeed = (crystal.getData('magnetSpeed') as number | undefined) ?? MAGNET_SPEED
+        const dx = heroX - crystal.x
+        const dy = heroY - crystal.y
+        const dist = Math.hypot(dx, dy) || 0.0001
+        const step = magnetSpeed * dt
+        crystal.x += (dx / dist) * step
+        crystal.y += (dy / dist) * step
+      }
+
       const dist = Phaser.Math.Distance.Between(crystal.x, crystal.y, heroX, heroY)
-      if (dist <= AUTO_PICKUP_RADIUS) {
+      if (dist <= AUTO_PICKUP_RADIUS || (crystal.getData('magnetized') && dist <= MAGNET_PICKUP_RADIUS)) {
         const xp = Math.max(1, Math.round((crystal.getData('xp') as number | undefined) ?? 0))
         crystal.destroy()
         if (xp > 0) onCollect(xp)
@@ -63,6 +78,13 @@ export class XpCrystalManager {
   destroyAll() {
     this.crystals.forEach((crystal) => crystal.destroy())
     this.crystals = []
+  }
+
+  activateMagnet() {
+    this.crystals.forEach((crystal) => {
+      if (!crystal.active) return
+      crystal.setData('magnetized', true)
+    })
   }
 
   private mergeOutOfBounds(view: Phaser.Geom.Rectangle, heroX: number, heroY: number) {
