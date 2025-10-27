@@ -23,6 +23,7 @@ import {
   type Weapon,
 } from "./weapons.ts";
 import {XpCrystalManager} from "./xpCrystals.ts";
+import {EnemyManager} from "./enemies.ts";
 
 const MOB_MAX_DAMAGE = 16;
 
@@ -65,6 +66,7 @@ export class HordesScene extends Phaser.Scene {
     private wave = 0
   private combat!: CombatSystem
   private xpManager!: XpCrystalManager
+  private enemyManager!: EnemyManager
   private pauseButton!: Phaser.GameObjects.Text
   private exitButton!: Phaser.GameObjects.Text
     private isPaused = false
@@ -116,6 +118,7 @@ export class HordesScene extends Phaser.Scene {
         this.enemies = []
         this.healPacks = []
         this.xpManager = new XpCrystalManager(this, this.cleanupPadding)
+        this.enemyManager = new EnemyManager(this, this.enemies)
         this.kills = 0
         this.wave = 0
         this.totalXp = 0
@@ -273,6 +276,7 @@ export class HordesScene extends Phaser.Scene {
 
             return enemy.active
         })
+        this.enemyManager.sync(this.enemies)
 
         this.combat.update(dt, view, this.cleanupPadding)
 
@@ -302,7 +306,7 @@ export class HordesScene extends Phaser.Scene {
             return true
         })
 
-        this.resolveEnemyOverlaps()
+        this.enemyManager.resolveOverlaps()
 
     }
 
@@ -358,50 +362,20 @@ export class HordesScene extends Phaser.Scene {
      * Spawns a single enemy just outside the camera viewport on a random edge.
      */
     private spawnEnemy(edge: number) {
-        const heroX = this.hero.sprite.x
-        const heroY = this.hero.sprite.y
-        const halfWidth = this.cameras.main.width / 2
-        const halfHeight = this.cameras.main.height / 2
-        const buffer = this.spawnBuffer
-
         const powerMultiplier = 1 + (this.wave / 10);
         const mob = this.generateMobStats(powerMultiplier);
         const mobDamageRelative = mob.damage / MOB_MAX_DAMAGE * powerMultiplier;
         const color = grbToHex(0.7 + (mobDamageRelative / 3), 0.4, 0.7 + ((1 - mobDamageRelative) / 3));
 
-        let x = 0
-        let y = 0
-
-        switch (edge) {
-            case 0: {
-                x = heroX + Phaser.Math.FloatBetween(-halfWidth, halfWidth)
-                y = heroY - halfHeight - buffer
-                break
-            }
-            case 1: {
-                x = heroX + halfWidth + buffer
-                y = heroY + Phaser.Math.FloatBetween(-halfHeight, halfHeight)
-                break
-            }
-            case 2: {
-                x = heroX + Phaser.Math.FloatBetween(-halfWidth, halfWidth)
-                y = heroY + halfHeight + buffer
-                break
-            }
-            default: {
-                x = heroX - halfWidth - buffer
-                y = heroY + Phaser.Math.FloatBetween(-halfHeight, halfHeight)
-                break
-            }
+        const spawnContext = {
+            heroX: this.hero.sprite.x,
+            heroY: this.hero.sprite.y,
+            halfWidth: this.cameras.main.width / 2,
+            halfHeight: this.cameras.main.height / 2,
+            buffer: this.spawnBuffer,
         }
 
-        const enemy = this.add.circle(x, y, mob.size / 2, color)
-        enemy.setActive(true)
-        enemy.setData('lastHit', 0)
-        enemy.setData('mob', mob)
-        enemy.setData('hp', mob.health)
-        enemy.setData('lastAuraTick', 0)
-        enemy.setData('auraKnockback', 40)
+        const enemy = this.enemyManager.spawn(edge, mob, color, spawnContext)
 
         const hpText = this.add
             .text(enemy.x, enemy.y, `${mob.health}`, {
@@ -414,8 +388,6 @@ export class HordesScene extends Phaser.Scene {
         enemy.setData('hpText', hpText)
         enemy.once('destroy', () => hpText.destroy())
         this.positionEnemyHpText(enemy, mob)
-
-        this.enemies.push(enemy)
     }
 
     private positionEnemyHpText(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
@@ -475,51 +447,6 @@ export class HordesScene extends Phaser.Scene {
         this.cameras.main.flash(100, 80, 180, 255, false)
         this.updateHud()
         pack.destroy()
-    }
-
-    private resolveEnemyOverlaps() {
-        const enemies = this.enemies
-        for (let i = 0; i < enemies.length; i += 1) {
-            const enemyA = enemies[i]
-            if (!enemyA.active) continue
-            const mobA = enemyA.getData('mob') as SimpleMob | undefined
-            if (!mobA) continue
-            const radiusA = mobA.size / 2
-
-            for (let j = i + 1; j < enemies.length; j += 1) {
-                const enemyB = enemies[j]
-                if (!enemyB.active) continue
-                const mobB = enemyB.getData('mob') as SimpleMob | undefined
-                if (!mobB) continue
-
-                const radiusB = mobB.size / 2
-                const dx = enemyB.x - enemyA.x
-                const dy = enemyB.y - enemyA.y
-                const dist = Math.hypot(dx, dy)
-                const minDistance = radiusA + radiusB + 2
-                if (dist === 0) {
-                    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2)
-                    enemyA.x += Math.cos(angle)
-                    enemyA.y += Math.sin(angle)
-                    enemyB.x -= Math.cos(angle)
-                    enemyB.y -= Math.sin(angle)
-                    this.positionEnemyHpText(enemyA, mobA)
-                    this.positionEnemyHpText(enemyB, mobB)
-                    continue
-                }
-                if (dist < minDistance) {
-                    const overlap = (minDistance - dist) / 2
-                    const nx = dx / dist
-                    const ny = dy / dist
-                    enemyA.x -= nx * overlap
-                    enemyA.y -= ny * overlap
-                    enemyB.x += nx * overlap
-                    enemyB.y += ny * overlap
-                    this.positionEnemyHpText(enemyA, mobA)
-                    this.positionEnemyHpText(enemyB, mobB)
-                }
-            }
-        }
     }
 
     private awardXp(amount: number) {
