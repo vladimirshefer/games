@@ -55,7 +55,7 @@ export class HordesScene extends Phaser.Scene {
   private inputController!: InputController
   private enemies: Phaser.GameObjects.Arc[] = []
   private healPacks: Phaser.GameObjects.Arc[] = []
-  private xpCrystals: Phaser.GameObjects.Arc[] = []
+  private xpCrystals: Phaser.GameObjects.Polygon[] = []
     private spawnBuffer = 60
     private cleanupPadding = 260
     private background!: Phaser.GameObjects.TileSprite
@@ -430,18 +430,24 @@ export class HordesScene extends Phaser.Scene {
         const xp = Math.max(1, Math.round(amount))
         const offsetX = Phaser.Math.FloatBetween(-6, 6)
         const offsetY = Phaser.Math.FloatBetween(-6, 6)
-        const crystal = this.add.circle(x + offsetX, y + offsetY, 8, 0x64b5f6, 0.7)
+        const baseSize = 8
+        const diamondPoints = [0, -baseSize, baseSize, 0, 0, baseSize, -baseSize, 0]
+        const crystal = this.add.polygon(x + offsetX, y + offsetY, diamondPoints, 0x64b5f6, 0.7)
         crystal.setDepth(-0.2)
+        crystal.setOrigin(0.5)
         crystal.setStrokeStyle(1.2, 0xffffff, 0.5)
         crystal.setData('xp', xp)
+        crystal.setData('baseSize', baseSize)
         this.updateCrystalVisual(crystal)
         this.xpCrystals.push(crystal)
     }
 
-    private updateCrystalVisual(crystal: Phaser.GameObjects.Arc) {
+    private updateCrystalVisual(crystal: Phaser.GameObjects.Polygon) {
         const xp = (crystal.getData('xp') as number | undefined) ?? 0
+        const baseSize = (crystal.getData('baseSize') as number | undefined) ?? 8
         const radius = Phaser.Math.Clamp(6 + Math.sqrt(xp) * 1.1, 6, 28)
-        crystal.setRadius(radius)
+        const scale = radius / baseSize
+        crystal.setScale(scale)
         crystal.setData('radius', radius)
         const alpha = Phaser.Math.Clamp(0.45 + xp / 180, 0.45, 0.9)
         crystal.setFillStyle(0x64b5f6, alpha)
@@ -507,7 +513,7 @@ export class HordesScene extends Phaser.Scene {
         pack.destroy()
     }
 
-    private collectXpCrystal(crystal: Phaser.GameObjects.Arc) {
+    private collectXpCrystal(crystal: Phaser.GameObjects.Polygon) {
         const xp = Math.max(1, Math.round((crystal.getData('xp') as number | undefined) ?? 0))
         crystal.destroy()
         if (xp > 0) {
