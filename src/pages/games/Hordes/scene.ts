@@ -345,7 +345,7 @@ export class HordesScene extends Phaser.Scene {
         const MAX_DAMAGE = MOB_MAX_DAMAGE * powerMultiplier;
         const relativeDamage = Phaser.Math.FloatBetween(0.1, 1);
         const relativeHealth = Phaser.Math.FloatBetween(0.1, Math.max(0.3, 1 - relativeDamage));
-        const relativeSpeed = Math.max(0.1, 1 - relativeHealth - relativeDamage);
+        const relativeSpeed = Math.max(0.3, 1 - relativeHealth - relativeDamage);
         const speed = Math.round(relativeSpeed * MAX_SPEED);
         const health = Math.round(relativeHealth * MAX_HEALTH);
         const damage = Math.round(relativeDamage * MAX_DAMAGE);
