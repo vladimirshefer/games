@@ -73,7 +73,7 @@ const HordesPage = () => {
     const containerRef = useRef<HTMLDivElement | null>(null)
     const gameRef = useRef<Phaser.Game | null>(null)
     const [isPlaying, setIsPlaying] = useState(false)
-    const [lastStats, setLastStats] = useState<ExitStats | null>(null)
+    const [_lastStats, setLastStats] = useState<ExitStats | null>(null)
     const [highScores, setHighScores] = useState<HighScore[]>([])
 
     useEffect(() => {
