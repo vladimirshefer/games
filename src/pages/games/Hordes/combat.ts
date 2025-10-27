@@ -70,10 +70,12 @@ export class CombatSystem {
       for (const enemy of enemies) {
         const mob = enemy.getData('mob') as SimpleMob | undefined
         if (!enemy.active || !mob) continue
+        if (bullet.hitEnemies.has(enemy)) continue
         if (
           Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y) <
           mob.size / 2 + bullet.radius
         ) {
+          bullet.hitEnemies.add(enemy)
           const killed = this.damageEnemy(enemy, bulletDamage, mob)
           if (!killed) {
             sprite.x += bullet.vx * dt * 0.3
@@ -126,6 +128,7 @@ export class CombatSystem {
       vy,
       radius,
       piercesLeft: this.config.bulletWeapon.pierce,
+      hitEnemies: new Set(),
     })
   }
 

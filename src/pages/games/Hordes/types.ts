@@ -6,6 +6,7 @@ export interface Bullet {
   vy: number
   radius: number
   piercesLeft: number
+  hitEnemies: Set<Phaser.GameObjects.Arc>
 }
 
 export interface HeroState {
@@ -26,4 +27,3 @@ export interface SimpleMob {
   xp: number
   size: number
 }
-
