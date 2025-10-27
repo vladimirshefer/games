@@ -206,6 +206,7 @@ export class HordesScene extends Phaser.Scene {
             .setInteractive({useHandCursor: true})
         this.exitButton.on('pointerdown', () => this.handleExit())
 
+        this.spawnWave()
         this.time.addEvent({
             delay: 5000,
             callback: this.spawnWave,
