@@ -31,7 +31,9 @@ import {
     ENEMY_SPRITESHEET_SPACING,
     ENEMY_SPRITESHEET_URL,
     HEAL_POTION_FRAME_INDEX,
-    PORTAL_OPENS_FRAME_INDEX
+    PORTAL_OPENS_FRAME_INDEX,
+    MOB_WALK_FRAME_INDICES,
+    ENEMY_WALK_ANIMATION_KEY
 } from "./sprite.ts";
 
 const MOB_MAX_DAMAGE = 16;
@@ -141,6 +143,7 @@ export class HordesScene extends Phaser.Scene {
         this.magnetPickups = []
         this.xpManager = new XpCrystalManager(this, this.cleanupPadding)
         this.enemyManager = new EnemyManager(this, this.enemies)
+        this.ensureEnemyWalkAnimation()
         this.kills = 0
         this.wave = 0
         this.totalXp = 0
@@ -855,5 +858,19 @@ export class HordesScene extends Phaser.Scene {
             `Wave ${this.wave} | HP ${this.hero.hp} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` +
             `Weapons: ${this.hero.weaponIds} | Kills ${this.kills}`,
         )
+    }
+
+    private ensureEnemyWalkAnimation() {
+        if (this.anims.exists(ENEMY_WALK_ANIMATION_KEY)) return
+        const frames = MOB_WALK_FRAME_INDICES.map((frame) => ({
+            key: ENEMY_SPRITESHEET_KEY,
+            frame,
+        }))
+        this.anims.create({
+            key: ENEMY_WALK_ANIMATION_KEY,
+            frames,
+            frameRate: 6,
+            repeat: -1,
+        })
     }
 }

@@ -21,3 +21,5 @@ export const MOB_WALK_FRAME_INDICES = [
   7 * ENEMY_SPRITESHEET_COLUMNS + 18, // 8th row (0-indexed), 19th column
   7 * ENEMY_SPRITESHEET_COLUMNS + 19, // 8th row (0-indexed), 20th column
 ]
+
+export const ENEMY_WALK_ANIMATION_KEY = 'enemy-walk'

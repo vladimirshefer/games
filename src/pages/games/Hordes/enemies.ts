@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import type {EnemySprite, SimpleMob} from './types'
-import {ENEMY_SPRITESHEET_KEY, MOB_WALK_FRAME_INDICES} from './sprite.ts'
+import {ENEMY_SPRITESHEET_KEY, ENEMY_WALK_ANIMATION_KEY, MOB_WALK_FRAME_INDICES} from './sprite.ts'
 
 interface SpawnContext {
   heroX: number
@@ -27,12 +27,9 @@ export class EnemyManager {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius, context)
 
-    const defaultFrame = MOB_WALK_FRAME_INDICES[0] ?? 0
-    const frameIndex = this.scene.textures.exists(ENEMY_SPRITESHEET_KEY)
-      ? Phaser.Utils.Array.GetRandom(MOB_WALK_FRAME_INDICES)
-      : defaultFrame
+    const frameIndex = MOB_WALK_FRAME_INDICES[0] ?? 0
 
-    const enemy = this.scene.add.image(x, y, ENEMY_SPRITESHEET_KEY, frameIndex)
+    const enemy = this.scene.add.sprite(x, y, ENEMY_SPRITESHEET_KEY, frameIndex)
     enemy.setDisplaySize(mob.size, mob.size)
     enemy.setTint(color)
     enemy.setDepth(0.1)
@@ -43,6 +40,10 @@ export class EnemyManager {
     enemy.setData('lastAuraTick', 0)
     enemy.setData('auraKnockback', 40)
     enemy.setData('radius', radius)
+    if (this.scene.anims.exists(ENEMY_WALK_ANIMATION_KEY)) {
+      enemy.play(ENEMY_WALK_ANIMATION_KEY)
+      enemy.anims.setProgress(Math.random())
+    }
 
     this.enemies.push(enemy)
     return enemy
