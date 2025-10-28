@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type {EnemySprite, SimpleMob} from './types'
+import {ENEMY_SPRITESHEET_KEY} from './sprite.ts'
 
 interface SpawnContext {
   heroX: number
@@ -27,13 +28,13 @@ export class EnemyManager {
     const { x, y } = this.findSpawnPosition(edge, radius, context)
 
     let frameIndex = 0
-    if (this.scene.textures.exists('enemy-kenney')) {
-      const texture = this.scene.textures.get('enemy-kenney')
+    if (this.scene.textures.exists(ENEMY_SPRITESHEET_KEY)) {
+      const texture = this.scene.textures.get(ENEMY_SPRITESHEET_KEY)
       const frameTotal = Math.max(texture.frameTotal - 1, 0)
       frameIndex = frameTotal > 0 ? Phaser.Math.Between(0, frameTotal) : 0
     }
 
-    const enemy = this.scene.add.image(x, y, 'enemy-kenney', frameIndex)
+    const enemy = this.scene.add.image(x, y, ENEMY_SPRITESHEET_KEY, frameIndex)
     enemy.setDisplaySize(mob.size, mob.size)
     enemy.setTint(color)
     enemy.setDepth(0.1)

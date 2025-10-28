@@ -24,7 +24,13 @@ import {
 } from "./weapons.ts";
 import {XpCrystalManager} from "./xpCrystals.ts";
 import {EnemyManager} from "./enemies.ts";
-import enemySpritesheetUrl from '../../../assets/kenney.nl/1-bit-pack/Tilesheet/monochrome-transparent.png';
+import {
+    ENEMY_SPRITESHEET_FRAME_HEIGHT,
+    ENEMY_SPRITESHEET_FRAME_WIDTH,
+    ENEMY_SPRITESHEET_KEY,
+    ENEMY_SPRITESHEET_SPACING,
+    ENEMY_SPRITESHEET_URL
+} from "./sprite.ts";
 
 const MOB_MAX_DAMAGE = 16;
 
@@ -82,6 +88,16 @@ export class HordesScene extends Phaser.Scene {
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
   }
+
+    preload() {
+        if (!this.textures.exists(ENEMY_SPRITESHEET_KEY)) {
+            this.load.spritesheet(ENEMY_SPRITESHEET_KEY, ENEMY_SPRITESHEET_URL, {
+                frameWidth: ENEMY_SPRITESHEET_FRAME_WIDTH,
+                frameHeight: ENEMY_SPRITESHEET_FRAME_HEIGHT,
+                spacing: ENEMY_SPRITESHEET_SPACING,
+            })
+        }
+    }
 
     /**
      * Bootstraps the scene: build background, hero, input, camera, and the first wave timer.
@@ -814,7 +830,7 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private getNextLevelXp(level: number) {
-        const baseXp = 20
+        const baseXp = 40
         const growthRate = 1.3
         return Math.ceil(baseXp * Math.pow(growthRate, level - 1))
     }

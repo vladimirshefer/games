@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
 import type {Weapon} from "./weapons.ts";
+import {BOMB_FRAME_INDEX, ENEMY_SPRITESHEET_KEY} from "./sprite.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
@@ -17,7 +18,6 @@ export interface CombatContext {
 }
 
 const BOMB_FUSE_DELAY = 2000;
-
 export class CombatSystem {
   private bullets: Bullet[] = []
   private shootElapsed = 0
@@ -26,7 +26,7 @@ export class CombatSystem {
   private config: CombatConfig
   private context: CombatContext
   private bombs: {
-    sprite: Phaser.GameObjects.Arc
+    sprite: Phaser.GameObjects.Image
     detonateAt: number
     weapon: Weapon
   }[] = []
@@ -260,18 +260,21 @@ export class CombatSystem {
 
   private spawnBomb(weapon: Weapon) {
     const { sprite } = this.context.hero
-    const bombCircle = this.scene.add.circle(sprite.x, sprite.y, 14, 0xff7043, 0.9)
-    bombCircle.setDepth(-0.5)
+    const bombSprite = this.scene.add.image(sprite.x, sprite.y, ENEMY_SPRITESHEET_KEY, BOMB_FRAME_INDEX)
+    bombSprite.setDepth(-0.5)
+    bombSprite.setDisplaySize(28, 28)
+    bombSprite.setTint(0xff7043)
+    bombSprite.setAlpha(0.9)
     const detonateAt = this.scene.time.now + BOMB_FUSE_DELAY;
     this.bombs.push({
-      sprite: bombCircle,
+      sprite: bombSprite,
       detonateAt,
       weapon,
     })
   }
 
   private detonateBomb(
-    bomb: { sprite: Phaser.GameObjects.Arc; weapon: Weapon },
+    bomb: { sprite: Phaser.GameObjects.Image; weapon: Weapon },
     enemies: EnemySprite[],
   ) {
     const { sprite, weapon } = bomb

@@ -1,0 +1,11 @@
+import enemySpritesheetUrl from '../../../assets/kenney.nl/1-bit-pack/Tilesheet/monochrome-transparent.png'
+
+export const ENEMY_SPRITESHEET_KEY = 'enemy-kenney'
+export const ENEMY_SPRITESHEET_URL = enemySpritesheetUrl
+export const ENEMY_SPRITESHEET_FRAME_WIDTH = 16
+export const ENEMY_SPRITESHEET_FRAME_HEIGHT = 16
+export const ENEMY_SPRITESHEET_SPACING = 1
+export const ENEMY_SPRITESHEET_COLUMNS = 49
+
+export const BOMB_FRAME_INDEX =
+  9 * ENEMY_SPRITESHEET_COLUMNS + 45 // 10th row (0-indexed), 4th from the right
