@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 
-export type EnemySprite = Phaser.GameObjects.Arc
+export type EnemySprite = Phaser.GameObjects.Image
 
 export interface Bullet {
   sprite: Phaser.GameObjects.Arc

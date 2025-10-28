@@ -26,7 +26,17 @@ export class EnemyManager {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius, context)
 
-    const enemy = this.scene.add.circle(x, y, radius, color)
+    let frameIndex = 0
+    if (this.scene.textures.exists('enemy-kenney')) {
+      const texture = this.scene.textures.get('enemy-kenney')
+      const frameTotal = Math.max(texture.frameTotal - 1, 0)
+      frameIndex = frameTotal > 0 ? Phaser.Math.Between(0, frameTotal) : 0
+    }
+
+    const enemy = this.scene.add.image(x, y, 'enemy-kenney', frameIndex)
+    enemy.setDisplaySize(mob.size, mob.size)
+    enemy.setTint(color)
+    enemy.setDepth(0.1)
     enemy.setActive(true)
     enemy.setData('mob', mob)
     enemy.setData('hp', mob.health)

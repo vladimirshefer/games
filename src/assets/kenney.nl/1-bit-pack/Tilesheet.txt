@@ -1,0 +1,11 @@
+Tilesheet information:
+
+Tile size                 •  16px × 16px
+Space between tiles       •  1px × 1px
+---
+Total tiles (horizontal)  •  49 tiles
+Total tiles (vertical)    •  22 tiles
+---
+Total tiles in sheet      •  1078 tiles
+---
+Source                    •  https://kenney.nl/assets/1-bit-pack

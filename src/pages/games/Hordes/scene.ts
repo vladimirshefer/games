@@ -24,6 +24,7 @@ import {
 } from "./weapons.ts";
 import {XpCrystalManager} from "./xpCrystals.ts";
 import {EnemyManager} from "./enemies.ts";
+import enemySpritesheetUrl from '../../../assets/kenney.nl/1-bit-pack/Tilesheet/monochrome-transparent.png';
 
 const MOB_MAX_DAMAGE = 16;
 
