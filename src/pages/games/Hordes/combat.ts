@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
 import type {Weapon} from "./weapons.ts";
 import {BOMB_FRAME_INDEX, ENEMY_SPRITESHEET_KEY} from "./sprite.ts";
+import {PICKUP_DEFAULT_SIZE} from "./scene.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
@@ -262,7 +263,7 @@ export class CombatSystem {
     const { sprite } = this.context.hero
     const bombSprite = this.scene.add.image(sprite.x, sprite.y, ENEMY_SPRITESHEET_KEY, BOMB_FRAME_INDEX)
     bombSprite.setDepth(-0.5)
-    bombSprite.setDisplaySize(28, 28)
+    bombSprite.setDisplaySize(PICKUP_DEFAULT_SIZE, PICKUP_DEFAULT_SIZE)
     bombSprite.setTint(0xff7043)
     bombSprite.setAlpha(0.9)
     const detonateAt = this.scene.time.now + BOMB_FUSE_DELAY;

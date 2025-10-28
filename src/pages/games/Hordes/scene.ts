@@ -30,10 +30,12 @@ import {
     ENEMY_SPRITESHEET_KEY,
     ENEMY_SPRITESHEET_SPACING,
     ENEMY_SPRITESHEET_URL,
-    HEAL_POTION_FRAME_INDEX
+    HEAL_POTION_FRAME_INDEX,
+    PORTAL_OPENS_FRAME_INDEX
 } from "./sprite.ts";
 
 const MOB_MAX_DAMAGE = 16;
+export const PICKUP_DEFAULT_SIZE = 28
 
 interface ExitStats {
   kills: number
@@ -65,7 +67,7 @@ export class HordesScene extends Phaser.Scene {
   private inputController!: InputController
   private enemies: EnemySprite[] = []
   private healPacks: Phaser.GameObjects.Image[] = []
-  private magnetPickups: Phaser.GameObjects.Arc[] = []
+  private magnetPickups: Phaser.GameObjects.Image[] = []
   private spawnBuffer = 60
   private cleanupPadding = 260
     private background!: Phaser.GameObjects.TileSprite
@@ -459,15 +461,14 @@ export class HordesScene extends Phaser.Scene {
 
         const view = this.cameras.main.worldView
         const margin = 60
-        const packRadius = 10
         const x = Phaser.Math.FloatBetween(view.left + margin, view.right - margin)
         const y = Phaser.Math.FloatBetween(view.top + margin, view.bottom - margin)
 
-        const diameter = packRadius * 2
+        const diameter = PICKUP_DEFAULT_SIZE
         const pack = this.add.image(x, y, ENEMY_SPRITESHEET_KEY, HEAL_POTION_FRAME_INDEX)
         pack.setDisplaySize(diameter, diameter)
-        pack.setTint(0x76ff03)
-        pack.setData('radius', packRadius)
+        pack.setTint(0xff7603)
+        pack.setData('radius', diameter / 2)
         this.healPacks.push(pack)
     }
 
@@ -476,13 +477,14 @@ export class HordesScene extends Phaser.Scene {
 
         const view = this.cameras.main.worldView
         const margin = 60
-        const radius = 12
         const x = Phaser.Math.FloatBetween(view.left + margin, view.right - margin)
         const y = Phaser.Math.FloatBetween(view.top + margin, view.bottom - margin)
 
-        const pickup = this.add.circle(x, y, radius, 0xffca28)
-        pickup.setStrokeStyle(2, 0xffffff, 0.85)
-        pickup.setData('radius', radius)
+        const diameter = PICKUP_DEFAULT_SIZE
+        const pickup = this.add.image(x, y, ENEMY_SPRITESHEET_KEY, PORTAL_OPENS_FRAME_INDEX)
+        pickup.setDisplaySize(diameter, diameter)
+        pickup.setTint(0x42a5f5)
+        pickup.setData('radius', diameter / 2)
         pickup.setDepth(0.2)
         this.magnetPickups.push(pickup)
     }
@@ -522,7 +524,7 @@ export class HordesScene extends Phaser.Scene {
         pack.destroy()
     }
 
-    private collectMagnetPickup(pickup: Phaser.GameObjects.Arc) {
+    private collectMagnetPickup(pickup: Phaser.GameObjects.Image) {
         this.xpManager.activateMagnet()
         this.showMagnetPickup()
         this.cameras.main.flash(140, 120, 200, 255, false)
