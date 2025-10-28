@@ -1,12 +1,14 @@
 import Phaser from 'phaser'
 
+export type EnemySprite = Phaser.GameObjects.Arc
+
 export interface Bullet {
   sprite: Phaser.GameObjects.Arc
   vx: number
   vy: number
   radius: number
   piercesLeft: number
-  hitEnemies: Set<Phaser.GameObjects.Arc>
+  hitEnemies: Set<EnemySprite>
 }
 
 export interface HeroState {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type {SimpleMob} from './types'
+import type {EnemySprite, SimpleMob} from './types'
 
 interface SpawnContext {
   heroX: number
@@ -11,14 +11,14 @@ interface SpawnContext {
 
 export class EnemyManager {
   private scene: Phaser.Scene
-  private enemies: Phaser.GameObjects.Arc[]
+  private enemies: EnemySprite[]
 
-  constructor(scene: Phaser.Scene, enemies: Phaser.GameObjects.Arc[]) {
+  constructor(scene: Phaser.Scene, enemies: EnemySprite[]) {
     this.scene = scene
     this.enemies = enemies
   }
 
-  sync(enemies: Phaser.GameObjects.Arc[]) {
+  sync(enemies: EnemySprite[]) {
     this.enemies = enemies
   }
 
@@ -139,7 +139,7 @@ export class EnemyManager {
     return true
   }
 
-  private updateHpLabel(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
+  private updateHpLabel(enemy: EnemySprite, mob: SimpleMob) {
     const label = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
     if (!label || !label.active) return
     label.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)

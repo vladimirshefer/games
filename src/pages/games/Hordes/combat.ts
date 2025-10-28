@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type {Bullet, HeroState, SimpleMob} from './types'
+import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
 import type {Weapon} from "./weapons.ts";
 
 export interface CombatConfig {
@@ -12,8 +12,8 @@ export interface CombatConfig {
 
 export interface CombatContext {
   hero: HeroState
-  getEnemies(): Phaser.GameObjects.Arc[]
-  onEnemyKilled(enemy: Phaser.GameObjects.Arc, mob: SimpleMob): void
+  getEnemies(): EnemySprite[]
+  onEnemyKilled(enemy: EnemySprite, mob: SimpleMob): void
 }
 
 const BOMB_FUSE_DELAY = 2000;
@@ -128,12 +128,12 @@ export class CombatSystem {
       vy,
       radius,
       piercesLeft: this.config.bulletWeapon.pierce,
-      hitEnemies: new Set(),
+      hitEnemies: new Set<EnemySprite>(),
     })
   }
 
   applyAuraDamage(
-    enemy: Phaser.GameObjects.Arc,
+    enemy: EnemySprite,
     distanceToHero: number,
     mob: SimpleMob,
   ): boolean {
@@ -171,7 +171,7 @@ export class CombatSystem {
     return killed
   }
 
-  private damageEnemy(enemy: Phaser.GameObjects.Arc, amount: number, mob: SimpleMob) {
+  private damageEnemy(enemy: EnemySprite, amount: number, mob: SimpleMob) {
     if (!enemy.active) return false
 
     const currentHp =
@@ -211,7 +211,7 @@ export class CombatSystem {
   private findNearestEnemy() {
     const { sprite } = this.context.hero
     const enemies = this.context.getEnemies()
-    let nearest: Phaser.GameObjects.Arc | undefined
+    let nearest: EnemySprite | undefined
     let nearestDist = Number.POSITIVE_INFINITY
 
     for (const enemy of enemies) {
@@ -226,7 +226,7 @@ export class CombatSystem {
     return nearest
   }
 
-  private updateBombs(dt: number, enemies: Phaser.GameObjects.Arc[]) {
+  private updateBombs(dt: number, enemies: EnemySprite[]) {
     const bombWeapon = this.config.bombWeapon ?? null
     if (bombWeapon) {
       this.bombElapsed += dt
@@ -272,7 +272,7 @@ export class CombatSystem {
 
   private detonateBomb(
     bomb: { sprite: Phaser.GameObjects.Arc; weapon: Weapon },
-    enemies: Phaser.GameObjects.Arc[],
+    enemies: EnemySprite[],
   ) {
     const { sprite, weapon } = bomb
     const explosion = this.scene.add.circle(sprite.x, sprite.y, weapon.area, 0xffab40, 0.35)

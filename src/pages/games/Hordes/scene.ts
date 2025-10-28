@@ -3,7 +3,7 @@ import {CombatSystem} from './combat'
 import {createHero, damageHero, healHero, HERO_SPEED, moveHero} from './hero'
 import type {InputController} from './input'
 import {createInputController} from './input'
-import type {HeroState, SimpleMob} from './types'
+import type {EnemySprite, HeroState, SimpleMob} from './types'
 import {
   AURA_MK2_WEAPON,
   AURA_MK3_WEAPON,
@@ -55,7 +55,7 @@ export class HordesScene extends Phaser.Scene {
   private static exitHandler?: (stats: ExitStats) => void
   private hero!: HeroState
   private inputController!: InputController
-  private enemies: Phaser.GameObjects.Arc[] = []
+  private enemies: EnemySprite[] = []
   private healPacks: Phaser.GameObjects.Arc[] = []
   private magnetPickups: Phaser.GameObjects.Arc[] = []
   private spawnBuffer = 60
@@ -427,7 +427,7 @@ export class HordesScene extends Phaser.Scene {
         this.positionEnemyHpText(enemy, mob)
     }
 
-    private positionEnemyHpText(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
+    private positionEnemyHpText(enemy: EnemySprite, mob: SimpleMob) {
         const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
         if (!hpText || !hpText.active) return
         hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
@@ -470,7 +470,7 @@ export class HordesScene extends Phaser.Scene {
     /**
      * Applies damage from an enemy to the hero with per-enemy cooldown and restarts on death.
      */
-    private handleHeroHit(enemy: Phaser.GameObjects.Arc, mob: SimpleMob) {
+    private handleHeroHit(enemy: EnemySprite, mob: SimpleMob) {
         if (this.hero.hp <= 0) return
 
         const now = this.time.now
