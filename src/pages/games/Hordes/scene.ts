@@ -290,6 +290,9 @@ export class HordesScene extends Phaser.Scene {
             const speed = mob.speed
             enemy.x += (dx / dist) * speed * dt
             enemy.y += (dy / dist) * speed * dt
+            if (dx !== 0) {
+                enemy.setFlipX(dx < 0)
+            }
             this.positionEnemyHpText(enemy, mob)
 
             if (dist < heroRadius + enemyRadius) {
