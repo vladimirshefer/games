@@ -9,3 +9,6 @@ export const ENEMY_SPRITESHEET_COLUMNS = 49
 
 export const BOMB_FRAME_INDEX =
   9 * ENEMY_SPRITESHEET_COLUMNS + 45 // 10th row (0-indexed), 4th from the right
+
+export const HEAL_POTION_FRAME_INDEX =
+  13 * ENEMY_SPRITESHEET_COLUMNS + 32 // 14th row (0-indexed), 17th from the right

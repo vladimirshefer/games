@@ -29,7 +29,8 @@ import {
     ENEMY_SPRITESHEET_FRAME_WIDTH,
     ENEMY_SPRITESHEET_KEY,
     ENEMY_SPRITESHEET_SPACING,
-    ENEMY_SPRITESHEET_URL
+    ENEMY_SPRITESHEET_URL,
+    HEAL_POTION_FRAME_INDEX
 } from "./sprite.ts";
 
 const MOB_MAX_DAMAGE = 16;
@@ -63,7 +64,7 @@ export class HordesScene extends Phaser.Scene {
   private hero!: HeroState
   private inputController!: InputController
   private enemies: EnemySprite[] = []
-  private healPacks: Phaser.GameObjects.Arc[] = []
+  private healPacks: Phaser.GameObjects.Image[] = []
   private magnetPickups: Phaser.GameObjects.Arc[] = []
   private spawnBuffer = 60
   private cleanupPadding = 260
@@ -462,8 +463,10 @@ export class HordesScene extends Phaser.Scene {
         const x = Phaser.Math.FloatBetween(view.left + margin, view.right - margin)
         const y = Phaser.Math.FloatBetween(view.top + margin, view.bottom - margin)
 
-        const pack = this.add.circle(x, y, packRadius, 0x4fc3f7)
-        pack.setStrokeStyle(2, 0xffffff, 0.8)
+        const diameter = packRadius * 2
+        const pack = this.add.image(x, y, ENEMY_SPRITESHEET_KEY, HEAL_POTION_FRAME_INDEX)
+        pack.setDisplaySize(diameter, diameter)
+        pack.setTint(0x76ff03)
         pack.setData('radius', packRadius)
         this.healPacks.push(pack)
     }
@@ -511,7 +514,7 @@ export class HordesScene extends Phaser.Scene {
     /**
      * Applies a heal pack effect and removes it from the scene.
      */
-    private collectHealPack(pack: Phaser.GameObjects.Arc) {
+    private collectHealPack(pack: Phaser.GameObjects.Image) {
         const healAmount = 30
         healHero(this.hero, healAmount)
         this.cameras.main.flash(100, 80, 180, 255, false)
