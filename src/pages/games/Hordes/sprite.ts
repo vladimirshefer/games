@@ -16,3 +16,8 @@ export const HEAL_POTION_FRAME_INDEX =
 // Used instead of magnet icon
 export const PORTAL_OPENS_FRAME_INDEX =
   2 * ENEMY_SPRITESHEET_COLUMNS + 45 // 3rd row (0-indexed), 4th from the right
+
+export const MOB_WALK_FRAME_INDICES = [
+  7 * ENEMY_SPRITESHEET_COLUMNS + 18, // 8th row (0-indexed), 19th column
+  7 * ENEMY_SPRITESHEET_COLUMNS + 19, // 8th row (0-indexed), 20th column
+]
