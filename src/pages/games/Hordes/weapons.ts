@@ -7,6 +7,10 @@ export interface Weapon {
     pierce: number
 }
 
+export interface SwordWeapon extends Weapon {
+    sectorAngle: number
+}
+
 export const PISTOL_WEAPON: Weapon = {damage: 10, cooldown: 0.3, pierce: 1, area: 6}
 export const PISTOL_MK2_WEAPON: Weapon = {damage: 20, cooldown: 0.28, pierce: 2, area: 8}
 export const PISTOL_MK3_WEAPON: Weapon = {damage: 30, cooldown: 0.26, pierce: 3, area: 9}
@@ -22,6 +26,12 @@ export const AURA_MK5_WEAPON: Weapon = {damage: 50, cooldown: 0.35, pierce: 1, a
 export const BOMB_WEAPON: Weapon = {cooldown: 5, damage: 40, area: 40, pierce: 0}
 export const BOMB_MK2_WEAPON: Weapon = {cooldown: 3, damage: 60, area: 60, pierce: 0}
 export const BOMB_MK3_WEAPON: Weapon = {cooldown: 2, damage: 80, area: 100, pierce: 0}
+
+export const SWORD_WEAPON: SwordWeapon = {cooldown: 3, damage: 10, area: 50, pierce: 0, sectorAngle: 120}
+export const SWORD_MK2_WEAPON: SwordWeapon = {cooldown: 2.5, damage: 20, area: 60, pierce: 0, sectorAngle: 130}
+export const SWORD_MK3_WEAPON: SwordWeapon = {cooldown: 2.2, damage: 30, area: 70, pierce: 0, sectorAngle: 140}
+export const SWORD_MK4_WEAPON: SwordWeapon = {cooldown: 2.0, damage: 40, area: 80, pierce: 0, sectorAngle: 150}
+export const SWORD_MK5_WEAPON: SwordWeapon = {cooldown: 1.8, damage: 50, area: 90, pierce: 0, sectorAngle: 160}
 
 export interface UpgradeOption {
     id: string
@@ -100,6 +110,35 @@ export const upgrades: UpgradeOption[] = [
         label: 'Bombs Mk III',
         description: 'Maximum bomb power and frequency.',
         requires: ['bombMk2'],
+    },
+    {
+        id: 'sword',
+        label: 'Equip Sword',
+        description: 'Unlock a melee sword slash in your movement direction.',
+    },
+    {
+        id: 'swordMk2',
+        label: 'Sword Mk II',
+        description: 'Sword swings faster and further.',
+        requires: ['sword'],
+    },
+    {
+        id: 'swordMk3',
+        label: 'Sword Mk III',
+        description: 'More sword damage with a wider arc.',
+        requires: ['swordMk2'],
+    },
+    {
+        id: 'swordMk4',
+        label: 'Sword Mk IV',
+        description: 'Sword reaches farther and swings quicker.',
+        requires: ['swordMk3'],
+    },
+    {
+        id: 'swordMk5',
+        label: 'Sword Mk V',
+        description: 'Maximum sword damage, arc, and speed.',
+        requires: ['swordMk4'],
     },
     {
         id: 'area1',

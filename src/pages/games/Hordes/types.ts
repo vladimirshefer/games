@@ -20,6 +20,7 @@ export interface HeroState {
   hasAura: boolean,
   upgrades: string[],
   weaponIds: string[],
+  direction: Phaser.Math.Vector2
 }
 
 export interface SimpleMob {

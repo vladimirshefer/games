@@ -30,6 +30,7 @@ export class EnemyManager {
     const frameIndex = MOB_WALK_FRAME_INDICES[0] ?? 0
 
     const enemy = this.scene.add.sprite(x, y, ENEMY_SPRITESHEET_KEY, frameIndex)
+    enemy.setOrigin(0.5)
     enemy.setDisplaySize(mob.size, mob.size)
     enemy.setTint(color)
     enemy.setDepth(0.1)

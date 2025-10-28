@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
-import type {Weapon} from "./weapons.ts";
+import type {Weapon, SwordWeapon} from "./weapons.ts";
 import {BOMB_FRAME_INDEX, ENEMY_SPRITESHEET_KEY} from "./sprite.ts";
 import {PICKUP_DEFAULT_SIZE} from "./scene.ts";
 
@@ -9,6 +9,7 @@ export interface CombatConfig {
   bulletWeapon: Weapon
   auraWeapon?: Weapon | null
   bombWeapon?: Weapon | null
+  swordWeapon?: SwordWeapon | null
   enemyBaseHp: number
 }
 
@@ -23,6 +24,7 @@ export class CombatSystem {
   private bullets: Bullet[] = []
   private shootElapsed = 0
   private bombElapsed = 0
+  private swordElapsed = 0
   private scene: Phaser.Scene
   private config: CombatConfig
   private context: CombatContext
@@ -43,6 +45,7 @@ export class CombatSystem {
     this.bullets = []
     this.shootElapsed = 0
     this.bombElapsed = 0
+    this.swordElapsed = 0
     this.bombs.forEach((bomb) => bomb.sprite.destroy())
     this.bombs = []
   }
@@ -95,6 +98,7 @@ export class CombatSystem {
     })
 
     this.updateBombs(dt, enemies)
+    this.updateSword(dt, enemies)
 
     if (this.context.hero.hp > 0) {
       this.tickAutoFire(dt)
@@ -209,6 +213,11 @@ export class CombatSystem {
     this.bombElapsed = 0
   }
 
+  setSwordWeapon(weapon: SwordWeapon | null | undefined) {
+    this.config.swordWeapon = weapon ?? null
+    this.swordElapsed = 0
+  }
+
   private findNearestEnemy() {
     const { sprite } = this.context.hero
     const enemies = this.context.getEnemies()
@@ -302,5 +311,62 @@ export class CombatSystem {
     }
 
     sprite.destroy()
+  }
+
+  private updateSword(dt: number, enemies: EnemySprite[]) {
+    const sword = this.config.swordWeapon ?? null
+    if (!sword) return
+
+    const hero = this.context.hero
+    if (hero.hp <= 0) return
+
+    this.swordElapsed += dt
+    if (this.swordElapsed < sword.cooldown) return
+
+    const direction = hero.direction
+    if (!direction || direction.lengthSq() < 0.0001) return
+
+    this.swordElapsed = 0
+    const origin = hero.sprite
+    const normalized = direction.clone().normalize()
+    const swingAngleDeg = Phaser.Math.RadToDeg(Math.atan2(normalized.y, normalized.x))
+    const halfArc = sword.sectorAngle / 2
+
+    const gfx = this.scene.add.graphics({ x: origin.x, y: origin.y })
+    gfx.setDepth(-0.3)
+    gfx.fillStyle(0xffd54f, 0.35)
+    gfx.beginPath()
+    gfx.slice(
+      0,
+      0,
+      sword.area,
+      Phaser.Math.DegToRad(swingAngleDeg - halfArc),
+      Phaser.Math.DegToRad(swingAngleDeg + halfArc),
+      false,
+    )
+    gfx.fillPath()
+    this.scene.tweens.add({
+      targets: gfx,
+      alpha: 0,
+      scale: 1.05,
+      duration: 160,
+      onComplete: () => gfx.destroy(),
+    })
+
+    for (const enemy of enemies) {
+      const mob = enemy.getData('mob') as SimpleMob | undefined
+      if (!enemy.active || !mob) continue
+
+      const dx = enemy.x - origin.x
+      const dy = enemy.y - origin.y
+      const distance = Math.hypot(dx, dy)
+      if (distance > sword.area + mob.size / 2) continue
+
+      const enemyAngle = Phaser.Math.RadToDeg(Math.atan2(dy, dx))
+      const diff = Phaser.Math.Angle.ShortestBetween(swingAngleDeg, enemyAngle)
+      if (Math.abs(diff) > halfArc) continue
+
+      this.damageEnemy(enemy, sword.damage, mob)
+    }
   }
 }

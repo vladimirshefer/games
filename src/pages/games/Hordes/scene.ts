@@ -18,9 +18,15 @@ import {
   PISTOL_MK4_WEAPON,
   PISTOL_MK5_WEAPON,
   PISTOL_WEAPON,
+  SWORD_MK2_WEAPON,
+  SWORD_MK3_WEAPON,
+  SWORD_MK4_WEAPON,
+  SWORD_MK5_WEAPON,
+  SWORD_WEAPON,
   type UpgradeOption,
   upgrades,
   type Weapon,
+  type SwordWeapon,
 } from "./weapons.ts";
 import {XpCrystalManager} from "./xpCrystals.ts";
 import {EnemyManager} from "./enemies.ts";
@@ -163,6 +169,7 @@ export class HordesScene extends Phaser.Scene {
                 bulletWeapon: PISTOL_WEAPON,
                 auraWeapon: null,
                 bombWeapon: null,
+                swordWeapon: null,
                 enemyBaseHp: DEFAULT_MOB.health,
             },
             {
@@ -697,6 +704,26 @@ export class HordesScene extends Phaser.Scene {
                 this.handleBombUpgrade(BOMB_MK3_WEAPON, 'Bombs Mk III unleashed!')
                 break
             }
+            case 'sword': {
+                this.handleSwordUpgrade(SWORD_WEAPON, 'Sword technique mastered!')
+                break
+            }
+            case 'swordMk2': {
+                this.handleSwordUpgrade(SWORD_MK2_WEAPON, 'Sword Mk II swings wider!')
+                break
+            }
+            case 'swordMk3': {
+                this.handleSwordUpgrade(SWORD_MK3_WEAPON, 'Sword Mk III hits harder!')
+                break
+            }
+            case 'swordMk4': {
+                this.handleSwordUpgrade(SWORD_MK4_WEAPON, 'Sword Mk IV extends reach!')
+                break
+            }
+            case 'swordMk5': {
+                this.handleSwordUpgrade(SWORD_MK5_WEAPON, 'Sword Mk V slices everything!')
+                break
+            }
             default:
                 break
         }
@@ -726,6 +753,14 @@ export class HordesScene extends Phaser.Scene {
             this.hero.weaponIds.push('bomb')
         }
         this.combat.setBombWeapon(weapon)
+        this.showWeaponUpgrade(message)
+    }
+
+    private handleSwordUpgrade(weapon: SwordWeapon, message: string) {
+        if (!this.hero.weaponIds.includes('sword')) {
+            this.hero.weaponIds.push('sword')
+        }
+        this.combat.setSwordWeapon(weapon)
         this.showWeaponUpgrade(message)
     }
 
@@ -864,6 +899,7 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private ensureEnemyWalkAnimation() {
+        if (!this.textures.exists(ENEMY_SPRITESHEET_KEY)) return
         if (this.anims.exists(ENEMY_WALK_ANIMATION_KEY)) return
         const frames = MOB_WALK_FRAME_INDICES.map((frame) => ({
             key: ENEMY_SPRITESHEET_KEY,

@@ -23,6 +23,7 @@ export function createHero(scene: Phaser.Scene): HeroState {
     hasAura: false,
     upgrades: ["pistolMk1"],
     weaponIds: ["pistol"],
+    direction: new Phaser.Math.Vector2(0, 0),
   }
 }
 
@@ -31,12 +32,14 @@ export function resetHeroState(hero: HeroState) {
   hero.aura.setPosition(0, 0)
   hero.aura.setVisible(hero.weaponIds.includes('aura'))
   hero.hp = hero.maxHp
+  hero.direction.set(0, 0)
 }
 
 export function moveHero(hero: HeroState, direction: Phaser.Math.Vector2, speed: number, dt: number) {
   hero.sprite.x += direction.x * speed * dt
   hero.sprite.y += direction.y * speed * dt
   hero.aura.setPosition(hero.sprite.x, hero.sprite.y)
+  hero.direction.copy(direction)
 }
 
 export function damageHero(hero: HeroState, amount: number) {
