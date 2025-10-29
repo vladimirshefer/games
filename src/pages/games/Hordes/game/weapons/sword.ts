@@ -1,24 +1,25 @@
 import type {EnemySprite, SimpleMob} from "../../types.ts";
 import Phaser from "phaser";
-import type {CombatConfig, CombatContext} from "../../combat.ts";
+import type {CombatContext} from "../../combat.ts";
+import type {SwordWeapon} from "../../weapons.ts";
 
 export class Sword {
     swordElapsed = 0
     private activeSwordSwing: ActiveSwordSwing | null = null
     private scene: Phaser.Scene;
-    private config: CombatConfig;
     private context: CombatContext;
     private damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
+    private stats: SwordWeapon;
 
     constructor(
         scene: Phaser.Scene,
-        config: CombatConfig,
         context: CombatContext,
+        stats: SwordWeapon,
         damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
     ) {
         this.scene = scene
-        this.config = config
         this.context = context
+        this.stats = stats
         this.damageEnemy = damageEnemy
     }
 
@@ -27,16 +28,13 @@ export class Sword {
             this.updateActiveSwordSwing(dt, enemies)
         }
 
-        const sword = this.config.swordWeapon ?? null
-        if (!sword) return
-
         const hero = this.context.hero
         if (hero.hp <= 0) return
         if (!hero.weaponIds.includes('sword')) return
 
         this.swordElapsed += dt
         if (this.activeSwordSwing) return
-        if (this.swordElapsed < sword.cooldown) return
+        if (this.swordElapsed < this.stats.cooldown) return
 
         const direction = hero.direction
         if (!direction || direction.lengthSq() < 0.0001) return
@@ -45,7 +43,7 @@ export class Sword {
         const origin = hero.sprite
         const normalized = direction.clone().normalize()
         const swingAngleDeg = Phaser.Math.RadToDeg(Math.atan2(normalized.y, normalized.x))
-        const halfArc = sword.sectorAngle / 2
+        const halfArc = this.stats.sectorAngle / 2
 
         const gfx = this.scene.add.graphics({x: origin.x, y: origin.y})
         const followHero = () => {
@@ -73,7 +71,7 @@ export class Sword {
         gfx.slice(
             0,
             0,
-            sword.area,
+            this.stats.area,
             Phaser.Math.DegToRad(swingAngleDeg - halfArc),
             Phaser.Math.DegToRad(swingAngleDeg + halfArc),
             false,
@@ -91,8 +89,8 @@ export class Sword {
             gfx,
             angleDeg: swingAngleDeg,
             halfArc,
-            radius: sword.area,
-            damage: sword.damage,
+            radius: this.stats.area,
+            damage: this.stats.damage,
             remaining: 0.5,
             hitEnemies: new Set(),
             cleanup,

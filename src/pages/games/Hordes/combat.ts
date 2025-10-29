@@ -28,7 +28,7 @@ export class CombatSystem {
   private readonly scene: Phaser.Scene
   private readonly config: CombatConfig
   private readonly context: CombatContext
-  private readonly sword: Sword
+  private sword: Sword | null = null
 
   private bombs: {
     sprite: Phaser.GameObjects.Image
@@ -40,7 +40,7 @@ export class CombatSystem {
     this.scene = scene
     this.config = config
     this.context = context
-    this.sword = new Sword(this.scene, this.config, this.context, this.damageEnemy);
+    this.setSwordWeapon(this.config.swordWeapon ?? null)
   }
 
   reset() {
@@ -48,7 +48,7 @@ export class CombatSystem {
     this.bullets = []
     this.shootElapsed = 0
     this.bombElapsed = 0
-    this.sword.reset()
+    this.sword?.reset()
     this.bombs.forEach((bomb) => bomb.sprite.destroy())
     this.bombs = []
   }
@@ -101,7 +101,7 @@ export class CombatSystem {
     })
 
     this.updateBombs(dt, enemies)
-    this.sword.update(dt, enemies)
+    this.sword?.update(dt, enemies)
 
     if (this.context.hero.hp > 0) {
       this.tickAutoFire(dt)
@@ -218,8 +218,12 @@ export class CombatSystem {
   }
 
   setSwordWeapon(weapon: SwordWeapon | null) {
+    this.sword?.reset()
     this.config.swordWeapon = weapon
-    this.sword.reset()
+    if (weapon) {
+      this.sword = new Sword(this.scene, this.context, weapon, this.damageEnemy)
+    }
+    this.sword?.reset()
   }
 
   private findNearestEnemy() {
