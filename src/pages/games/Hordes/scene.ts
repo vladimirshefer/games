@@ -253,16 +253,10 @@ export class HordesScene extends Phaser.Scene {
         this.enemies = this.enemies.filter((enemy) => {
             const mob = enemy.getData('mob') as SimpleMob | undefined
             if (!enemy.active || !mob) return false
-
             const enemyRadius = mob.size / 2
             const dx = heroX - enemy.x
             const dy = heroY - enemy.y
             const dist = Math.hypot(dx, dy) || 0.001
-
-            if (this.combat.applyAuraDamage(enemy, dist, mob)) {
-                return false
-            }
-
             const speed = mob.speed
             enemy.x += (dx / dist) * speed * dt
             enemy.y += (dy / dist) * speed * dt

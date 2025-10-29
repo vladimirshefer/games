@@ -3,6 +3,7 @@ import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
 import type {SwordWeapon, Weapon} from "./weapons.ts";
 import {Sword} from "./game/weapons/sword.ts";
 import {Bomb} from "./game/weapons/bomb.ts";
+import {Aura} from "./game/weapons/aura.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
@@ -27,6 +28,7 @@ export class CombatSystem {
   private readonly context: CombatContext
   private sword: Sword | null = null
   private bomb: Bomb | null = null
+  private aura: Aura | null = null
 
   constructor(scene: Phaser.Scene, config: CombatConfig, context: CombatContext) {
     this.scene = scene
@@ -34,6 +36,7 @@ export class CombatSystem {
     this.context = context
     this.setSwordWeapon(this.config.swordWeapon ?? null)
     this.setBombWeapon(this.config.bombWeapon ?? null)
+    this.setAuraWeapon(this.config.auraWeapon ?? null)
   }
 
   reset() {
@@ -42,6 +45,7 @@ export class CombatSystem {
     this.shootElapsed = 0
     this.sword?.reset()
     this.bomb?.reset()
+    this.aura?.reset()
   }
 
   update(dt: number, worldView: Phaser.Geom.Rectangle, cleanupPadding: number) {
@@ -93,6 +97,7 @@ export class CombatSystem {
 
     this.bomb?.update(dt, enemies)
     this.sword?.update(dt, enemies)
+    this.aura?.update(dt, enemies)
 
     if (this.context.hero.hp > 0) {
       this.tickAutoFire(dt)
@@ -132,44 +137,6 @@ export class CombatSystem {
     })
   }
 
-  applyAuraDamage(
-    enemy: EnemySprite,
-    distanceToHero: number,
-    mob: SimpleMob,
-  ): boolean {
-    const auraWeapon = this.config.auraWeapon
-    if (!auraWeapon) return false
-
-    if (distanceToHero > auraWeapon.area + mob.size / 2) return false
-
-    const now = this.scene.time.now
-    const lastTick = enemy.getData('lastAuraTick') as number | undefined
-    const cooldownMs = auraWeapon.cooldown * 1000
-    if (lastTick && now - lastTick < cooldownMs) {
-      return false
-    }
-
-    enemy.setData('lastAuraTick', now)
-    const killed = this.damageEnemy(enemy, auraWeapon.damage, mob)
-    if (!killed) {
-      const heroSprite = this.context.hero.sprite
-      const dx = enemy.x - heroSprite.x
-      const dy = enemy.y - heroSprite.y
-      const length = Math.hypot(dx, dy) || 1
-      const knockback =
-        (enemy.getData('auraKnockback') as number | undefined) ?? 40
-      const nextKnockback = Math.max(knockback / 2, 5)
-      enemy.setData('auraKnockback', nextKnockback)
-      enemy.x += (dx / length) * knockback
-      enemy.y += (dy / length) * knockback
-
-      const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
-      if (hpText && hpText.active) {
-        hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
-      }
-    }
-    return killed
-  }
 
   private damageEnemy(enemy: EnemySprite, amount: number, mob: SimpleMob) {
     if (!enemy.active) return false
@@ -200,7 +167,14 @@ export class CombatSystem {
   }
 
   setAuraWeapon(weapon: Weapon | null | undefined) {
+    this.aura?.reset()
     this.config.auraWeapon = weapon ?? null
+    if (weapon) {
+      this.aura = new Aura(this.scene, this.context, weapon, this.damageEnemy)
+    } else {
+      this.aura = null
+    }
+    this.aura?.reset()
   }
 
   setBombWeapon(weapon: Weapon | null) {
