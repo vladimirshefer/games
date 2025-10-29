@@ -7,7 +7,6 @@ import {Aura} from "./game/weapons/aura.ts";
 import {Pistol} from "./game/weapons/pistol.ts";
 
 export interface CombatConfig {
-  bulletSpeed: number
   pistolWeapon: Weapon
   auraWeapon?: Weapon | null
   bombWeapon?: Weapon | null
