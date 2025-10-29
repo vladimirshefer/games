@@ -6,18 +6,17 @@ import {createInputController} from './input'
 import type {EnemySprite, HeroState, SimpleMob} from './types'
 import {XpCrystalManager} from "./xpCrystals.ts";
 import {EnemyManager} from "./enemies.ts";
-import {DEFAULT_MOB, WaveManager} from "./waves.ts";
+import {WaveManager} from "./waves.ts";
 import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
-import {PISTOL_WEAPON} from "./weapons.ts";
 import {
     ENEMY_SPRITESHEET_FRAME_HEIGHT,
     ENEMY_SPRITESHEET_FRAME_WIDTH,
     ENEMY_SPRITESHEET_KEY,
     ENEMY_SPRITESHEET_SPACING,
     ENEMY_SPRITESHEET_URL,
-    MOB_WALK_FRAME_INDICES,
-    ENEMY_WALK_ANIMATION_KEY
+    ENEMY_WALK_ANIMATION_KEY,
+    MOB_WALK_FRAME_INDICES
 } from "./sprite.ts";
 
 interface ExitStats {
@@ -138,11 +137,10 @@ export class HordesScene extends Phaser.Scene {
         this.combat = new CombatSystem(
             this,
             {
-                pistolWeapon: PISTOL_WEAPON,
+                pistolWeapon: null,
                 auraWeapon: null,
                 bombWeapon: null,
                 swordWeapon: null,
-                enemyBaseHp: DEFAULT_MOB.health,
             },
             {
                 hero: this.hero,

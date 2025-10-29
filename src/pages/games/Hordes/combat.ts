@@ -7,11 +7,10 @@ import {Aura} from "./game/weapons/aura.ts";
 import {Pistol} from "./game/weapons/pistol.ts";
 
 export interface CombatConfig {
-  pistolWeapon: Weapon
+  pistolWeapon?: Weapon | null
   auraWeapon?: Weapon | null
   bombWeapon?: Weapon | null
   swordWeapon?: SwordWeapon | null
-  enemyBaseHp: number
 }
 
 export interface CombatContext {
@@ -77,7 +76,7 @@ export class CombatSystem {
     return false
   }
 
-  setPistolWeapon(weapon: Weapon) {
+  setPistolWeapon(weapon: Weapon | null) {
     this.pistol?.reset()
     this.config.pistolWeapon = weapon
     if (weapon) {
@@ -88,7 +87,7 @@ export class CombatSystem {
     this.pistol?.reset()
   }
 
-  setAuraWeapon(weapon: Weapon | null | undefined) {
+  setAuraWeapon(weapon: Weapon | null) {
     this.aura?.reset()
     this.config.auraWeapon = weapon ?? null
     if (weapon) {
