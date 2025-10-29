@@ -263,7 +263,6 @@ export class CombatSystem {
       }
 
       const progress = 1 - timeRemaining / fuseMs
-      bomb.sprite.setScale(1 + progress * 0.4)
       bomb.sprite.setAlpha(0.6 + Math.sin(progress * Math.PI * 4) * 0.2)
       return true
     })

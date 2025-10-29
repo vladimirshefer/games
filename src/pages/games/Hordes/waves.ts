@@ -94,13 +94,13 @@ export class WaveManager {
   }
 
   private spawnEnemy(edge: number, hero: HeroState) {
-    const powerMultiplier = 1 + this.wave / 10
+    const powerMultiplier = 1 + this.wave / 20
     const mob = this.generateMobStats(powerMultiplier)
     const mobDamageRelative = (mob.damage / MOB_MAX_DAMAGE) * powerMultiplier
     const color = grbToHex(
-      0.7 + mobDamageRelative / 3,
+      0.5 + mobDamageRelative / 2,
       0.4,
-      0.7 + (1 - mobDamageRelative) / 3,
+      0.5 + (1 - mobDamageRelative) / 2,
     )
 
     const camera = this.scene.cameras.main
@@ -117,8 +117,8 @@ export class WaveManager {
   }
 
   private generateMobStats(powerMultiplier: number): SimpleMob {
-    const MAX_SPEED = HERO_SPEED + 0.9
-    const MAX_HEALTH = 100 * powerMultiplier
+    const MAX_SPEED = HERO_SPEED * 0.5
+    const MAX_HEALTH = 20 * powerMultiplier
     const MAX_DAMAGE = MOB_MAX_DAMAGE * powerMultiplier
     const minRelativeDamage = 0.1
     const minRelativeHealth = 0.1
