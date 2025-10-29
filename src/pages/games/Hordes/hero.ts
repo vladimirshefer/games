@@ -21,8 +21,8 @@ export function createHero(scene: Phaser.Scene): HeroState {
     maxHp: HERO_BASE_HP,
     hp: HERO_BASE_HP,
     hasAura: false,
-    upgrades: ["pistolMk1"],
-    weaponIds: ["pistol"],
+    upgrades: [],
+    weaponIds: [],
     direction: new Phaser.Math.Vector2(0, 0),
   }
 }

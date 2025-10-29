@@ -58,6 +58,8 @@ const DEFAULT_MOB: SimpleMob = {
     size: 20,
 }
 
+const STARTER_UPGRADES = new Set(['pistol', 'sword', 'aura', 'bomb'])
+
 function grbToHex(r1: number, g1: number, b1: number) {
     const r = 0xff * Math.min(Math.max(r1, 0.0), 1.0);
     const g = 0xff * Math.min(Math.max(g1, 0.0), 1.0);
@@ -80,9 +82,9 @@ export class HordesScene extends Phaser.Scene {
   private cleanupPadding = 260
     private background!: Phaser.GameObjects.TileSprite
     private worldBounds = 20000
-    private infoText!: Phaser.GameObjects.Text
-    private kills = 0
-    private wave = 0
+  private infoText!: Phaser.GameObjects.Text
+  private kills = 0
+  private wave = 0
   private combat!: CombatSystem
   private xpManager!: XpCrystalManager
   private enemyManager!: EnemyManager
@@ -95,6 +97,7 @@ export class HordesScene extends Phaser.Scene {
     private pendingLevelUps = 0
   private upgradeOverlay: Phaser.GameObjects.GameObject[] = []
   private upgradeInProgress = false
+  private wavesInitialized = false
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
@@ -150,6 +153,7 @@ export class HordesScene extends Phaser.Scene {
         this.xpManager = new XpCrystalManager(this, this.cleanupPadding)
         this.enemyManager = new EnemyManager(this, this.enemies)
         this.ensureEnemyWalkAnimation()
+        this.wavesInitialized = false
         this.kills = 0
         this.wave = 0
         this.totalXp = 0
@@ -236,28 +240,14 @@ export class HordesScene extends Phaser.Scene {
             .setInteractive({useHandCursor: true})
         this.exitButton.on('pointerdown', () => this.handleExit())
 
-        this.spawnWave()
-        this.time.addEvent({
-            delay: 5000,
-            callback: this.spawnWave,
-            callbackScope: this,
-            loop: true,
-            startAt: 0,
-        })
-        this.time.addEvent({
-            delay: 10000,
-            callback: this.spawnHealPack,
-            callbackScope: this,
-            loop: true,
-            startAt: 4000,
-        })
-        this.time.addEvent({
-            delay: 60000, // every minute
-            callback: this.spawnMagnetPickup,
-            callbackScope: this,
-            loop: true,
-            startAt: 0,
-        })
+        if (this.hero.weaponIds.length === 0) {
+            this.pendingLevelUps = Math.max(this.pendingLevelUps, 1)
+            this.tryOpenUpgradeMenu()
+        } else {
+            this.maybeStartWaves()
+        }
+
+        // Wave timers start after the player picks a starting weapon.
     }
 
     /**
@@ -375,6 +365,40 @@ export class HordesScene extends Phaser.Scene {
 
         this.enemyManager.resolveOverlaps()
 
+    }
+
+    private maybeStartWaves() {
+        if (this.wavesInitialized) return
+        if (this.hero.weaponIds.length === 0) return
+        this.initializeWaveTimers()
+    }
+
+    private initializeWaveTimers() {
+        if (this.wavesInitialized) return
+        this.wavesInitialized = true
+
+        this.spawnWave()
+        this.time.addEvent({
+            delay: 5000,
+            callback: this.spawnWave,
+            callbackScope: this,
+            loop: true,
+            startAt: 0,
+        })
+        this.time.addEvent({
+            delay: 10000,
+            callback: this.spawnHealPack,
+            callbackScope: this,
+            loop: true,
+            startAt: 4000,
+        })
+        this.time.addEvent({
+            delay: 60000, // every minute
+            callback: this.spawnMagnetPickup,
+            callbackScope: this,
+            loop: true,
+            startAt: 0,
+        })
     }
 
     /**
@@ -563,22 +587,25 @@ export class HordesScene extends Phaser.Scene {
         if (this.pendingLevelUps <= 0) return
 
         const options = this.getAvailableUpgrades()
-        this.pendingLevelUps -= 1
-
         if (!options.length) {
-            this.tryOpenUpgradeMenu()
+            this.pendingLevelUps = 0
             return
         }
 
+        this.pendingLevelUps -= 1
         this.upgradeInProgress = true
         this.openUpgradeMenu(options)
     }
 
     private getAvailableUpgrades(): UpgradeOption[] {
+        const needsStarter = this.hero.weaponIds.length === 0
         return upgrades.filter(option => {
             if (this.hero.upgrades.includes(option.id)) return false
             if (option.requires && !option.requires.every(req => this.hero.upgrades.includes(req))) {
                 return false
+            }
+            if (needsStarter) {
+                return STARTER_UPGRADES.has(option.id)
             }
             return true
         })
@@ -609,8 +636,10 @@ export class HordesScene extends Phaser.Scene {
             .setStrokeStyle(2, 0xffeb3b, 0.5)
         this.upgradeOverlay.push(panel)
 
+        const needsStarter = this.hero.weaponIds.length === 0
+        const titleText = needsStarter ? 'Choose Starting Weapon' : 'Choose Upgrade'
         const title = this.add
-            .text(centerX, centerY - panelHeight / 2 + 40, 'Choose Upgrade', {
+            .text(centerX, centerY - panelHeight / 2 + 40, titleText, {
                 color: '#ffe082',
                 fontFamily: 'monospace',
                 fontSize: '22px',
@@ -674,6 +703,10 @@ export class HordesScene extends Phaser.Scene {
             }
             case 'auraMk5': {
                 this.handleAuraUpgrade(AURA_MK5_WEAPON, 'Aura Mk V unleashed!')
+                break
+            }
+            case 'pistol': {
+                this.handlePistolUpgrade(PISTOL_WEAPON, 'Pistol ready!')
                 break
             }
             case 'pistolMk2': {
@@ -744,6 +777,9 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private handlePistolUpgrade(weapon: Weapon, message: string) {
+        if (!this.hero.weaponIds.includes('pistol')) {
+            this.hero.weaponIds.push('pistol')
+        }
         this.combat.setBulletWeapon(weapon)
         this.showWeaponUpgrade(message)
     }
@@ -769,6 +805,9 @@ export class HordesScene extends Phaser.Scene {
     this.resumeFromUpgrade()
     this.upgradeInProgress = false
     this.tryOpenUpgradeMenu()
+    if (!this.upgradeInProgress) {
+      this.maybeStartWaves()
+    }
   }
 
   private handleExit() {

@@ -71,10 +71,15 @@ export const upgrades: UpgradeOption[] = [
         requires: ['auraMk4'],
     },
     {
+        id: 'pistol',
+        label: 'Equip Pistol',
+        description: 'Basic ranged damage with moderate fire rate.',
+    },
+    {
         id: 'pistolMk2',
         label: 'Pistol Mk II',
         description: 'Increase bullet damage and pierce.',
-        requires: ['pistolMk1'],
+        requires: ['pistol'],
     },
     {
         id: 'pistolMk3',

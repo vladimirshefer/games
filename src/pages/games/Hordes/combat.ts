@@ -108,6 +108,7 @@ export class CombatSystem {
   tickAutoFire(dt: number) {
     const enemies = this.context.getEnemies()
     if (!enemies.some((enemy) => enemy.active)) return
+    if (!this.context.hero.weaponIds.includes('pistol')) return
 
     this.shootElapsed += dt
     if (this.shootElapsed < this.config.bulletWeapon.cooldown) return
@@ -319,6 +320,7 @@ export class CombatSystem {
 
     const hero = this.context.hero
     if (hero.hp <= 0) return
+    if (!hero.weaponIds.includes('sword')) return
 
     this.swordElapsed += dt
     if (this.swordElapsed < sword.cooldown) return
