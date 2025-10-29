@@ -139,7 +139,7 @@ export class HordesScene extends Phaser.Scene {
             this,
             {
                 bulletSpeed: 480,
-                bulletWeapon: PISTOL_WEAPON,
+                pistolWeapon: PISTOL_WEAPON,
                 auraWeapon: null,
                 bombWeapon: null,
                 swordWeapon: null,

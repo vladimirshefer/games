@@ -8,7 +8,7 @@ import {Pistol} from "./game/weapons/pistol.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
-  bulletWeapon: Weapon
+  pistolWeapon: Weapon
   auraWeapon?: Weapon | null
   bombWeapon?: Weapon | null
   swordWeapon?: SwordWeapon | null
@@ -37,7 +37,7 @@ export class CombatSystem {
     this.setSwordWeapon(this.config.swordWeapon ?? null)
     this.setBombWeapon(this.config.bombWeapon ?? null)
     this.setAuraWeapon(this.config.auraWeapon ?? null)
-    this.setPistolWeapon(this.config.bulletWeapon ?? null)
+    this.setPistolWeapon(this.config.pistolWeapon ?? null)
   }
 
   reset() {
@@ -80,7 +80,7 @@ export class CombatSystem {
 
   setPistolWeapon(weapon: Weapon) {
     this.pistol?.reset()
-    this.config.bulletWeapon = weapon
+    this.config.pistolWeapon = weapon
     if (weapon) {
       this.pistol = new Pistol(this.scene, this.context, weapon, this.damageEnemy)
     } else {
