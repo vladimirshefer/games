@@ -1,9 +1,10 @@
 import Phaser from 'phaser'
-import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
+import type {EnemySprite, HeroState, SimpleMob} from './types'
 import type {SwordWeapon, Weapon} from "./weapons.ts";
 import {Sword} from "./game/weapons/sword.ts";
 import {Bomb} from "./game/weapons/bomb.ts";
 import {Aura} from "./game/weapons/aura.ts";
+import {Pistol} from "./game/weapons/pistol.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
@@ -21,14 +22,13 @@ export interface CombatContext {
 }
 
 export class CombatSystem {
-  private bullets: Bullet[] = []
-  private shootElapsed = 0
   private readonly scene: Phaser.Scene
   private readonly config: CombatConfig
   private readonly context: CombatContext
   private sword: Sword | null = null
   private bomb: Bomb | null = null
   private aura: Aura | null = null
+  private pistol: Pistol | null = null
 
   constructor(scene: Phaser.Scene, config: CombatConfig, context: CombatContext) {
     this.scene = scene
@@ -37,106 +37,23 @@ export class CombatSystem {
     this.setSwordWeapon(this.config.swordWeapon ?? null)
     this.setBombWeapon(this.config.bombWeapon ?? null)
     this.setAuraWeapon(this.config.auraWeapon ?? null)
+    this.setPistolWeapon(this.config.bulletWeapon ?? null)
   }
 
   reset() {
-    this.bullets.forEach((bullet) => bullet.sprite.destroy())
-    this.bullets = []
-    this.shootElapsed = 0
     this.sword?.reset()
     this.bomb?.reset()
     this.aura?.reset()
+    this.pistol?.reset()
   }
 
   update(dt: number, worldView: Phaser.Geom.Rectangle, cleanupPadding: number) {
-    const { damage: bulletDamage } = this.config.bulletWeapon
     const enemies = this.context.getEnemies()
-
-    this.bullets = this.bullets.filter((bullet) => {
-      const sprite = bullet.sprite
-      if (!sprite.active) return false
-
-      sprite.x += bullet.vx * dt
-      sprite.y += bullet.vy * dt
-
-      if (
-        sprite.x < worldView.left - cleanupPadding ||
-        sprite.x > worldView.right + cleanupPadding ||
-        sprite.y < worldView.top - cleanupPadding ||
-        sprite.y > worldView.bottom + cleanupPadding
-      ) {
-        sprite.destroy()
-        return false
-      }
-
-      for (const enemy of enemies) {
-        const mob = enemy.getData('mob') as SimpleMob | undefined
-        if (!enemy.active || !mob) continue
-        if (bullet.hitEnemies.has(enemy)) continue
-        if (
-          Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y) <
-          mob.size / 2 + bullet.radius
-        ) {
-          bullet.hitEnemies.add(enemy)
-          const killed = this.damageEnemy(enemy, bulletDamage, mob)
-          if (!killed) {
-            sprite.x += bullet.vx * dt * 0.3
-            sprite.y += bullet.vy * dt * 0.3
-          }
-          bullet.piercesLeft -= 1
-
-          if (bullet.piercesLeft <= 0) {
-            sprite.destroy()
-            return false
-          }
-        }
-      }
-
-      return true
-    })
-
+    this.pistol?.update(dt, enemies, worldView, cleanupPadding)
     this.bomb?.update(dt, enemies)
     this.sword?.update(dt, enemies)
     this.aura?.update(dt, enemies)
-
-    if (this.context.hero.hp > 0) {
-      this.tickAutoFire(dt)
-    }
   }
-
-  tickAutoFire(dt: number) {
-    const enemies = this.context.getEnemies()
-    if (!enemies.some((enemy) => enemy.active)) return
-    if (!this.context.hero.weaponIds.includes('pistol')) return
-
-    this.shootElapsed += dt
-    if (this.shootElapsed < this.config.bulletWeapon.cooldown) return
-
-    this.shootElapsed = 0
-    const nearest = this.findNearestEnemy()
-    if (!nearest) return
-
-    const { sprite } = this.context.hero
-    const dx = nearest.x - sprite.x
-    const dy = nearest.y - sprite.y
-    const length = Math.hypot(dx, dy)
-    if (!length) return
-
-    const radius = this.config.bulletWeapon?.area
-    const bulletSprite = this.scene.add.circle(sprite.x, sprite.y, radius, 0xffeb3b)
-    const vx = (dx / length) * this.config.bulletSpeed
-    const vy = (dy / length) * this.config.bulletSpeed
-
-    this.bullets.push({
-      sprite: bulletSprite,
-      vx,
-      vy,
-      radius,
-      piercesLeft: this.config.bulletWeapon.pierce,
-      hitEnemies: new Set<EnemySprite>(),
-    })
-  }
-
 
   private damageEnemy(enemy: EnemySprite, amount: number, mob: SimpleMob) {
     if (!enemy.active) return false
@@ -161,9 +78,15 @@ export class CombatSystem {
     return false
   }
 
-  setBulletWeapon(weapon: Weapon) {
+  setPistolWeapon(weapon: Weapon) {
+    this.pistol?.reset()
     this.config.bulletWeapon = weapon
-    this.shootElapsed = 0
+    if (weapon) {
+      this.pistol = new Pistol(this.scene, this.context, weapon, this.damageEnemy)
+    } else {
+      this.pistol = null
+    }
+    this.pistol?.reset()
   }
 
   setAuraWeapon(weapon: Weapon | null | undefined) {
@@ -197,24 +120,6 @@ export class CombatSystem {
       this.sword = null
     }
     this.sword?.reset()
-  }
-
-  private findNearestEnemy() {
-    const { sprite } = this.context.hero
-    const enemies = this.context.getEnemies()
-    let nearest: EnemySprite | undefined
-    let nearestDist = Number.POSITIVE_INFINITY
-
-    for (const enemy of enemies) {
-      if (!enemy.active) continue
-      const dist = Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y)
-      if (dist < nearestDist) {
-        nearest = enemy
-        nearestDist = dist
-      }
-    }
-
-    return nearest
   }
 
 }

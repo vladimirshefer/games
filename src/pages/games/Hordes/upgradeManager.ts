@@ -259,7 +259,7 @@ export class UpgradeManager {
     if (!this.hero.weaponIds.includes('pistol')) {
       this.hero.weaponIds.push('pistol')
     }
-    this.combat.setBulletWeapon(weapon)
+    this.combat.setPistolWeapon(weapon)
     this.hooks.onShowMessage(message)
   }
 
