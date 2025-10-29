@@ -27,11 +27,11 @@ export const BOMB_WEAPON: Weapon = {cooldown: 5, damage: 40, area: 100, pierce: 
 export const BOMB_MK2_WEAPON: Weapon = {cooldown: 3, damage: 60, area: 150, pierce: 0}
 export const BOMB_MK3_WEAPON: Weapon = {cooldown: 2, damage: 80, area: 200, pierce: 0}
 
-export const SWORD_WEAPON: SwordWeapon = {cooldown: 3, damage: 10, area: 50, pierce: 0, sectorAngle: 120}
-export const SWORD_MK2_WEAPON: SwordWeapon = {cooldown: 2.5, damage: 20, area: 60, pierce: 0, sectorAngle: 130}
-export const SWORD_MK3_WEAPON: SwordWeapon = {cooldown: 2.2, damage: 30, area: 70, pierce: 0, sectorAngle: 140}
-export const SWORD_MK4_WEAPON: SwordWeapon = {cooldown: 2.0, damage: 40, area: 80, pierce: 0, sectorAngle: 150}
-export const SWORD_MK5_WEAPON: SwordWeapon = {cooldown: 1.8, damage: 50, area: 90, pierce: 0, sectorAngle: 160}
+export const SWORD_WEAPON: SwordWeapon = {cooldown: 2, damage: 10, area: 50, pierce: 0, sectorAngle: 120}
+export const SWORD_MK2_WEAPON: SwordWeapon = {cooldown: 1.8, damage: 20, area: 60, pierce: 0, sectorAngle: 130}
+export const SWORD_MK3_WEAPON: SwordWeapon = {cooldown: 1.6, damage: 30, area: 70, pierce: 0, sectorAngle: 140}
+export const SWORD_MK4_WEAPON: SwordWeapon = {cooldown: 1.4, damage: 40, area: 80, pierce: 0, sectorAngle: 150}
+export const SWORD_MK5_WEAPON: SwordWeapon = {cooldown: 1.2, damage: 50, area: 90, pierce: 0, sectorAngle: 160}
 
 export interface UpgradeOption {
     id: string
