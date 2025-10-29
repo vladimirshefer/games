@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import type {Bullet, EnemySprite, HeroState, SimpleMob} from './types'
 import type {Weapon, SwordWeapon} from "./weapons.ts";
 import {BOMB_FRAME_INDEX, ENEMY_SPRITESHEET_KEY} from "./sprite.ts";
-import {PICKUP_DEFAULT_SIZE} from "./scene.ts";
+import {PICKUP_DEFAULT_SIZE} from "./pickups.ts";
 
 export interface CombatConfig {
   bulletSpeed: number
