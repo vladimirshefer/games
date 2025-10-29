@@ -23,9 +23,9 @@ export const AURA_MK3_WEAPON: Weapon = {damage: 20, cooldown: 0.42, pierce: 1, a
 export const AURA_MK4_WEAPON: Weapon = {damage: 30, cooldown: 0.38, pierce: 1, area: AURA_RADIUS * 1.7}
 export const AURA_MK5_WEAPON: Weapon = {damage: 50, cooldown: 0.35, pierce: 1, area: AURA_RADIUS * 2.0}
 
-export const BOMB_WEAPON: Weapon = {cooldown: 5, damage: 40, area: 40, pierce: 0}
-export const BOMB_MK2_WEAPON: Weapon = {cooldown: 3, damage: 60, area: 60, pierce: 0}
-export const BOMB_MK3_WEAPON: Weapon = {cooldown: 2, damage: 80, area: 100, pierce: 0}
+export const BOMB_WEAPON: Weapon = {cooldown: 5, damage: 40, area: 100, pierce: 0}
+export const BOMB_MK2_WEAPON: Weapon = {cooldown: 3, damage: 60, area: 150, pierce: 0}
+export const BOMB_MK3_WEAPON: Weapon = {cooldown: 2, damage: 80, area: 200, pierce: 0}
 
 export const SWORD_WEAPON: SwordWeapon = {cooldown: 3, damage: 10, area: 50, pierce: 0, sectorAngle: 120}
 export const SWORD_MK2_WEAPON: SwordWeapon = {cooldown: 2.5, damage: 20, area: 60, pierce: 0, sectorAngle: 130}

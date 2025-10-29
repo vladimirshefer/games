@@ -39,7 +39,9 @@ export function moveHero(hero: HeroState, direction: Phaser.Math.Vector2, speed:
   hero.sprite.x += direction.x * speed * dt
   hero.sprite.y += direction.y * speed * dt
   hero.aura.setPosition(hero.sprite.x, hero.sprite.y)
-  hero.direction.copy(direction)
+  if (direction.lengthSq() > 0.0001) {
+    hero.direction.copy(direction)
+  }
 }
 
 export function damageHero(hero: HeroState, amount: number) {
