@@ -1,17 +1,7 @@
 import Phaser from 'phaser'
 import type {EnemySprite, HeroState, SimpleMob} from './types'
 import {EnemyManager} from './enemies.ts'
-import {HERO_SPEED} from './hero.ts'
-
-export const DEFAULT_MOB: SimpleMob = {
-  health: 16,
-  damage: 2,
-  speed: 90,
-  xp: 2,
-  size: 20,
-}
-
-const MOB_MAX_DAMAGE = 16
+import {HERO_BASE_SPEED, MOB_BASE_DAMAGE, MOB_BASE_HP, MOB_BASE_RADIUS, MOB_BASE_SPEED} from "./game/constants.ts";
 
 interface WaveHooks {
   getHero(): HeroState
@@ -76,7 +66,7 @@ export class WaveManager {
     this.wave += 1
     this.hooks.onWaveAdvanced(this.wave)
 
-    const count = Math.max(2 + this.wave, 10)
+    const count = Math.max(20 + this.wave, 10)
     const edge = Phaser.Math.Between(0, 3)
 
     this.spawnEnemy(1, hero)
@@ -96,7 +86,7 @@ export class WaveManager {
   private spawnEnemy(edge: number, hero: HeroState) {
     const powerMultiplier = 1 + this.wave / 20
     const mob = this.generateMobStats(powerMultiplier)
-    const mobDamageRelative = (mob.damage / MOB_MAX_DAMAGE) * powerMultiplier
+    const mobDamageRelative = (mob.damage / MOB_BASE_DAMAGE) * powerMultiplier
     const color = grbToHex(
       0.5 + mobDamageRelative / 2,
       0.4,
@@ -117,9 +107,9 @@ export class WaveManager {
   }
 
   private generateMobStats(powerMultiplier: number): SimpleMob {
-    const MAX_SPEED = HERO_SPEED * 0.5
-    const MAX_HEALTH = 20 * powerMultiplier
-    const MAX_DAMAGE = MOB_MAX_DAMAGE * powerMultiplier
+    const MAX_SPEED = Math.min(MOB_BASE_SPEED * powerMultiplier, HERO_BASE_SPEED)
+    const MAX_HEALTH = MOB_BASE_HP * powerMultiplier
+    const MAX_DAMAGE = MOB_BASE_DAMAGE * powerMultiplier
     const minRelativeDamage = 0.1
     const minRelativeHealth = 0.1
     const minRelativeSpeed = 0.3
@@ -138,7 +128,7 @@ export class WaveManager {
     const damage = Math.round(relativeDamage * MAX_DAMAGE)
 
     const mob: SimpleMob = {
-      size: DEFAULT_MOB.size,
+      size: MOB_BASE_RADIUS * 2,
       speed,
       health,
       xp: 0,
@@ -148,7 +138,8 @@ export class WaveManager {
     const mobStrength =
       mob.health / MAX_HEALTH + mob.speed / MAX_SPEED + mob.damage / MAX_DAMAGE
     mob.xp = Math.round(mobStrength) + 1
-    mob.size = mob.size + mob.health / 4
+    const additionalSize = isNaN(Math.sqrt(mob.health)) ? 0 : Math.round(Math.sqrt(mob.health));
+    mob.size = mob.size + additionalSize
     return mob
   }
 }

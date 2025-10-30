@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
 import type {Weapon} from "../../weapons.ts";
 import type {Bullet, EnemySprite, SimpleMob} from "../../types.ts";
+import {HERO_BASE_SPEED} from "../constants.ts";
 
 export class Pistol {
     private readonly scene: Phaser.Scene;
@@ -129,4 +130,5 @@ export class Pistol {
     }
 }
 
-const BULLET_SPEED = 480;
+const BULLET_SPEED = HERO_BASE_SPEED * 3;
+

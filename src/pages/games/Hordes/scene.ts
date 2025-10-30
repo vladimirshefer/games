@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import {CombatSystem} from './combat'
-import {createHero, damageHero, HERO_SPEED, moveHero} from './hero'
+import {createHero, damageHero, moveHero} from './hero'
 import type {InputController} from './input'
 import {createInputController} from './input'
 import type {EnemySprite, HeroState, SimpleMob} from './types'
@@ -18,6 +18,7 @@ import {
     ENEMY_WALK_ANIMATION_KEY,
     MOB_WALK_FRAME_INDICES
 } from "./sprite.ts";
+import {HERO_BASE_SPEED} from "./game/constants.ts";
 
 interface ExitStats {
   kills: number
@@ -238,7 +239,7 @@ export class HordesScene extends Phaser.Scene {
         }
 
         const direction = this.inputController.getDirection()
-        moveHero(this.hero, direction, HERO_SPEED, dt)
+        moveHero(this.hero, direction, HERO_BASE_SPEED, dt)
         const camera = this.cameras.main
         this.background.tilePositionX = camera.scrollX
         this.background.tilePositionY = camera.scrollY
