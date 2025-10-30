@@ -1,11 +1,16 @@
 import Phaser from 'phaser'
 import type { HeroState } from './types'
 import {HERO_BASE_HP, HERO_BASE_RADIUS} from "./game/constants.ts";
+import {ENEMY_SPRITESHEET_KEY, HERO_FRAME_INDEX} from "./sprite.ts";
 
 export const AURA_RADIUS = 50
 
 export function createHero(scene: Phaser.Scene): HeroState {
-  const sprite = scene.add.circle(0, 0, HERO_BASE_RADIUS, 0x4caf50)
+  const sprite = scene.add.sprite(0, 0, ENEMY_SPRITESHEET_KEY, HERO_FRAME_INDEX)
+  sprite.setOrigin(0.5)
+  sprite.setDisplaySize(HERO_BASE_RADIUS * 2, HERO_BASE_RADIUS * 2)
+  sprite.setTint(0x4caf50)
+  sprite.setDepth(0.2)
   sprite.setData('radius', HERO_BASE_RADIUS)
 
   const aura = scene.add.circle(sprite.x, sprite.y, AURA_RADIUS, 0xffeb3b, 0.1)

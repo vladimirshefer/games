@@ -12,7 +12,7 @@ export interface Bullet {
 }
 
 export interface HeroState {
-  sprite: Phaser.GameObjects.Arc
+  sprite: Phaser.GameObjects.Sprite
   aura: Phaser.GameObjects.Arc
   radius: number
   maxHp: number

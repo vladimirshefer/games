@@ -7,6 +7,9 @@ export const ENEMY_SPRITESHEET_FRAME_HEIGHT = 16
 export const ENEMY_SPRITESHEET_SPACING = 1
 export const ENEMY_SPRITESHEET_COLUMNS = 49
 
+export const HERO_FRAME_INDEX =
+  4 * ENEMY_SPRITESHEET_COLUMNS + 30 // 5th row (0-indexed), 19th from the right
+
 export const BOMB_FRAME_INDEX =
   9 * ENEMY_SPRITESHEET_COLUMNS + 45 // 10th row (0-indexed), 4th from the right
 
