@@ -1,10 +1,11 @@
 import Phaser from 'phaser'
+import {HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
 
-const MAGNET_TRIGGER_RADIUS = 100
-const MAGNET_COLLECT_RADIUS = 28
-const MAGNET_SPEED = 280
+const MAGNET_TRIGGER_RADIUS = PICKUP_DEFAULT_SIZE * 4
+const MAGNET_COLLECT_RADIUS = PICKUP_DEFAULT_SIZE
+const MAGNET_SPEED = HERO_BASE_SPEED * 1.5
 const MAX_CRYSTALS = 100
-const BASE_SIZE = 8
+const BASE_SIZE = PICKUP_DEFAULT_SIZE * 0.5
 
 export class XpCrystalManager {
   private scene: Phaser.Scene

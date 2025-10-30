@@ -1,6 +1,6 @@
 import type {Weapon} from "../../weapons.ts";
 import {BOMB_FRAME_INDEX, ENEMY_SPRITESHEET_KEY} from "../../sprite.ts";
-import {PICKUP_DEFAULT_SIZE} from "../../pickups.ts";
+import {PICKUP_DEFAULT_SIZE} from "../constants.ts";
 import Phaser from "phaser";
 import type {EnemySprite, SimpleMob} from "../../types.ts";
 import type {CombatContext} from "../../combat.ts";

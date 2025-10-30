@@ -3,9 +3,8 @@ import {healHero} from './hero.ts'
 import type {HeroState} from './types'
 import {XpCrystalManager} from './xpCrystals.ts'
 import {ENEMY_SPRITESHEET_KEY, HEAL_POTION_FRAME_INDEX, PORTAL_OPENS_FRAME_INDEX} from './sprite.ts'
-import {HERO_BASE_HP, HERO_BASE_RADIUS, MOB_BASE_RADIUS} from "./game/constants.ts";
+import {HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
 
-export const PICKUP_DEFAULT_SIZE = HERO_BASE_RADIUS * 2
 
 interface PickupHooks {
   getHero(): HeroState

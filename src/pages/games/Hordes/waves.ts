@@ -13,7 +13,7 @@ export class WaveManager {
   private scene: Phaser.Scene
   private enemyManager: EnemyManager
   private hooks: WaveHooks
-  private spawnBuffer: number
+  private readonly spawnBuffer: number
   private wave = 0
   private running = false
   private waveTimer?: Phaser.Time.TimerEvent

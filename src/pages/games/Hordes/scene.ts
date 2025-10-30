@@ -18,7 +18,7 @@ import {
     ENEMY_WALK_ANIMATION_KEY,
     MOB_WALK_FRAME_INDICES
 } from "./sprite.ts";
-import {HERO_BASE_SPEED} from "./game/constants.ts";
+import {HERO_BASE_SPEED, MOB_BASE_RADIUS, WORLD_BOUNDS} from "./game/constants.ts";
 
 interface ExitStats {
   kills: number
@@ -34,10 +34,10 @@ export class HordesScene extends Phaser.Scene {
   private hero!: HeroState
   private inputController!: InputController
   private enemies: EnemySprite[] = []
-  private spawnBuffer = 60
+  private spawnBuffer = MOB_BASE_RADIUS * 6
   private cleanupPadding = 260
-    private background!: Phaser.GameObjects.TileSprite
-    private worldBounds = 20000
+  private background!: Phaser.GameObjects.TileSprite
+  private worldBounds = WORLD_BOUNDS
   private infoText!: Phaser.GameObjects.Text
   private kills = 0
   private wave = 0
