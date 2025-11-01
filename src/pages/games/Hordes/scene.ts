@@ -32,6 +32,8 @@ export class HordesScene extends Phaser.Scene {
   private kills = 0
   private wave = 0
   private combat!: CombatSystem
+  private heroHpBarBg!: Phaser.GameObjects.Rectangle
+  private heroHpBarFill!: Phaser.GameObjects.Rectangle
   private xpManager!: XpCrystalManager
   private enemyManager!: EnemyManager
   private waveManager!: WaveManager
@@ -95,6 +97,7 @@ export class HordesScene extends Phaser.Scene {
         this.background.setDepth(-2)
 
         this.hero = createHero(this)
+        this.createHeroHpBar()
 
         this.enemies = []
         this.xpManager = new XpCrystalManager(this)
@@ -154,6 +157,8 @@ export class HordesScene extends Phaser.Scene {
             this.inputController.destroy()
             this.xpManager.destroyAll()
             this.upgradeManager.destroy()
+            this.heroHpBarBg.destroy()
+            this.heroHpBarFill.destroy()
             this.pickupManager.destroy()
             this.waveManager.destroy()
             this.clearSupportTimers()
@@ -233,6 +238,7 @@ export class HordesScene extends Phaser.Scene {
         const camera = this.cameras.main
         this.background.tilePositionX = camera.scrollX
         this.background.tilePositionY = camera.scrollY
+        this.syncHeroHpBar()
 
         const view = this.cameras.main.worldView
 
@@ -460,13 +466,14 @@ export class HordesScene extends Phaser.Scene {
     }
 
     /**
-     * Writes the latest wave and HP values to the HUD text element.
+     * Writes the latest wave, level, and weapon values to the HUD text element.
      */
     private updateHud() {
         this.infoText.setText(
-            `Wave ${this.wave} | HP ${this.hero.hp} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` +
+            `Wave ${this.wave} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` +
             `Weapons: ${this.hero.weaponIds} | Kills ${this.kills}`,
         )
+        this.updateHeroHpBarFill()
     }
 
     private ensureEnemyWalkAnimation() {
@@ -482,5 +489,50 @@ export class HordesScene extends Phaser.Scene {
             frameRate: 6,
             repeat: -1,
         })
+    }
+
+    private createHeroHpBar() {
+        const width = 48
+        const height = 6
+        const padding = 1
+        const yOffset = this.hero.sprite.displayHeight / 2 + 10
+
+        this.heroHpBarBg = this.add
+            .rectangle(this.hero.sprite.x, this.hero.sprite.y - yOffset, width, height, 0x000000, 0.7)
+            .setOrigin(0.5)
+            .setDepth(1)
+
+        this.heroHpBarFill = this.add
+            .rectangle(this.hero.sprite.x - width / 2 + padding, this.heroHpBarBg.y, width - padding * 2, height - padding * 2, 0x4caf50)
+            .setOrigin(0, 0.5)
+            .setDepth(1.1)
+
+        this.updateHeroHpBarFill()
+    }
+
+    private syncHeroHpBar() {
+        if (!this.heroHpBarBg || !this.heroHpBarFill) return
+        const yOffset = this.hero.sprite.displayHeight / 2 + 10
+        const x = this.hero.sprite.x
+        const y = this.hero.sprite.y - yOffset
+        const padding = 1
+
+        this.heroHpBarBg.setPosition(x, y)
+        this.heroHpBarFill.setPosition(x - this.heroHpBarBg.width / 2 + padding, y)
+    }
+
+    private updateHeroHpBarFill() {
+        if (!this.heroHpBarBg || !this.heroHpBarFill) return
+        const padding = 1
+        const innerWidth = Math.max(0, this.heroHpBarBg.width - padding * 2)
+        const ratio = Phaser.Math.Clamp(this.hero.hp / this.hero.maxHp, 0, 1)
+        this.heroHpBarFill.displayWidth = innerWidth * ratio
+        if (ratio > 0.6) {
+            this.heroHpBarFill.setFillStyle(0x4caf50)
+        } else if (ratio > 0.3) {
+            this.heroHpBarFill.setFillStyle(0xffc107)
+        } else {
+            this.heroHpBarFill.setFillStyle(0xff5252)
+        }
     }
 }
