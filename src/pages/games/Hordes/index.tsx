@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from 'react'
+import {Link} from 'react-router'
 import Phaser from 'phaser'
 import {HordesScene} from './scene'
 
@@ -195,6 +196,12 @@ const HordesPage = () => {
                     </button>
                 </div>
             </div>
+            <Link
+                to="/"
+                className="mt-6 inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
+            >
+                Back to main page
+            </Link>
         </div>
     )
 }
