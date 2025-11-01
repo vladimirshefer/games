@@ -193,12 +193,16 @@ const TowerDefensePage = () => {
           )}
           <button
             onClick={handlePlayClick}
-            className="mt-4 w-full rounded-md bg-blue-600 px-4 py-2 text-base font-semibold text-white transition hover:bg-blue-500"
+            className="mt-4 w-full rounded-md bg-blue-600 px-4 py-2 text-base font-semibold
+            text-white transition hover:bg-blue-500"
           >
             Play
           </button>
         </div>
-        <div className="flex w-full max-w-sm flex-col gap-3 rounded-lg border border-white/10 bg-slate-900/60 p-5 text-sm">
+        <div
+          className="flex w-full max-w-sm flex-col gap-3 rounded-lg border border-white/10
+        bg-slate-900/60 p-5 text-sm"
+        >
           <h2 className="text-xl font-semibold">How to Play</h2>
           <ul className="list-disc space-y-1 pl-5 opacity-80">
             <li>Click a glowing pad to spend 25 coins on a tower.</li>

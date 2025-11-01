@@ -194,14 +194,16 @@ const HordesPage = () => {
         </div>
         <Link
           to="/"
-          className="mt-6 inline-flex items-center justify-center rounded-md border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
+          className="mt-6 inline-flex items-center justify-center rounded-md border border-slate-600
+          bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
         >
           Back to main page
         </Link>
       </div>
       <button
         onClick={handlePlayClick}
-        className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-3rem)] max-w-md -translate-x-1/2 transform rounded-md bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-green-500"
+        className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-3rem)] max-w-md -translate-x-1/2 transform rounded-md
+        bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-green-500"
       >
         Play
       </button>

@@ -195,7 +195,11 @@ export class TowerDefenseScene extends Phaser.Scene {
         this.scale.width / 2,
         this.scale.height - 24,
         'Click glowing pads to build towers. Towers fire automatically.',
-        { ...this.hudStyle(), fontSize: '14px', color: '#9ca3af' }
+        {
+          ...this.hudStyle(),
+          fontSize: '14px',
+          color: '#9ca3af'
+        }
       )
       .setOrigin(0.5, 1)
     this.refreshHud()
@@ -228,13 +232,13 @@ export class TowerDefenseScene extends Phaser.Scene {
 
     const enemiesThisWave = ENEMIES_PER_WAVE + Math.max(0, this.wave - 1) * ENEMIES_PER_WAVE_GROWTH
     const spawnDelay = Math.max(MIN_SPAWN_DELAY, 900 - this.wave * 40)
-    let spawned = 0
+    let _spawned = 0
 
     const timer = this.time.addEvent({
       delay: spawnDelay,
       repeat: enemiesThisWave - 1,
       callback: () => {
-        spawned += 1
+        _spawned += 1
         this.spawnEnemy()
       }
       // onComplete: () => {
