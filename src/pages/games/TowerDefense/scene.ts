@@ -1,4 +1,22 @@
 import Phaser from 'phaser'
+import {
+    BASE_HP,
+    ENEMY_BASE_HP,
+    ENEMY_BASE_REWARD,
+    ENEMY_BASE_SPEED,
+    ENEMIES_PER_WAVE,
+    ENEMIES_PER_WAVE_GROWTH,
+    ENEMY_REWARD_PER_WAVE,
+    ENEMY_SPEED_PER_WAVE,
+    ENEMY_HP_PER_WAVE,
+    MIN_SPAWN_DELAY,
+    WAVE_BREAK,
+    TOWER_COST,
+    TOWER_DAMAGE,
+    TOWER_RANGE,
+    TOWER_FIRE_RATE,
+    STARTING_COINS
+} from "./game/constants.ts";
 
 type ExitStats = {
     waves: number
@@ -50,23 +68,6 @@ const SPOT_FRACTIONS = [
     {x: 0.74, y: 0.44},
     {x: 0.78, y: 0.86},
 ]
-
-const BASE_HP = 15
-const STARTING_COINS = 75
-const TOWER_COST = 25
-const TOWER_RANGE = 170
-const TOWER_FIRE_RATE = 650
-const TOWER_DAMAGE = 10
-const ENEMY_BASE_HP = 30
-const ENEMY_HP_PER_WAVE = 6
-const ENEMY_BASE_SPEED = 90
-const ENEMY_SPEED_PER_WAVE = 6
-const ENEMY_BASE_REWARD = 6
-const ENEMY_REWARD_PER_WAVE = 2
-const ENEMIES_PER_WAVE = 6
-const ENEMIES_PER_WAVE_GROWTH = 2
-const WAVE_BREAK = 3000
-const MIN_SPAWN_DELAY = 400
 
 /**
  * Lightweight Phaser scene implementing a simple tower defence loop.
