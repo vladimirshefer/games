@@ -1,4 +1,4 @@
-import Phaser from 'phaser'
+import Phaser, {type Scene} from 'phaser'
 import {CombatSystem} from './combat'
 import {createHero, damageHero, moveHero} from './hero'
 import type {InputController} from './input'
@@ -17,6 +17,72 @@ interface ExitStats {
   waves: number
 }
 
+class HeroHpBar {
+  private readonly width
+  private readonly height = 6
+  private readonly padding = 1
+  private bg: Phaser.GameObjects.Rectangle
+  private fill: Phaser.GameObjects.Rectangle
+
+  private hero: HeroState;
+
+  constructor(scene: Scene, hero: HeroState) {
+    this.hero = hero;
+    const offsetY = this.getOffsetY()
+    this.width = hero.sprite.displayWidth
+
+    this.bg = scene.add
+      .rectangle(hero.sprite.x, hero.sprite.y - offsetY, this.width, this.height, 0x000000, 0.7)
+      .setOrigin(0.5)
+      .setDepth(1)
+
+    this.fill = scene.add
+      .rectangle(
+        hero.sprite.x - this.width / 2 + this.padding,
+        this.bg.y,
+        this.width - this.padding * 2,
+        this.height - this.padding * 2,
+        0x4caf50,
+      )
+      .setOrigin(0, 0.5)
+      .setDepth(1.1)
+
+    this.updateValue(hero.hp, hero.maxHp)
+  }
+
+  syncPosition() {
+    const x = this.hero.sprite.x
+    const y = this.hero.sprite.y + this.getOffsetY()
+    const leftEdge = x - this.width / 2 + this.padding
+
+    this.bg.setPosition(x, y)
+    this.fill.setPosition(leftEdge, y)
+  }
+
+  updateValue(currentHp: number, maxHp: number) {
+    const ratio = Phaser.Math.Clamp(maxHp === 0 ? 0 : currentHp / maxHp, 0, 1)
+    const innerWidth = Math.max(0, this.width - this.padding * 2)
+    this.fill.displayWidth = innerWidth * ratio
+
+    if (ratio > 0.6) {
+      this.fill.setFillStyle(0x4caf50)
+    } else if (ratio > 0.3) {
+      this.fill.setFillStyle(0xffc107)
+    } else {
+      this.fill.setFillStyle(0xff5252)
+    }
+  }
+
+  destroy() {
+    this.bg.destroy()
+    this.fill.destroy()
+  }
+
+  private getOffsetY() {
+    return this.hero.sprite.displayHeight / 2 + 4
+  }
+}
+
 /**
  * Core Phaser scene for the Hordes mode: handles hero state, enemy waves,
  * auto-shooting, and camera-following infinite background.
@@ -28,12 +94,11 @@ export class HordesScene extends Phaser.Scene {
   private enemies: EnemySprite[] = []
   private background!: Phaser.GameObjects.TileSprite
   private worldBounds = WORLD_BOUNDS
+  private heroHpBar!: HeroHpBar
   private infoText!: Phaser.GameObjects.Text
   private kills = 0
   private wave = 0
   private combat!: CombatSystem
-  private heroHpBarBg!: Phaser.GameObjects.Rectangle
-  private heroHpBarFill!: Phaser.GameObjects.Rectangle
   private xpManager!: XpCrystalManager
   private enemyManager!: EnemyManager
   private waveManager!: WaveManager
@@ -97,7 +162,7 @@ export class HordesScene extends Phaser.Scene {
         this.background.setDepth(-2)
 
         this.hero = createHero(this)
-        this.createHeroHpBar()
+        this.heroHpBar = new HeroHpBar(this, this.hero)
 
         this.enemies = []
         this.xpManager = new XpCrystalManager(this)
@@ -157,8 +222,7 @@ export class HordesScene extends Phaser.Scene {
             this.inputController.destroy()
             this.xpManager.destroyAll()
             this.upgradeManager.destroy()
-            this.heroHpBarBg.destroy()
-            this.heroHpBarFill.destroy()
+            this.heroHpBar.destroy()
             this.pickupManager.destroy()
             this.waveManager.destroy()
             this.clearSupportTimers()
@@ -238,7 +302,7 @@ export class HordesScene extends Phaser.Scene {
         const camera = this.cameras.main
         this.background.tilePositionX = camera.scrollX
         this.background.tilePositionY = camera.scrollY
-        this.syncHeroHpBar()
+        this.heroHpBar.syncPosition()
 
         const view = this.cameras.main.worldView
 
@@ -473,7 +537,7 @@ export class HordesScene extends Phaser.Scene {
             `Wave ${this.wave} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` +
             `Weapons: ${this.hero.weaponIds} | Kills ${this.kills}`,
         )
-        this.updateHeroHpBarFill()
+        this.heroHpBar.updateValue(this.hero.hp, this.hero.maxHp)
     }
 
     private ensureEnemyWalkAnimation() {
@@ -489,50 +553,5 @@ export class HordesScene extends Phaser.Scene {
             frameRate: 6,
             repeat: -1,
         })
-    }
-
-    private createHeroHpBar() {
-        const width = 48
-        const height = 6
-        const padding = 1
-        const yOffset = this.hero.sprite.displayHeight / 2 + 10
-
-        this.heroHpBarBg = this.add
-            .rectangle(this.hero.sprite.x, this.hero.sprite.y - yOffset, width, height, 0x000000, 0.7)
-            .setOrigin(0.5)
-            .setDepth(1)
-
-        this.heroHpBarFill = this.add
-            .rectangle(this.hero.sprite.x - width / 2 + padding, this.heroHpBarBg.y, width - padding * 2, height - padding * 2, 0x4caf50)
-            .setOrigin(0, 0.5)
-            .setDepth(1.1)
-
-        this.updateHeroHpBarFill()
-    }
-
-    private syncHeroHpBar() {
-        if (!this.heroHpBarBg || !this.heroHpBarFill) return
-        const yOffset = this.hero.sprite.displayHeight / 2 + 10
-        const x = this.hero.sprite.x
-        const y = this.hero.sprite.y - yOffset
-        const padding = 1
-
-        this.heroHpBarBg.setPosition(x, y)
-        this.heroHpBarFill.setPosition(x - this.heroHpBarBg.width / 2 + padding, y)
-    }
-
-    private updateHeroHpBarFill() {
-        if (!this.heroHpBarBg || !this.heroHpBarFill) return
-        const padding = 1
-        const innerWidth = Math.max(0, this.heroHpBarBg.width - padding * 2)
-        const ratio = Phaser.Math.Clamp(this.hero.hp / this.hero.maxHp, 0, 1)
-        this.heroHpBarFill.displayWidth = innerWidth * ratio
-        if (ratio > 0.6) {
-            this.heroHpBarFill.setFillStyle(0x4caf50)
-        } else if (ratio > 0.3) {
-            this.heroHpBarFill.setFillStyle(0xffc107)
-        } else {
-            this.heroHpBarFill.setFillStyle(0xff5252)
-        }
     }
 }
