@@ -10,13 +10,7 @@ import {WaveManager} from "./waves.ts";
 import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "./game/sprite.ts";
-import {
-    HERO_BASE_SPEED,
-    LEVEL_BASE_PROGRESSION,
-    LEVEL_BASE_XP,
-    MOB_BASE_RADIUS,
-    WORLD_BOUNDS
-} from "./game/constants.ts";
+import {HERO_BASE_SPEED, LEVEL_BASE_PROGRESSION, LEVEL_BASE_XP, WORLD_BOUNDS} from "./game/constants.ts";
 
 interface ExitStats {
   kills: number
@@ -32,7 +26,6 @@ export class HordesScene extends Phaser.Scene {
   private hero!: HeroState
   private inputController!: InputController
   private enemies: EnemySprite[] = []
-  private spawnBuffer = MOB_BASE_RADIUS * 6
   private background!: Phaser.GameObjects.TileSprite
   private worldBounds = WORLD_BOUNDS
   private infoText!: Phaser.GameObjects.Text
@@ -114,7 +107,7 @@ export class HordesScene extends Phaser.Scene {
             },
         })
         this.enemyManager = new EnemyManager(this, this.enemies)
-        this.waveManager = new WaveManager(this, this.enemyManager, this.spawnBuffer, {
+        this.waveManager = new WaveManager(this, this.enemyManager, {
             getHero: () => this.hero,
             onEnemySpawned: (enemy, mob) => this.enemyManager.attachHpLabel(enemy, mob),
             onWaveAdvanced: (newWave) => {

@@ -20,7 +20,6 @@ export class WaveManager {
   private scene: Phaser.Scene
   private enemyManager: EnemyManager
   private hooks: WaveHooks
-  private readonly spawnBuffer: number
   private wave = 0
   private running = false
   private waveTimer?: Phaser.Time.TimerEvent
@@ -28,12 +27,10 @@ export class WaveManager {
   constructor(
     scene: Phaser.Scene,
     enemyManager: EnemyManager,
-    spawnBuffer: number,
     hooks: WaveHooks,
   ) {
     this.scene = scene
     this.enemyManager = enemyManager
-    this.spawnBuffer = spawnBuffer
     this.hooks = hooks
   }
 
@@ -87,23 +84,23 @@ export class WaveManager {
       const stats = mobPack.stats;
       for (let i = 0; i < count; i += 1) {
         if (i < count * 0.1) {
-          this.spawnEnemy(edge+1, hero, stats)
+          this.spawnEnemy(edge+1, stats)
           continue
         }
         if (i < count * 0.2) {
-          this.spawnEnemy(edge+2, hero, stats)
+          this.spawnEnemy(edge+2, stats)
           continue
         }
         if (i < count * 0.5) {
-          this.spawnEnemy(edge+3, hero, stats)
+          this.spawnEnemy(edge+3, stats)
           continue
         }
-        this.spawnEnemy(edge, hero, stats)
+        this.spawnEnemy(edge, stats)
       }
     }
   }
 
-  private spawnEnemy(edge: number, hero: HeroState, stats: MobStats) {
+  private spawnEnemy(edge: number, stats: MobStats) {
     edge = edge % 4;
     const powerMultiplier = 1 + this.wave / 20
     const mobDamageRelative = (stats.damage / MOB_BASE_DAMAGE) * powerMultiplier
@@ -112,17 +109,7 @@ export class WaveManager {
       0.4,
       0.5 + (1 - mobDamageRelative) / 2,
     )
-
-    const camera = this.scene.cameras.main
-    const spawnContext = {
-      heroX: hero.sprite.x,
-      heroY: hero.sprite.y,
-      halfWidth: camera.width / 2,
-      halfHeight: camera.height / 2,
-      buffer: this.spawnBuffer,
-    }
-
-    const enemy = this.enemyManager.spawn(edge, stats, color, spawnContext)
+    const enemy = this.enemyManager.spawn(edge, stats, color)
     this.hooks.onEnemySpawned(enemy, stats)
   }
 

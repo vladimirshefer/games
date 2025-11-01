@@ -1,14 +1,13 @@
 import Phaser from 'phaser'
 import type {EnemySprite, HeroState} from './types'
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
-import {CLEANUP_PADDING} from './game/constants.ts'
+import {CLEANUP_PADDING, MOB_BASE_RADIUS} from './game/constants.ts'
 
 export interface SpawnContext {
   heroX: number
   heroY: number
   halfWidth: number
   halfHeight: number
-  buffer: number
 }
 
 export interface MobStats {
@@ -54,15 +53,16 @@ export interface IEnemyManager {
 export class EnemyManager implements IEnemyManager {
   private scene: Phaser.Scene
   private enemies: EnemySprite[]
+  private readonly spawnBuffer: number = MOB_BASE_RADIUS * 6
 
   constructor(scene: Phaser.Scene, enemies: EnemySprite[]) {
     this.scene = scene
     this.enemies = enemies
   }
 
-  spawn(edge: number, mob: MobStats, color: number, context: SpawnContext) {
+  spawn(edge: number, mob: MobStats, color: number) {
     const radius = mob.size / 2
-    const { x, y } = this.findSpawnPosition(edge, radius, context)
+    const { x, y } = this.findSpawnPosition(edge, radius)
 
     const frameIndex = ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
 
@@ -209,9 +209,10 @@ export class EnemyManager implements IEnemyManager {
     )
   }
 
-  private findSpawnPosition(edge: number, radius: number, context: SpawnContext) {
-    const { heroX, heroY, halfWidth, halfHeight, buffer } = context
-    let position = { x: heroX, y: heroY }
+  private findSpawnPosition(edge: number, radius: number) {
+    const camera = this.scene.cameras.main;
+    const worldView = camera.worldView;
+    let position = { x: worldView.centerX, y: worldView.y }
     const attempts = 12
 
     for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -219,20 +220,20 @@ export class EnemyManager implements IEnemyManager {
       let y = 0
       switch (edge) {
         case 0:
-          x = heroX + Phaser.Math.FloatBetween(-halfWidth, halfWidth)
-          y = heroY - halfHeight - buffer
+          x = worldView.centerX + Phaser.Math.FloatBetween(-worldView.width / 2, worldView.width / 2)
+          y = worldView.top - this.spawnBuffer
           break
         case 1:
-          x = heroX + halfWidth + buffer
-          y = heroY + Phaser.Math.FloatBetween(-halfHeight, halfHeight)
+          x = worldView.right + this.spawnBuffer
+          y = worldView.centerY + Phaser.Math.FloatBetween(-worldView.height / 2, worldView.height / 2)
           break
         case 2:
-          x = heroX + Phaser.Math.FloatBetween(-halfWidth, halfWidth)
-          y = heroY + halfHeight + buffer
+          x = worldView.centerX + Phaser.Math.FloatBetween(-worldView.width / 2, worldView.width / 2)
+          y = worldView.bottom + this.spawnBuffer
           break
         default:
-          x = heroX - halfWidth - buffer
-          y = heroY + Phaser.Math.FloatBetween(-halfHeight, halfHeight)
+          x = worldView.left - this.spawnBuffer
+          y = worldView.centerY + Phaser.Math.FloatBetween(-worldView.height / 2, worldView.height / 2)
           break
       }
 
