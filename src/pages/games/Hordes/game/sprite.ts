@@ -17,6 +17,9 @@ export const ONE_BIT_PACK_KNOWN_FRAMES = {
   hero: 4 * ENEMY_SPRITESHEET_COLUMNS + 30,
   mobWalk1: 7 * ENEMY_SPRITESHEET_COLUMNS + 18, // 8th row (0-indexed), 19th column
   mobWalk2: 7 * ENEMY_SPRITESHEET_COLUMNS + 19, // 8th row (0-indexed), 20th column
+  sword1: 7 * ENEMY_SPRITESHEET_COLUMNS + 32,
+  pistol1: 9 * ENEMY_SPRITESHEET_COLUMNS + 37,
   bomb: 9 * ENEMY_SPRITESHEET_COLUMNS + 45, // 10th row (0-indexed), 4th from the right
+  aura: 12 * ENEMY_SPRITESHEET_COLUMNS + 27,
   healPotion: 13 * ENEMY_SPRITESHEET_COLUMNS + 32 // 14th row (0-indexed), 17th from the right
 }
