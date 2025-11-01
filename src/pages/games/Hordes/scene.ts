@@ -96,7 +96,7 @@ export class HordesScene extends Phaser.Scene {
   private worldBounds = WORLD_BOUNDS
   private heroHpBar!: HeroHpBar
   private infoText!: Phaser.GameObjects.Text
-  private weaponHudContainer!: Phaser.GameObjects.Container
+  private weaponHud!: WeaponHud
   private kills = 0
   private wave = 0
   private combat!: CombatSystem
@@ -227,7 +227,7 @@ export class HordesScene extends Phaser.Scene {
       this.pickupManager.destroy()
       this.waveManager.destroy()
       this.clearSupportTimers()
-      this.weaponHudContainer?.destroy(true)
+      this.weaponHud?.destroy(true)
     })
 
     const camera = this.cameras.main
@@ -244,8 +244,7 @@ export class HordesScene extends Phaser.Scene {
       .setDepth(2)
     this.infoText.setScrollFactor(0)
 
-    this.weaponHudContainer = this.add.container(16, this.infoText.y + this.infoText.height + 12).setScrollFactor(0)
-    this.weaponHudContainer.setDepth(2)
+    this.weaponHud = new WeaponHud(this, this.infoText, this.hero)
 
     this.updateHud()
 
@@ -536,72 +535,8 @@ export class HordesScene extends Phaser.Scene {
     this.infoText.setText(
       `Wave ${this.wave} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` + `Kills ${this.kills}`
     )
-    this.updateWeaponHud()
+    this.weaponHud.refresh()
     this.heroHpBar.updateValue(this.hero.hp, this.hero.maxHp)
-  }
-
-  private updateWeaponHud() {
-    if (!this.weaponHudContainer) return
-
-    this.weaponHudContainer.removeAll(true)
-    this.weaponHudContainer.setPosition(16, this.infoText.y + this.infoText.height + 12)
-
-    this.hero.weaponIds.forEach((weaponId, index) => {
-      const frame = this.getWeaponFrame(weaponId)
-      if (frame === undefined) return
-
-      const level = this.getWeaponLevel(weaponId)
-      const item = this.add.container(index * 52, 0)
-      const background = this.add.rectangle(0, 0, 44, 44, 0x1a1a2b, 0.65).setOrigin(0).setStrokeStyle(1, 0xffffff, 0.2)
-
-      const icon = this.add.sprite(22, 18, ONE_BIT_PACK.key, frame).setOrigin(0.5).setScale(2)
-
-      const levelText = this.add
-        .text(22, 30, `${level}`, {
-          color: '#ffe082',
-          fontFamily: 'monospace',
-          fontSize: '14px'
-        })
-        .setOrigin(0.5, 0)
-
-      item.add([background, icon, levelText])
-      this.weaponHudContainer.add(item)
-    })
-  }
-
-  private getWeaponFrame(weaponId: string) {
-    switch (weaponId) {
-      case 'sword':
-        return ONE_BIT_PACK_KNOWN_FRAMES.sword1
-      case 'pistol':
-        return ONE_BIT_PACK_KNOWN_FRAMES.pistol1
-      case 'bomb':
-        return ONE_BIT_PACK_KNOWN_FRAMES.bomb
-      case 'aura':
-        return ONE_BIT_PACK_KNOWN_FRAMES.aura
-      default:
-        return undefined
-    }
-  }
-
-  private getWeaponLevel(weaponId: string): number {
-    const upgradeChains: Record<string, string[]> = {
-      aura: ['aura', 'auraMk2', 'auraMk3', 'auraMk4', 'auraMk5'],
-      pistol: ['pistol', 'pistolMk2', 'pistolMk3', 'pistolMk4', 'pistolMk5'],
-      bomb: ['bomb', 'bombMk2', 'bombMk3'],
-      sword: ['sword', 'swordMk2', 'swordMk3', 'swordMk4', 'swordMk5']
-    }
-
-    const chain = upgradeChains[weaponId]
-    if (!chain) return 1
-
-    for (let index = chain.length - 1; index >= 0; index -= 1) {
-      if (this.hero.upgrades.includes(chain[index])) {
-        return index + 1
-      }
-    }
-
-    return 1
   }
 
   private ensureEnemyWalkAnimation() {
@@ -617,5 +552,82 @@ export class HordesScene extends Phaser.Scene {
       frameRate: 6,
       repeat: -1
     })
+  }
+}
+
+class WeaponHud extends Phaser.GameObjects.Container {
+  private static readonly frames: Record<string, number | undefined> = {
+    sword: ONE_BIT_PACK_KNOWN_FRAMES.sword1,
+    pistol: ONE_BIT_PACK_KNOWN_FRAMES.pistol1,
+    bomb: ONE_BIT_PACK_KNOWN_FRAMES.bomb,
+    aura: ONE_BIT_PACK_KNOWN_FRAMES.aura
+  }
+
+  private static readonly upgradeChains: Record<string, string[]> = {
+    aura: ['aura', 'auraMk2', 'auraMk3', 'auraMk4', 'auraMk5'],
+    pistol: ['pistol', 'pistolMk2', 'pistolMk3', 'pistolMk4', 'pistolMk5'],
+    bomb: ['bomb', 'bombMk2', 'bombMk3'],
+    sword: ['sword', 'swordMk2', 'swordMk3', 'swordMk4', 'swordMk5']
+  }
+
+  private readonly hero: HeroState
+  private readonly infoText: Phaser.GameObjects.Text
+
+  constructor(scene: Phaser.Scene, infoText: Phaser.GameObjects.Text, hero: HeroState) {
+    super(scene, 16, infoText.y + infoText.height + 12)
+    this.hero = hero
+    this.infoText = infoText
+    this.setDepth(2)
+    this.setScrollFactor(0)
+    scene.add.existing(this)
+  }
+
+  refresh() {
+    this.removeAll(true)
+    this.setPosition(16, this.infoText.y + this.infoText.height + 12)
+
+    this.hero.weaponIds.forEach((weaponId, index) => {
+      const frame = WeaponHud.frames[weaponId]
+      if (frame === undefined) return
+
+      const level = this.getWeaponLevel(weaponId)
+      const item = new Phaser.GameObjects.Container(this.scene, index * 52, 0)
+
+      const background = new Phaser.GameObjects.Rectangle(this.scene, 0, 0, 44, 44, 0x1a1a2b, 0.65)
+        .setOrigin(0)
+        .setStrokeStyle(1, 0xffffff, 0.2)
+
+      const icon = new Phaser.GameObjects.Sprite(this.scene, 22, 18, ONE_BIT_PACK.key, frame)
+        .setOrigin(0.5)
+        .setScale(2)
+
+      const levelText = new Phaser.GameObjects.Text(this.scene, 22, 30, `${level}`, {
+        color: '#ffe082',
+        fontFamily: 'monospace',
+        fontSize: '14px'
+      })
+        .setOrigin(0.5, 0)
+
+      item.add([background, icon, levelText])
+      this.add(item)
+    })
+  }
+
+  override destroy(fromScene?: boolean) {
+    this.removeAll(true)
+    super.destroy(fromScene)
+  }
+
+  private getWeaponLevel(weaponId: string): number {
+    const chain = WeaponHud.upgradeChains[weaponId]
+    if (!chain) return 1
+
+    for (let index = chain.length - 1; index >= 0; index -= 1) {
+      if (this.hero.upgrades.includes(chain[index])) {
+        return index + 1
+      }
+    }
+
+    return 1
   }
 }
