@@ -2,11 +2,11 @@ import Phaser from 'phaser'
 import type {EnemySprite, HeroState} from './types'
 import {EnemyManager, type MobStats} from './enemies.ts'
 import {
-  HERO_BASE_SPEED,
   MOB_BASE_DAMAGE,
   MOB_BASE_HP,
   MOB_BASE_RADIUS,
   MOB_BASE_SPEED,
+  MOB_BASE_XP,
   WAVE_BASE_AMOUNT
 } from "./game/constants.ts";
 
@@ -71,34 +71,42 @@ export class WaveManager {
     if (!hero) return
 
     this.wave += 1
-    this.hooks.onWaveAdvanced(this.wave)
-
-    const count = Math.max(WAVE_BASE_AMOUNT + this.wave, 10)
-    const edge = Phaser.Math.Between(0, 3)
-
-    this.spawnEnemy(1, hero)
-    this.spawnEnemy(1, hero)
-    this.spawnEnemy(2, hero)
-    this.spawnEnemy(2, hero)
-    this.spawnEnemy(3, hero)
-    this.spawnEnemy(3, hero)
-    this.spawnEnemy(4, hero)
-    this.spawnEnemy(4, hero)
-
-    for (let i = 0; i < (count - 8) / 2; i += 1) {
-      this.spawnEnemy(edge, hero)
+    if (WAVES.length <= this.wave) {
+      this.gameover()
+      return
     }
 
-    for (let i = 0; i < (count - 8) / 2; i += 1) {
-      this.spawnEnemy(edge + 1, hero)
+    this.hooks.onWaveAdvanced(this.wave)
+    const wave = WAVES[this.wave];
+    const edge = Phaser.Math.Between(0, 3)
+    // 50% spawns at the designated edge.
+    // 30% to near edge.
+    // 10% to other edges.
+    for (const mobPack of wave.mobs) {
+      const count = mobPack.amount
+      const stats = mobPack.stats;
+      for (let i = 0; i < count; i += 1) {
+        if (i < count * 0.1) {
+          this.spawnEnemy(edge+1, hero, stats)
+          continue
+        }
+        if (i < count * 0.2) {
+          this.spawnEnemy(edge+2, hero, stats)
+          continue
+        }
+        if (i < count * 0.5) {
+          this.spawnEnemy(edge+3, hero, stats)
+          continue
+        }
+        this.spawnEnemy(edge, hero, stats)
+      }
     }
   }
 
-  private spawnEnemy(edge: number, hero: HeroState) {
+  private spawnEnemy(edge: number, hero: HeroState, stats: MobStats) {
     edge = edge % 4;
     const powerMultiplier = 1 + this.wave / 20
-    const mob = this.generateMobStats(powerMultiplier)
-    const mobDamageRelative = (mob.damage / MOB_BASE_DAMAGE) * powerMultiplier
+    const mobDamageRelative = (stats.damage / MOB_BASE_DAMAGE) * powerMultiplier
     const color = grbToHex(
       0.5 + mobDamageRelative / 2,
       0.4,
@@ -114,45 +122,13 @@ export class WaveManager {
       buffer: this.spawnBuffer,
     }
 
-    const enemy = this.enemyManager.spawn(edge, mob, color, spawnContext)
-    this.hooks.onEnemySpawned(enemy, mob)
+    const enemy = this.enemyManager.spawn(edge, stats, color, spawnContext)
+    this.hooks.onEnemySpawned(enemy, stats)
   }
 
-  private generateMobStats(powerMultiplier: number): MobStats {
-    const MAX_SPEED = Math.min(MOB_BASE_SPEED * powerMultiplier, HERO_BASE_SPEED)
-    const MAX_HEALTH = MOB_BASE_HP * powerMultiplier
-    const MAX_DAMAGE = MOB_BASE_DAMAGE * powerMultiplier
-    const minRelativeDamage = 0.1
-    const minRelativeHealth = 0.1
-    const minRelativeSpeed = 0.3
-    const relativeDamage = Phaser.Math.FloatBetween(minRelativeDamage, 1)
-    const relativeHealth = Phaser.Math.FloatBetween(
-      minRelativeHealth,
-      Math.max(0.3, 1 - relativeDamage),
-    )
-    const relativeSpeed = Math.max(
-      minRelativeSpeed,
-      1 + minRelativeDamage + minRelativeHealth - relativeHealth - relativeDamage,
-    )
-
-    const speed = Math.round(relativeSpeed * MAX_SPEED)
-    const health = Math.round(relativeHealth * MAX_HEALTH)
-    const damage = Math.round(relativeDamage * MAX_DAMAGE)
-
-    const mob: MobStats = {
-      size: MOB_BASE_RADIUS * 2,
-      speed,
-      health,
-      xp: 0,
-      damage,
-    }
-
-    const mobStrength =
-      mob.health / MAX_HEALTH + mob.speed / MAX_SPEED + mob.damage / MAX_DAMAGE
-    mob.xp = Math.round(mobStrength) + 1
-    const additionalSize = isNaN(Math.sqrt(mob.health)) ? 0 : Math.round(Math.sqrt(mob.health));
-    mob.size = mob.size + additionalSize
-    return mob
+  private gameover() {
+    this.stop()
+    this.scene.game.events.emit('wavesOver')
   }
 }
 
@@ -162,3 +138,42 @@ function grbToHex(r1: number, g1: number, b1: number) {
   const b = 0xff * Math.min(Math.max(b1, 0.0), 1.0)
   return ((r * 0x10000) & 0xff0000) | ((g * 0x100) & 0xff00) | b
 }
+
+interface Wave {
+  mobs: { stats: MobStats, amount: number }[]
+}
+
+const DEFAULT_MOB_STATS = {
+  size: MOB_BASE_RADIUS * 2,
+  speed: MOB_BASE_SPEED,
+  health: MOB_BASE_HP,
+  xp: MOB_BASE_XP,
+  damage: MOB_BASE_DAMAGE,
+};
+
+export const WAVES: Wave[] = [
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      }
+    ]
+  },
+]

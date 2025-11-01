@@ -54,6 +54,7 @@ export class HordesScene extends Phaser.Scene {
     private pendingLevelUps = 0
   private supportTimersStarted = false
   private pickupTimers: Phaser.Time.TimerEvent[] = []
+    private wavesOver: boolean = false
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
@@ -119,7 +120,6 @@ export class HordesScene extends Phaser.Scene {
             onEnemySpawned: (enemy, mob) => this.attachEnemyHpOverlay(enemy, mob),
             onWaveAdvanced: (newWave) => {
                 this.wave = newWave
-                this.updateHud()
             },
         })
         this.ensureEnemyWalkAnimation()
@@ -222,6 +222,8 @@ export class HordesScene extends Phaser.Scene {
             this.maybeStartWaves()
         }
 
+        this.game.events.on('wavesOver', () => this.wavesOver = true)
+
         // Wave timers start after the player picks a starting weapon.
     }
 
@@ -278,6 +280,11 @@ export class HordesScene extends Phaser.Scene {
 
             return enemy.active
         })
+
+        if (this.enemies.length === 0 && this.wavesOver) {
+            this.handleExit()
+        }
+
         this.enemyManager.sync(this.enemies)
 
         this.combat.update(dt, view)
