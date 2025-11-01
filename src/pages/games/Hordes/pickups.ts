@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import {healHero} from './hero.ts'
 import type {HeroState} from './types'
 import {XpCrystalManager} from './xpCrystals.ts'
-import {ENEMY_SPRITESHEET_KEY, HEAL_POTION_FRAME_INDEX, PORTAL_OPENS_FRAME_INDEX} from './sprite.ts'
+import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
 import {HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
 
 
@@ -42,7 +42,8 @@ export class PickupManager {
     const y = Phaser.Math.FloatBetween(view.top + SPAWN_MARGIN, view.bottom - SPAWN_MARGIN)
 
     const diameter = PICKUP_DEFAULT_SIZE
-    const pack = this.scene.add.image(x, y, ENEMY_SPRITESHEET_KEY, HEAL_POTION_FRAME_INDEX)
+    const pack = this.scene.add.image(x, y,
+        ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.healPotion)
     pack.setDisplaySize(diameter, diameter)
     pack.setTint(0xf06040)
     pack.setData('radius', diameter / 2)
@@ -56,7 +57,7 @@ export class PickupManager {
     const y = Phaser.Math.FloatBetween(view.top + SPAWN_MARGIN, view.bottom - SPAWN_MARGIN)
 
     const diameter = PICKUP_DEFAULT_SIZE
-    const pickup = this.scene.add.image(x, y, ENEMY_SPRITESHEET_KEY, PORTAL_OPENS_FRAME_INDEX)
+    const pickup = this.scene.add.image(x, y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.portalOpens)
     pickup.setDisplaySize(diameter, diameter)
     pickup.setTint(0x42a5f5)
     pickup.setData('radius', diameter / 2)

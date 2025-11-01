@@ -9,15 +9,7 @@ import {EnemyManager} from "./enemies.ts";
 import {WaveManager} from "./waves.ts";
 import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
-import {
-    ENEMY_SPRITESHEET_FRAME_HEIGHT,
-    ENEMY_SPRITESHEET_FRAME_WIDTH,
-    ENEMY_SPRITESHEET_KEY,
-    ENEMY_SPRITESHEET_SPACING,
-    ENEMY_SPRITESHEET_URL,
-    ENEMY_WALK_ANIMATION_KEY,
-    MOB_WALK_FRAME_INDICES
-} from "./sprite.ts";
+import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "./game/sprite.ts";
 import {HERO_BASE_SPEED, MOB_BASE_RADIUS, WORLD_BOUNDS} from "./game/constants.ts";
 
 interface ExitStats {
@@ -62,11 +54,11 @@ export class HordesScene extends Phaser.Scene {
   }
 
     preload() {
-        if (!this.textures.exists(ENEMY_SPRITESHEET_KEY)) {
-            this.load.spritesheet(ENEMY_SPRITESHEET_KEY, ENEMY_SPRITESHEET_URL, {
-                frameWidth: ENEMY_SPRITESHEET_FRAME_WIDTH,
-                frameHeight: ENEMY_SPRITESHEET_FRAME_HEIGHT,
-                spacing: ENEMY_SPRITESHEET_SPACING,
+        if (!this.textures.exists(ONE_BIT_PACK.key)) {
+            this.load.spritesheet(ONE_BIT_PACK.key, ONE_BIT_PACK.url, {
+                frameWidth: ONE_BIT_PACK.frameWidth,
+                frameHeight: ONE_BIT_PACK.frameHeight,
+                spacing: ONE_BIT_PACK.spacing,
             })
         }
     }
@@ -530,14 +522,14 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private ensureEnemyWalkAnimation() {
-        if (!this.textures.exists(ENEMY_SPRITESHEET_KEY)) return
-        if (this.anims.exists(ENEMY_WALK_ANIMATION_KEY)) return
-        const frames = MOB_WALK_FRAME_INDICES.map((frame) => ({
-            key: ENEMY_SPRITESHEET_KEY,
+        if (!this.textures.exists(ONE_BIT_PACK.key)) return
+        if (this.anims.exists('enemy-walk')) return
+        const frames = [ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk2].map((frame) => ({
+            key: ONE_BIT_PACK.key,
             frame,
         }))
         this.anims.create({
-            key: ENEMY_WALK_ANIMATION_KEY,
+            key: 'enemy-walk',
             frames,
             frameRate: 6,
             repeat: -1,

@@ -1,5 +1,5 @@
 import type {Weapon} from "../../weapons.ts";
-import {BOMB_FRAME_INDEX, ENEMY_SPRITESHEET_KEY} from "../../sprite.ts";
+import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "../sprite.ts";
 import {PICKUP_DEFAULT_SIZE} from "../constants.ts";
 import Phaser from "phaser";
 import type {EnemySprite, SimpleMob} from "../../types.ts";
@@ -62,7 +62,7 @@ export class Bomb {
 
     private spawnBomb(weapon: Weapon) {
         const {sprite} = this.context.hero
-        const bombSprite = this.scene.add.image(sprite.x, sprite.y, ENEMY_SPRITESHEET_KEY, BOMB_FRAME_INDEX)
+        const bombSprite = this.scene.add.image(sprite.x, sprite.y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.bomb)
         bombSprite.setDepth(-0.5)
         bombSprite.setDisplaySize(PICKUP_DEFAULT_SIZE, PICKUP_DEFAULT_SIZE)
         bombSprite.setTint(0xff7043)
