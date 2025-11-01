@@ -11,7 +11,6 @@ import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "./game/sprite.ts";
 import {
-    CLEANUP_PADDING,
     HERO_BASE_SPEED,
     LEVEL_BASE_PROGRESSION,
     LEVEL_BASE_XP,
@@ -117,7 +116,7 @@ export class HordesScene extends Phaser.Scene {
         this.enemyManager = new EnemyManager(this, this.enemies)
         this.waveManager = new WaveManager(this, this.enemyManager, this.spawnBuffer, {
             getHero: () => this.hero,
-            onEnemySpawned: (enemy, mob) => this.attachEnemyHpOverlay(enemy, mob),
+            onEnemySpawned: (enemy, mob) => this.enemyManager.attachHpLabel(enemy, mob),
             onWaveAdvanced: (newWave) => {
                 this.wave = newWave
             },
@@ -232,8 +231,6 @@ export class HordesScene extends Phaser.Scene {
      */
     update(_time: number, delta: number) {
         const dt = delta / 1000
-        const heroRadius = this.hero.radius
-
         if (this.isPaused) {
             return
         }
@@ -244,52 +241,19 @@ export class HordesScene extends Phaser.Scene {
         this.background.tilePositionX = camera.scrollX
         this.background.tilePositionY = camera.scrollY
 
-        const heroX = this.hero.sprite.x
-        const heroY = this.hero.sprite.y
         const view = this.cameras.main.worldView
 
-        this.enemies = this.enemies.filter((enemy) => {
-            const mob = enemy.getData('mob') as MobStats | undefined
-            if (!enemy.active || !mob) return false
-            const enemyRadius = mob.size / 2
-            const dx = heroX - enemy.x
-            const dy = heroY - enemy.y
-            const dist = Math.hypot(dx, dy) || 0.001
-            const speed = mob.speed
-            enemy.x += (dx / dist) * speed * dt
-            enemy.y += (dy / dist) * speed * dt
-            if (dx !== 0) {
-                enemy.setFlipX(dx < 0)
-            }
-            this.positionEnemyHpText(enemy, mob)
-
-            if (dist < heroRadius + enemyRadius) {
-                this.handleHeroHit(enemy, mob)
-            }
-
-            const offscreenPadding = CLEANUP_PADDING + enemyRadius
-            if (
-                enemy.x < view.left - offscreenPadding ||
-                enemy.x > view.right + offscreenPadding ||
-                enemy.y < view.top - offscreenPadding ||
-                enemy.y > view.bottom + offscreenPadding
-            ) {
-                enemy.destroy()
-                return false
-            }
-
-            return enemy.active
+        this.enemies = this.enemyManager.update(this.hero, dt, view, (enemy, mob) => {
+            this.handleHeroHit(enemy, mob)
         })
 
         if (this.enemies.length === 0 && this.wavesOver) {
             this.handleExit()
         }
 
-        this.enemyManager.sync(this.enemies)
-
         this.combat.update(dt, view)
 
-        this.xpManager.update(heroX, heroY, view, (xp) => this.awardXp(xp))
+        this.xpManager.update(this.hero.sprite.x, this.hero.sprite.y, view, (xp) => this.awardXp(xp))
 
         this.pickupManager.update(view)
 
@@ -329,26 +293,6 @@ export class HordesScene extends Phaser.Scene {
         this.pickupTimers.forEach((timer) => timer.remove())
         this.pickupTimers = []
         this.supportTimersStarted = false
-    }
-
-    private attachEnemyHpOverlay(enemy: EnemySprite, mob: MobStats) {
-        const hpText = this.add
-            .text(enemy.x, enemy.y, `${mob.health}`, {
-                color: '#ffffff',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-            })
-            .setOrigin(0.5)
-            .setDepth(1)
-        enemy.setData('hpText', hpText)
-        enemy.once('destroy', () => hpText.destroy())
-        this.positionEnemyHpText(enemy, mob)
-    }
-
-    private positionEnemyHpText(enemy: EnemySprite, mob: MobStats) {
-        const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
-        if (!hpText || !hpText.active) return
-        hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
     }
 
     /**

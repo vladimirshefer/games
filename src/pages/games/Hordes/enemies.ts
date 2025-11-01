@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
-import type {EnemySprite} from './types'
+import type {EnemySprite, HeroState} from './types'
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
+import {CLEANUP_PADDING} from './game/constants.ts'
 
 export interface SpawnContext {
   heroX: number
@@ -20,12 +21,6 @@ export interface MobStats {
 
 export interface IEnemyManager {
   /**
-   * Updates the internal list of enemies managed by this manager
-   * @param enemies New list of enemies to manage
-   */
-  sync(enemies: EnemySprite[]): void
-
-  /**
    * Spawns a new enemy at the specified edge of the screen
    * @param edge Screen edge index (0: top, 1: right, 2: bottom, 3: left)
    * @param mob Enemy stats and properties
@@ -36,9 +31,24 @@ export interface IEnemyManager {
   spawn(edge: number, mob: MobStats, color: number, context: SpawnContext): EnemySprite
 
   /**
+   * Creates and tracks the floating HP label for an enemy.
+   */
+  attachHpLabel(enemy: EnemySprite, mob: MobStats): void
+
+  /**
    * Resolves collisions between enemies by pushing them apart
    */
   resolveOverlaps(): void
+
+  /**
+   * Moves living enemies, cleans up off-screen units, and reports hero collisions.
+   */
+  update(
+    hero: HeroState,
+    dt: number,
+    view: Phaser.Geom.Rectangle,
+    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
+  ): EnemySprite[]
 }
 
 export class EnemyManager implements IEnemyManager {
@@ -47,10 +57,6 @@ export class EnemyManager implements IEnemyManager {
 
   constructor(scene: Phaser.Scene, enemies: EnemySprite[]) {
     this.scene = scene
-    this.enemies = enemies
-  }
-
-  sync(enemies: EnemySprite[]) {
     this.enemies = enemies
   }
 
@@ -79,6 +85,21 @@ export class EnemyManager implements IEnemyManager {
 
     this.enemies.push(enemy)
     return enemy
+  }
+
+  attachHpLabel(enemy: EnemySprite, mob: MobStats) {
+    const hpText = this.scene.add
+      .text(enemy.x, enemy.y, `${mob.health}`, {
+        color: '#ffffff',
+        fontFamily: 'monospace',
+        fontSize: '12px',
+      })
+      .setOrigin(0.5)
+      .setDepth(1)
+
+    enemy.setData('hpText', hpText)
+    enemy.once('destroy', () => hpText.destroy())
+    this.updateHpLabel(enemy, mob)
   }
 
   resolveOverlaps() {
@@ -125,6 +146,55 @@ export class EnemyManager implements IEnemyManager {
         }
       }
     }
+  }
+
+  update(
+    hero: HeroState,
+    dt: number,
+    view: Phaser.Geom.Rectangle,
+    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
+  ) {
+    const heroRadius = hero.radius
+    const heroX = hero.sprite.x
+    const heroY = hero.sprite.y
+
+    this.enemies = this.enemies.filter((enemy) => {
+      const mob = enemy.getData('mob') as MobStats | undefined
+      if (!enemy.active || !mob) return false
+
+      const enemyRadius = mob.size / 2
+      const dx = heroX - enemy.x
+      const dy = heroY - enemy.y
+      const dist = Math.hypot(dx, dy) || 0.001
+      const speed = mob.speed
+
+      enemy.x += (dx / dist) * speed * dt
+      enemy.y += (dy / dist) * speed * dt
+      if (dx !== 0) {
+        enemy.setFlipX(dx < 0)
+      }
+
+      this.updateHpLabel(enemy, mob)
+
+      if (dist < heroRadius + enemyRadius) {
+        onHeroHit(enemy, mob)
+      }
+
+      const offscreenPadding = CLEANUP_PADDING + enemyRadius
+      if (
+        enemy.x < view.left - offscreenPadding ||
+        enemy.x > view.right + offscreenPadding ||
+        enemy.y < view.top - offscreenPadding ||
+        enemy.y > view.bottom + offscreenPadding
+      ) {
+        enemy.destroy()
+        return false
+      }
+
+      return enemy.active
+    })
+
+    return this.enemies
   }
 
   private findSpawnPosition(edge: number, radius: number, context: SpawnContext) {

@@ -152,28 +152,20 @@ const DEFAULT_MOB_STATS = {
 };
 
 export const WAVES: Wave[] = [
-  {
+  ...repeat(10, {
     mobs: [
       {
         stats: DEFAULT_MOB_STATS,
         amount: WAVE_BASE_AMOUNT,
       }
     ]
-  },
-  {
-    mobs: [
-      {
-        stats: DEFAULT_MOB_STATS,
-        amount: WAVE_BASE_AMOUNT,
-      }
-    ]
-  },
-  {
-    mobs: [
-      {
-        stats: DEFAULT_MOB_STATS,
-        amount: WAVE_BASE_AMOUNT,
-      }
-    ]
-  },
+  })
 ]
+
+function repeat<T>(amount: number, value: T): T[] {
+  const result: T[] = []
+  for (let i = 0; i < amount; i += 1) {
+    result.push(value)
+  }
+  return result;
+}
