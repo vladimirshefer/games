@@ -88,18 +88,7 @@ export class EnemyManager implements IEnemyManager {
   }
 
   attachHpLabel(enemy: EnemySprite, mob: MobStats) {
-    const hpText = this.scene.add
-      .text(enemy.x, enemy.y, `${mob.health}`, {
-        color: '#ffffff',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-      })
-      .setOrigin(0.5)
-      .setDepth(1)
-
-    enemy.setData('hpText', hpText)
-    enemy.once('destroy', () => hpText.destroy())
-    this.updateHpLabel(enemy, mob)
+    EnemyHpLabel.create(this.scene, enemy, mob)
   }
 
   resolveOverlaps() {
@@ -128,8 +117,8 @@ export class EnemyManager implements IEnemyManager {
           enemyA.y += Math.sin(angle)
           enemyB.x -= Math.cos(angle)
           enemyB.y -= Math.sin(angle)
-          this.updateHpLabel(enemyA, mobA)
-          this.updateHpLabel(enemyB, mobB)
+          EnemyHpLabel.update(enemyA, mobA)
+          EnemyHpLabel.update(enemyB, mobB)
           continue
         }
 
@@ -141,8 +130,8 @@ export class EnemyManager implements IEnemyManager {
           enemyA.y -= ny * overlap
           enemyB.x += nx * overlap
           enemyB.y += ny * overlap
-          this.updateHpLabel(enemyA, mobA)
-          this.updateHpLabel(enemyB, mobB)
+          EnemyHpLabel.update(enemyA, mobA)
+          EnemyHpLabel.update(enemyB, mobB)
         }
       }
     }
@@ -154,47 +143,70 @@ export class EnemyManager implements IEnemyManager {
     view: Phaser.Geom.Rectangle,
     onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
   ) {
-    const heroRadius = hero.radius
-    const heroX = hero.sprite.x
-    const heroY = hero.sprite.y
-
-    this.enemies = this.enemies.filter((enemy) => {
-      const mob = enemy.getData('mob') as MobStats | undefined
-      if (!enemy.active || !mob) return false
-
-      const enemyRadius = mob.size / 2
-      const dx = heroX - enemy.x
-      const dy = heroY - enemy.y
-      const dist = Math.hypot(dx, dy) || 0.001
-      const speed = mob.speed
-
-      enemy.x += (dx / dist) * speed * dt
-      enemy.y += (dy / dist) * speed * dt
-      if (dx !== 0) {
-        enemy.setFlipX(dx < 0)
-      }
-
-      this.updateHpLabel(enemy, mob)
-
-      if (dist < heroRadius + enemyRadius) {
-        onHeroHit(enemy, mob)
-      }
-
-      const offscreenPadding = CLEANUP_PADDING + enemyRadius
-      if (
-        enemy.x < view.left - offscreenPadding ||
-        enemy.x > view.right + offscreenPadding ||
-        enemy.y < view.top - offscreenPadding ||
-        enemy.y > view.bottom + offscreenPadding
-      ) {
-        enemy.destroy()
-        return false
-      }
-
-      return enemy.active
-    })
+    this.enemies = this.enemies.filter((enemy) =>
+      this.updateEnemyState(enemy, hero, dt, view, onHeroHit),
+    )
 
     return this.enemies
+  }
+
+  private updateEnemyState(
+    enemy: EnemySprite,
+    hero: HeroState,
+    dt: number,
+    view: Phaser.Geom.Rectangle,
+    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
+  ) {
+    const mob = enemy.getData('mob') as MobStats | undefined
+    if (!enemy.active || !mob) return false
+
+    const distance = this.moveEnemyTowardsHero(enemy, mob, hero, dt)
+    EnemyHpLabel.update(enemy, mob)
+
+    // if enemy touches hero collision
+    if (distance < hero.radius + mob.size / 2) {
+      onHeroHit(enemy, mob)
+    }
+
+    if (this.shouldCullEnemy(enemy, mob.size / 2, view)) {
+      enemy.destroy()
+      return false
+    }
+
+    return enemy.active
+  }
+
+  private moveEnemyTowardsHero(
+    enemy: EnemySprite,
+    mob: MobStats,
+    hero: HeroState,
+    dt: number,
+  ) {
+    const dx = hero.sprite.x - enemy.x
+    const dy = hero.sprite.y - enemy.y
+    const distance = Math.hypot(dx, dy) || 0.001
+    const speed = mob.speed
+
+    enemy.x += (dx / distance) * speed * dt
+    enemy.y += (dy / distance) * speed * dt
+    if (dx !== 0) {
+      enemy.setFlipX(dx < 0)
+    }
+
+    return distance
+  }
+  private shouldCullEnemy(
+    enemy: EnemySprite,
+    enemyRadius: number,
+    view: Phaser.Geom.Rectangle,
+  ) {
+    const offscreenPadding = CLEANUP_PADDING + enemyRadius
+    return (
+      enemy.x < view.left - offscreenPadding ||
+      enemy.x > view.right + offscreenPadding ||
+      enemy.y < view.top - offscreenPadding ||
+      enemy.y > view.bottom + offscreenPadding
+    )
   }
 
   private findSpawnPosition(edge: number, radius: number, context: SpawnContext) {
@@ -250,10 +262,33 @@ export class EnemyManager implements IEnemyManager {
     }
     return true
   }
+}
 
-  private updateHpLabel(enemy: EnemySprite, mob: MobStats) {
-    const label = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
+class EnemyHpLabel {
+  private static readonly DATA_KEY = 'hpText'
+
+  static create(scene: Phaser.Scene, enemy: EnemySprite, mob: MobStats) {
+    const hpText = scene.add
+      .text(enemy.x, enemy.y, `${mob.health}`, {
+        color: '#ffffff',
+        fontFamily: 'monospace',
+        fontSize: '12px',
+      })
+      .setOrigin(0.5)
+      .setDepth(1)
+
+    enemy.setData(EnemyHpLabel.DATA_KEY, hpText)
+    enemy.once('destroy', () => hpText.destroy())
+    EnemyHpLabel.update(enemy, mob)
+  }
+
+  static update(enemy: EnemySprite, mob: MobStats) {
+    const label = EnemyHpLabel.get(enemy)
     if (!label || !label.active) return
     label.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
+  }
+
+  private static get(enemy: EnemySprite) {
+    return enemy.getData(EnemyHpLabel.DATA_KEY) as Phaser.GameObjects.Text | undefined
   }
 }
