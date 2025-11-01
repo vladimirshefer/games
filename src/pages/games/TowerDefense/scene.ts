@@ -10,7 +10,6 @@ import {
     ENEMY_SPEED_PER_WAVE,
     ENEMY_HP_PER_WAVE,
     MIN_SPAWN_DELAY,
-    WAVE_BREAK,
     TOWER_COST,
     TOWER_DAMAGE,
     TOWER_RANGE,
@@ -106,7 +105,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
 
     create() {
-        const {width, height} = this.scale
+        // const {width, height} = this.scale
         this.cameras.main.setBackgroundColor('#0b0f19')
 
         this.enemyOverlay = this.add.graphics().setDepth(5)
@@ -238,10 +237,10 @@ export class TowerDefenseScene extends Phaser.Scene {
                 spawned += 1
                 this.spawnEnemy()
             },
-            onComplete: () => {
-                this.timers = this.timers.filter((current) => current !== timer)
-                this.time.delayedCall(WAVE_BREAK, () => this.startNextWave())
-            },
+            // onComplete: () => {
+            //     this.timers = this.timers.filter((current) => current !== timer)
+            //     this.time.delayedCall(WAVE_BREAK, () => this.startNextWave())
+            // },
         })
         this.timers.push(timer)
         this.spawnEnemy()
