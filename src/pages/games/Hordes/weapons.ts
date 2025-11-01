@@ -5,34 +5,42 @@ export interface WeaponStats {
     damage: number
     cooldown: number
     area: number
-    pierce: number
+    pierce: number,
+    sectorAngle: number,
 }
 
-export interface SwordWeaponStats extends WeaponStats {
-    sectorAngle: number
+function w(stats: Partial<WeaponStats>) : WeaponStats {
+    return {
+        damage: MOB_BASE_HP,
+        cooldown: 2,
+        area: 0,
+        pierce: 0,
+        sectorAngle: 120,
+        ...stats,
+    }
 }
 
-export const PISTOL_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 0.5, cooldown: 0.3, pierce: 1, area: 6}
-export const PISTOL_MK2_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 0.8, cooldown: 0.28, pierce: 2, area: 6}
-export const PISTOL_MK3_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 1.1, cooldown: 0.26, pierce: 3, area: 6}
-export const PISTOL_MK4_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 1.3, cooldown: 0.24, pierce: 5, area: 6}
-export const PISTOL_MK5_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 2.0, cooldown: 0.22, pierce: 8, area: 6}
+export const PISTOL_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 0.5, cooldown: 0.3, pierce: 1, area: 6})
+export const PISTOL_MK2_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 0.8, cooldown: 0.28, pierce: 2, area: 6})
+export const PISTOL_MK3_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 1.1, cooldown: 0.26, pierce: 3, area: 6})
+export const PISTOL_MK4_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 1.3, cooldown: 0.24, pierce: 5, area: 6})
+export const PISTOL_MK5_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 2.0, cooldown: 0.22, pierce: 8, area: 6})
 
-export const AURA_WEAPON: WeaponStats = { damage: MOB_BASE_HP * 0.5, cooldown: 0.5, pierce: 1, area: AURA_RADIUS }
-export const AURA_MK2_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 0.8, cooldown: 0.45, pierce: 1, area: AURA_RADIUS * 1.2}
-export const AURA_MK3_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 1.1, cooldown: 0.42, pierce: 1, area: AURA_RADIUS * 1.4}
-export const AURA_MK4_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 1.3, cooldown: 0.38, pierce: 1, area: AURA_RADIUS * 1.7}
-export const AURA_MK5_WEAPON: WeaponStats = {damage: MOB_BASE_HP * 2.0, cooldown: 0.35, pierce: 1, area: AURA_RADIUS * 2.0}
+export const AURA_WEAPON: WeaponStats = w({ damage: MOB_BASE_HP * 0.5, cooldown: 0.5, area: AURA_RADIUS })
+export const AURA_MK2_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 0.8, cooldown: 0.45, area: AURA_RADIUS * 1.2})
+export const AURA_MK3_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 1.1, cooldown: 0.42, area: AURA_RADIUS * 1.4})
+export const AURA_MK4_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 1.3, cooldown: 0.38, area: AURA_RADIUS * 1.7})
+export const AURA_MK5_WEAPON: WeaponStats = w({damage: MOB_BASE_HP * 2.0, cooldown: 0.35, area: AURA_RADIUS * 2.0})
 
-export const BOMB_WEAPON: WeaponStats = {cooldown: 5, damage: MOB_BASE_HP * 2, area: 100, pierce: 0}
-export const BOMB_MK2_WEAPON: WeaponStats = {cooldown: 3, damage: MOB_BASE_HP * 4, area: 150, pierce: 0}
-export const BOMB_MK3_WEAPON: WeaponStats = {cooldown: 2, damage: MOB_BASE_HP * 6, area: 200, pierce: 0}
+export const BOMB_WEAPON: WeaponStats = w({cooldown: 5, damage: MOB_BASE_HP * 2, area: 100})
+export const BOMB_MK2_WEAPON: WeaponStats = w({cooldown: 3, damage: MOB_BASE_HP * 4, area: 150})
+export const BOMB_MK3_WEAPON: WeaponStats = w({cooldown: 2, damage: MOB_BASE_HP * 6, area: 200})
 
-export const SWORD_WEAPON: SwordWeaponStats = {cooldown: 2, damage: MOB_BASE_HP * 1.2, area: 50, pierce: 0, sectorAngle: 120}
-export const SWORD_MK2_WEAPON: SwordWeaponStats = {cooldown: 1.8, damage: MOB_BASE_HP * 1.5, area: 60, pierce: 0, sectorAngle: 130}
-export const SWORD_MK3_WEAPON: SwordWeaponStats = {cooldown: 1.6, damage: MOB_BASE_HP * 1.7, area: 70, pierce: 0, sectorAngle: 140}
-export const SWORD_MK4_WEAPON: SwordWeaponStats = {cooldown: 1.4, damage: MOB_BASE_HP * 2.0, area: 80, pierce: 0, sectorAngle: 150}
-export const SWORD_MK5_WEAPON: SwordWeaponStats = {cooldown: 1.2, damage: MOB_BASE_HP * 2.5, area: 90, pierce: 0, sectorAngle: 160}
+export const SWORD_WEAPON: WeaponStats = w({cooldown: 2, damage: MOB_BASE_HP * 1.2, area: 50, sectorAngle: 120})
+export const SWORD_MK2_WEAPON: WeaponStats = w({cooldown: 1.8, damage: MOB_BASE_HP * 1.5, area: 60, sectorAngle: 130})
+export const SWORD_MK3_WEAPON: WeaponStats = w({cooldown: 1.6, damage: MOB_BASE_HP * 1.7, area: 70, sectorAngle: 140})
+export const SWORD_MK4_WEAPON: WeaponStats = w({cooldown: 1.4, damage: MOB_BASE_HP * 2.0, area: 80, sectorAngle: 150})
+export const SWORD_MK5_WEAPON: WeaponStats = w({cooldown: 1.2, damage: MOB_BASE_HP * 2.5, area: 90, sectorAngle: 160})
 
 export interface UpgradeOption {
     id: string

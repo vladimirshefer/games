@@ -1,7 +1,7 @@
 import type {EnemySprite, SimpleMob} from "../../types.ts";
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
-import type {SwordWeaponStats} from "../../weapons.ts";
+import type {WeaponStats} from "../../weapons.ts";
 import type {Weapon} from "./weapon.ts";
 
 export class Sword implements Weapon {
@@ -10,12 +10,12 @@ export class Sword implements Weapon {
     private scene: Phaser.Scene;
     private context: CombatContext;
     private damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
-    private stats: SwordWeaponStats;
+    private stats: WeaponStats;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
-        stats: SwordWeaponStats,
+        stats: WeaponStats,
         damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
     ) {
         this.scene = scene

@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import type {EnemySprite, HeroState, SimpleMob} from './types'
-import type {SwordWeaponStats, WeaponStats} from "./weapons.ts";
+import type {WeaponStats} from "./weapons.ts";
 import {Sword} from "./game/weapons/sword.ts";
 import {Bomb} from "./game/weapons/bomb.ts";
 import {Aura} from "./game/weapons/aura.ts";
@@ -10,7 +10,7 @@ export interface CombatConfig {
   pistolWeapon?: WeaponStats | null
   auraWeapon?: WeaponStats | null
   bombWeapon?: WeaponStats | null
-  swordWeapon?: SwordWeaponStats | null
+  swordWeapon?: WeaponStats | null
 }
 
 export interface CombatContext {
@@ -109,7 +109,7 @@ export class CombatSystem {
     this.bomb?.reset()
   }
 
-  setSwordWeapon(weapon: SwordWeaponStats | null) {
+  setSwordWeapon(weapon: WeaponStats | null) {
     this.sword?.reset()
     this.config.swordWeapon = weapon
     if (weapon) {

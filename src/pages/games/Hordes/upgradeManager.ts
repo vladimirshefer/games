@@ -20,9 +20,8 @@ import {
   SWORD_MK4_WEAPON,
   SWORD_MK5_WEAPON,
   SWORD_WEAPON,
-  upgrades,
   type UpgradeOption,
-  type SwordWeaponStats,
+  upgrades,
   type WeaponStats,
 } from './weapons.ts'
 
@@ -271,7 +270,7 @@ export class UpgradeManager {
     this.hooks.onShowMessage(message)
   }
 
-  private handleSwordUpgrade(weapon: SwordWeaponStats, message: string) {
+  private handleSwordUpgrade(weapon: WeaponStats, message: string) {
     if (!this.hero.weaponIds.includes('sword')) {
       this.hero.weaponIds.push('sword')
     }
