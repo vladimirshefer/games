@@ -138,15 +138,84 @@ const DEFAULT_MOB_STATS = {
   damage: MOB_BASE_DAMAGE,
 };
 
+const STRONG_MOB_STATS = {
+  size: MOB_BASE_RADIUS * 2.5,
+  speed: MOB_BASE_SPEED,
+  health: MOB_BASE_HP * 3,
+  xp: MOB_BASE_XP * 2,
+  damage: MOB_BASE_DAMAGE * 1.5,
+};
+
 export const WAVES: Wave[] = [
-  ...repeat(10, {
+  ...repeat(3, {
     mobs: [
       {
         stats: DEFAULT_MOB_STATS,
         amount: WAVE_BASE_AMOUNT,
       }
     ]
-  })
+      },
+  ),
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      },
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT / 5,
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      },
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT / 4,
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      },
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT / 3,
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      },
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT / 2,
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      },
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT,
+      }
+    ]
+  },
 ]
 
 function repeat<T>(amount: number, value: T): T[] {
