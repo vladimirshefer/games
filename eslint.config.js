@@ -31,7 +31,6 @@ export default defineConfig([
           ignoreRestSiblings: true
         }
       ],
-      'max-len': ['error', { code: 120 }]
     }
   }
 ])
