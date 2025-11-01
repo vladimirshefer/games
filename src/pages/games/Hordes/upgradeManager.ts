@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import type {HeroState} from './types'
-import type {CombatSystem} from './combat'
+import type { HeroState } from './types'
+import type { CombatSystem } from './combat'
 import {
   AURA_MK2_WEAPON,
   AURA_MK3_WEAPON,
@@ -22,7 +22,7 @@ import {
   SWORD_WEAPON,
   type UpgradeOption,
   upgrades,
-  type WeaponStats,
+  type WeaponStats
 } from './weapons.ts'
 
 const STARTER_UPGRADES = new Set(['pistol', 'sword', 'aura', 'bomb'])
@@ -42,12 +42,7 @@ export class UpgradeManager {
   private overlay: Phaser.GameObjects.GameObject[] = []
   private active = false
 
-  constructor(
-    scene: Phaser.Scene,
-    hero: HeroState,
-    combat: CombatSystem,
-    hooks: UpgradeHooks,
-  ) {
+  constructor(scene: Phaser.Scene, hero: HeroState, combat: CombatSystem, hooks: UpgradeHooks) {
     this.scene = scene
     this.hero = hero
     this.combat = combat
@@ -97,7 +92,7 @@ export class UpgradeManager {
       .text(centerX, centerY - panelHeight / 2 + 40, titleText, {
         color: '#ffe082',
         fontFamily: 'monospace',
-        fontSize: '22px',
+        fontSize: '22px'
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -112,19 +107,15 @@ export class UpgradeManager {
           fontFamily: 'monospace',
           fontSize: '20px',
           backgroundColor: '#30304a',
-          padding: { x: 16, y: 10 },
+          padding: { x: 16, y: 10 }
         })
         .setOrigin(0.5)
         .setScrollFactor(0)
         .setDepth(12)
         .setInteractive({ useHandCursor: true })
 
-      button.on('pointerover', () =>
-        button.setStyle({ backgroundColor: '#3d3d5c' }),
-      )
-      button.on('pointerout', () =>
-        button.setStyle({ backgroundColor: '#30304a' }),
-      )
+      button.on('pointerover', () => button.setStyle({ backgroundColor: '#3d3d5c' }))
+      button.on('pointerout', () => button.setStyle({ backgroundColor: '#30304a' }))
       button.on('pointerdown', () => this.applyUpgrade(option.id))
       this.overlay.push(button)
 
@@ -132,7 +123,7 @@ export class UpgradeManager {
         .text(centerX, optionY + 28, option.description, {
           color: '#b0bec5',
           fontFamily: 'monospace',
-          fontSize: '16px',
+          fontSize: '16px'
         })
         .setOrigin(0.5, 0)
         .setScrollFactor(0)
@@ -230,10 +221,7 @@ export class UpgradeManager {
     const needsStarter = this.hero.weaponIds.length === 0
     return upgrades.filter((option) => {
       if (this.hero.upgrades.includes(option.id)) return false
-      if (
-        option.requires &&
-        !option.requires.every((req) => this.hero.upgrades.includes(req))
-      ) {
+      if (option.requires && !option.requires.every((req) => this.hero.upgrades.includes(req))) {
         return false
       }
       if (needsStarter) {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import {CLEANUP_PADDING, HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
+import { CLEANUP_PADDING, HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE } from './game/constants.ts'
 
 const MAGNET_TRIGGER_RADIUS = PICKUP_DEFAULT_SIZE * 4
 const MAGNET_COLLECT_RADIUS = PICKUP_DEFAULT_SIZE
@@ -24,7 +24,7 @@ export class XpCrystalManager {
       y + offsetY,
       [0, -BASE_SIZE, BASE_SIZE, 0, 0, BASE_SIZE, -BASE_SIZE, 0],
       0x64b5f6,
-      0.7,
+      0.7
     )
     crystal.setOrigin(0.5)
     crystal.setDepth(-0.2)
@@ -37,12 +37,7 @@ export class XpCrystalManager {
     this.crystals.push(crystal)
   }
 
-  update(
-    heroX: number,
-    heroY: number,
-    view: Phaser.Geom.Rectangle,
-    onCollect: (xp: number) => void,
-  ) {
+  update(heroX: number, heroY: number, view: Phaser.Geom.Rectangle, onCollect: (xp: number) => void) {
     const dt = Phaser.Math.Clamp(this.scene.game.loop.delta ?? 16, 8, 48) / 1000
     this.crystals = this.crystals.filter((crystal) => {
       if (!crystal.active) {
@@ -108,7 +103,7 @@ export class XpCrystalManager {
           crystal.x < view.left - padding ||
           crystal.x > view.right + padding ||
           crystal.y < view.top - padding ||
-          crystal.y > view.bottom + padding,
+          crystal.y > view.bottom + padding
       )
 
       if (offscreen.length < 2) break

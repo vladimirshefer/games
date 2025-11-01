@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
-import type {HeroState} from './types'
-import {HERO_BASE_HP, HERO_BASE_RADIUS} from "./game/constants.ts";
-import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "./game/sprite.ts";
+import type { HeroState } from './types'
+import { HERO_BASE_HP, HERO_BASE_RADIUS } from './game/constants.ts'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
 
 export const AURA_RADIUS = 50
 
@@ -26,7 +26,7 @@ export function createHero(scene: Phaser.Scene): HeroState {
     hasAura: false,
     upgrades: [],
     weaponIds: [],
-    direction: new Phaser.Math.Vector2(0, 0),
+    direction: new Phaser.Math.Vector2(0, 0)
   }
 }
 

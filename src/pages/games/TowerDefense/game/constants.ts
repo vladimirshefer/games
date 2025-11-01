@@ -1,4 +1,3 @@
-
 export const BASE_HP = 15
 export const STARTING_COINS = 75
 export const TOWER_COST = 25

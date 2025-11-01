@@ -15,11 +15,11 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs['recommended-latest'],
       reactRefresh.configs.vite,
-      prettierRecommended,
+      prettierRecommended
     ],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      globals: globals.browser
     },
     rules: {
       '@typescript-eslint/no-unused-vars': [
@@ -28,9 +28,10 @@ export default defineConfig([
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        },
+          ignoreRestSiblings: true
+        }
       ],
-    },
-  },
+      'max-len': ['error', { code: 120 }]
+    }
+  }
 ])

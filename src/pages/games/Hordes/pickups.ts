@@ -1,10 +1,9 @@
 import Phaser from 'phaser'
-import {healHero} from './hero.ts'
-import type {HeroState} from './types'
-import {XpCrystalManager} from './xpCrystals.ts'
-import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
-import {CLEANUP_PADDING, HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
-
+import { healHero } from './hero.ts'
+import type { HeroState } from './types'
+import { XpCrystalManager } from './xpCrystals.ts'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
+import { CLEANUP_PADDING, HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE } from './game/constants.ts'
 
 interface PickupHooks {
   getHero(): HeroState
@@ -24,11 +23,7 @@ export class PickupManager {
   private healPacks: Phaser.GameObjects.Image[] = []
   private magnetPickups: Phaser.GameObjects.Image[] = []
 
-  constructor(
-    scene: Phaser.Scene,
-    xpManager: XpCrystalManager,
-    hooks: PickupHooks,
-  ) {
+  constructor(scene: Phaser.Scene, xpManager: XpCrystalManager, hooks: PickupHooks) {
     this.scene = scene
     this.xpManager = xpManager
     this.hooks = hooks
@@ -39,8 +34,7 @@ export class PickupManager {
     const y = Phaser.Math.FloatBetween(view.top + SPAWN_MARGIN, view.bottom - SPAWN_MARGIN)
 
     const diameter = PICKUP_DEFAULT_SIZE
-    const pack = this.scene.add.image(x, y,
-        ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.healPotion)
+    const pack = this.scene.add.image(x, y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.healPotion)
     pack.setDisplaySize(diameter, diameter)
     pack.setTint(0xf06040)
     pack.setData('radius', diameter / 2)
@@ -120,37 +114,20 @@ export class PickupManager {
   private collectHealPack(pack: Phaser.GameObjects.Image) {
     const hero = this.hooks.getHero()
     healHero(hero, HEAL_AMOUNT)
-    this.scene.cameras.main.flash(
-      HEAL_FLASH.duration,
-      HEAL_FLASH.r,
-      HEAL_FLASH.g,
-      HEAL_FLASH.b,
-      false,
-    )
+    this.scene.cameras.main.flash(HEAL_FLASH.duration, HEAL_FLASH.r, HEAL_FLASH.g, HEAL_FLASH.b, false)
     pack.destroy()
     this.hooks.onHeroHealed()
   }
 
   private collectMagnetPickup(pickup: Phaser.GameObjects.Image) {
     this.xpManager.activateMagnet()
-    this.scene.cameras.main.flash(
-      MAGNET_FLASH.duration,
-      MAGNET_FLASH.r,
-      MAGNET_FLASH.g,
-      MAGNET_FLASH.b,
-      false,
-    )
+    this.scene.cameras.main.flash(MAGNET_FLASH.duration, MAGNET_FLASH.r, MAGNET_FLASH.g, MAGNET_FLASH.b, false)
     pickup.destroy()
     this.hooks.onMagnetActivated()
   }
 
   private isOutOfBounds(x: number, y: number, view: Phaser.Geom.Rectangle) {
     const padding = CLEANUP_PADDING
-    return (
-      x < view.left - padding ||
-      x > view.right + padding ||
-      y < view.top - padding ||
-      y > view.bottom + padding
-    )
+    return x < view.left - padding || x > view.right + padding || y < view.top - padding || y > view.bottom + padding
   }
 }

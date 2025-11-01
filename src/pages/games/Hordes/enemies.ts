@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
-import type {EnemySprite, HeroState} from './types'
-import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
-import {CLEANUP_PADDING, MOB_BASE_RADIUS} from './game/constants.ts'
+import type { EnemySprite, HeroState } from './types'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
+import { CLEANUP_PADDING, MOB_BASE_RADIUS } from './game/constants.ts'
 
 export interface SpawnContext {
   heroX: number
@@ -46,7 +46,7 @@ export interface IEnemyManager {
     hero: HeroState,
     dt: number,
     view: Phaser.Geom.Rectangle,
-    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
+    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void
   ): EnemySprite[]
 }
 
@@ -139,11 +139,9 @@ export class EnemyManager implements IEnemyManager {
     hero: HeroState,
     dt: number,
     view: Phaser.Geom.Rectangle,
-    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
+    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void
   ) {
-    this.enemies = this.enemies.filter((enemy) =>
-      this.updateEnemyState(enemy, hero, dt, view, onHeroHit),
-    )
+    this.enemies = this.enemies.filter((enemy) => this.updateEnemyState(enemy, hero, dt, view, onHeroHit))
 
     return this.enemies
   }
@@ -153,7 +151,7 @@ export class EnemyManager implements IEnemyManager {
     hero: HeroState,
     dt: number,
     view: Phaser.Geom.Rectangle,
-    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void,
+    onHeroHit: (enemy: EnemySprite, mob: MobStats) => void
   ) {
     const mob = enemy.getData('mob') as MobStats | undefined
     if (!enemy.active || !mob) return false
@@ -174,12 +172,7 @@ export class EnemyManager implements IEnemyManager {
     return enemy.active
   }
 
-  private moveEnemyTowardsHero(
-    enemy: EnemySprite,
-    mob: MobStats,
-    hero: HeroState,
-    dt: number,
-  ) {
+  private moveEnemyTowardsHero(enemy: EnemySprite, mob: MobStats, hero: HeroState, dt: number) {
     const dx = hero.sprite.x - enemy.x
     const dy = hero.sprite.y - enemy.y
     const distance = Math.hypot(dx, dy) || 0.001
@@ -193,11 +186,7 @@ export class EnemyManager implements IEnemyManager {
 
     return distance
   }
-  private shouldCullEnemy(
-    enemy: EnemySprite,
-    enemyRadius: number,
-    view: Phaser.Geom.Rectangle,
-  ) {
+  private shouldCullEnemy(enemy: EnemySprite, enemyRadius: number, view: Phaser.Geom.Rectangle) {
     const offscreenPadding = CLEANUP_PADDING + enemyRadius
     return (
       enemy.x < view.left - offscreenPadding ||
@@ -208,8 +197,8 @@ export class EnemyManager implements IEnemyManager {
   }
 
   private findSpawnPosition(edge: number, radius: number) {
-    const camera = this.scene.cameras.main;
-    const worldView = camera.worldView;
+    const camera = this.scene.cameras.main
+    const worldView = camera.worldView
     let position = { x: worldView.centerX, y: worldView.y }
     const attempts = 12
 
@@ -271,7 +260,7 @@ class EnemyHpLabel {
       .text(enemy.x, enemy.y, `${mob.health}`, {
         color: '#ffffff',
         fontFamily: 'monospace',
-        fontSize: '12px',
+        fontSize: '12px'
       })
       .setOrigin(0.5)
       .setDepth(1)

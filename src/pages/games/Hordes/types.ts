@@ -8,8 +8,8 @@ export interface HeroState {
   radius: number
   maxHp: number
   hp: number
-  hasAura: boolean,
-  upgrades: string[],
-  weaponIds: string[],
+  hasAura: boolean
+  upgrades: string[]
+  weaponIds: string[]
   direction: Phaser.Math.Vector2
 }

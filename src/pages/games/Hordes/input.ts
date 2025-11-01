@@ -123,6 +123,6 @@ export function createInputController(scene: Phaser.Scene): InputController {
       joystickBase = undefined
       joystickThumb = undefined
       joystickPointerId = undefined
-    },
+    }
   }
 }
