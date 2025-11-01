@@ -22,8 +22,8 @@ import {
   SWORD_WEAPON,
   upgrades,
   type UpgradeOption,
-  type SwordWeapon,
-  type Weapon,
+  type SwordWeaponStats,
+  type WeaponStats,
 } from './weapons.ts'
 
 const STARTER_UPGRADES = new Set(['pistol', 'sword', 'aura', 'bomb'])
@@ -244,7 +244,7 @@ export class UpgradeManager {
     })
   }
 
-  private handleAuraUpgrade(weapon: Weapon, message: string) {
+  private handleAuraUpgrade(weapon: WeaponStats, message: string) {
     this.hero.hasAura = true
     if (!this.hero.weaponIds.includes('aura')) {
       this.hero.weaponIds.push('aura')
@@ -255,7 +255,7 @@ export class UpgradeManager {
     this.hooks.onShowMessage(message)
   }
 
-  private handlePistolUpgrade(weapon: Weapon, message: string) {
+  private handlePistolUpgrade(weapon: WeaponStats, message: string) {
     if (!this.hero.weaponIds.includes('pistol')) {
       this.hero.weaponIds.push('pistol')
     }
@@ -263,7 +263,7 @@ export class UpgradeManager {
     this.hooks.onShowMessage(message)
   }
 
-  private handleBombUpgrade(weapon: Weapon, message: string) {
+  private handleBombUpgrade(weapon: WeaponStats, message: string) {
     if (!this.hero.weaponIds.includes('bomb')) {
       this.hero.weaponIds.push('bomb')
     }
@@ -271,7 +271,7 @@ export class UpgradeManager {
     this.hooks.onShowMessage(message)
   }
 
-  private handleSwordUpgrade(weapon: SwordWeapon, message: string) {
+  private handleSwordUpgrade(weapon: SwordWeaponStats, message: string) {
     if (!this.hero.weaponIds.includes('sword')) {
       this.hero.weaponIds.push('sword')
     }

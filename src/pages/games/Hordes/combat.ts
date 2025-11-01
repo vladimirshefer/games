@@ -1,16 +1,16 @@
 import Phaser from 'phaser'
 import type {EnemySprite, HeroState, SimpleMob} from './types'
-import type {SwordWeapon, Weapon} from "./weapons.ts";
+import type {SwordWeaponStats, WeaponStats} from "./weapons.ts";
 import {Sword} from "./game/weapons/sword.ts";
 import {Bomb} from "./game/weapons/bomb.ts";
 import {Aura} from "./game/weapons/aura.ts";
 import {Pistol} from "./game/weapons/pistol.ts";
 
 export interface CombatConfig {
-  pistolWeapon?: Weapon | null
-  auraWeapon?: Weapon | null
-  bombWeapon?: Weapon | null
-  swordWeapon?: SwordWeapon | null
+  pistolWeapon?: WeaponStats | null
+  auraWeapon?: WeaponStats | null
+  bombWeapon?: WeaponStats | null
+  swordWeapon?: SwordWeaponStats | null
 }
 
 export interface CombatContext {
@@ -45,12 +45,12 @@ export class CombatSystem {
     this.pistol?.reset()
   }
 
-  update(dt: number, worldView: Phaser.Geom.Rectangle, cleanupPadding: number) {
+  update(dt: number, worldView: Phaser.Geom.Rectangle) {
     const enemies = this.context.getEnemies()
-    this.pistol?.update(dt, enemies, worldView, cleanupPadding)
-    this.bomb?.update(dt, enemies)
-    this.sword?.update(dt, enemies)
-    this.aura?.update(dt, enemies)
+    this.pistol?.update(dt, enemies, worldView)
+    this.bomb?.update(dt, enemies, worldView)
+    this.sword?.update(dt, enemies, worldView)
+    this.aura?.update(dt, enemies, worldView)
   }
 
   private damageEnemy(enemy: EnemySprite, amount: number, mob: SimpleMob) {
@@ -76,7 +76,7 @@ export class CombatSystem {
     return false
   }
 
-  setPistolWeapon(weapon: Weapon | null) {
+  setPistolWeapon(weapon: WeaponStats | null) {
     this.pistol?.reset()
     this.config.pistolWeapon = weapon
     if (weapon) {
@@ -87,7 +87,7 @@ export class CombatSystem {
     this.pistol?.reset()
   }
 
-  setAuraWeapon(weapon: Weapon | null) {
+  setAuraWeapon(weapon: WeaponStats | null) {
     this.aura?.reset()
     this.config.auraWeapon = weapon ?? null
     if (weapon) {
@@ -98,7 +98,7 @@ export class CombatSystem {
     this.aura?.reset()
   }
 
-  setBombWeapon(weapon: Weapon | null) {
+  setBombWeapon(weapon: WeaponStats | null) {
     this.bomb?.reset()
     this.config.bombWeapon = weapon ?? null
     if (weapon) {
@@ -109,7 +109,7 @@ export class CombatSystem {
     this.bomb?.reset()
   }
 
-  setSwordWeapon(weapon: SwordWeapon | null) {
+  setSwordWeapon(weapon: SwordWeaponStats | null) {
     this.sword?.reset()
     this.config.swordWeapon = weapon
     if (weapon) {

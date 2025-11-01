@@ -1,28 +1,29 @@
-import type {Weapon} from "../../weapons.ts";
+import type {WeaponStats} from "../../weapons.ts";
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "../sprite.ts";
 import {PICKUP_DEFAULT_SIZE} from "../constants.ts";
 import Phaser from "phaser";
 import type {EnemySprite, SimpleMob} from "../../types.ts";
 import type {CombatContext} from "../../combat.ts";
+import type {Weapon} from "./weapon.ts";
 
-export class Bomb {
+export class Bomb implements Weapon{
 
     private bombElapsed = 0
 
     private bombs: {
         sprite: Phaser.GameObjects.Image
         detonateAt: number
-        weapon: Weapon
+        weapon: WeaponStats
     }[] = []
     private scene: Phaser.Scene;
     private context: CombatContext;
-    private readonly stats: Weapon;
+    private readonly stats: WeaponStats;
     private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
-        stats: Weapon,
+        stats: WeaponStats,
         damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
     ) {
         this.scene = scene
@@ -31,8 +32,8 @@ export class Bomb {
         this.damageEnemy = damageEnemy
     }
 
-    update(dt: number, enemies: EnemySprite[]) {
-        this.bombElapsed += dt
+    update(_dt: number, enemies: EnemySprite[], _worldView: Phaser.Geom.Rectangle): void {
+        this.bombElapsed += _dt
         while (this.bombElapsed >= this.stats.cooldown) {
             this.bombElapsed -= this.stats.cooldown
             this.spawnBomb(this.stats)
@@ -60,7 +61,7 @@ export class Bomb {
     }
 
 
-    private spawnBomb(weapon: Weapon) {
+    private spawnBomb(weapon: WeaponStats) {
         const {sprite} = this.context.hero
         const bombSprite = this.scene.add.image(sprite.x, sprite.y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.bomb)
         bombSprite.setDepth(-0.5)
@@ -76,7 +77,7 @@ export class Bomb {
     }
 
     private detonateBomb(
-        bomb: { sprite: Phaser.GameObjects.Image; weapon: Weapon },
+        bomb: { sprite: Phaser.GameObjects.Image; weapon: WeaponStats },
         enemies: EnemySprite[],
     ) {
         const {sprite, weapon} = bomb

@@ -27,7 +27,7 @@ export class EnemyManager {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius, context)
 
-    const frameIndex = [ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk2][0] ?? 0
+    const frameIndex = ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
 
     const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, frameIndex)
     enemy.setOrigin(0.5)

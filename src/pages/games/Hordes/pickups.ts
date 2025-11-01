@@ -3,7 +3,7 @@ import {healHero} from './hero.ts'
 import type {HeroState} from './types'
 import {XpCrystalManager} from './xpCrystals.ts'
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
-import {HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
+import {CLEANUP_PADDING, HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
 
 
 interface PickupHooks {
@@ -20,7 +20,6 @@ const SPAWN_MARGIN = MOB_BASE_RADIUS * 3
 export class PickupManager {
   private scene: Phaser.Scene
   private xpManager: XpCrystalManager
-  private cleanupPadding: number
   private hooks: PickupHooks
   private healPacks: Phaser.GameObjects.Image[] = []
   private magnetPickups: Phaser.GameObjects.Image[] = []
@@ -28,12 +27,10 @@ export class PickupManager {
   constructor(
     scene: Phaser.Scene,
     xpManager: XpCrystalManager,
-    cleanupPadding: number,
     hooks: PickupHooks,
   ) {
     this.scene = scene
     this.xpManager = xpManager
-    this.cleanupPadding = cleanupPadding
     this.hooks = hooks
   }
 
@@ -148,7 +145,7 @@ export class PickupManager {
   }
 
   private isOutOfBounds(x: number, y: number, view: Phaser.Geom.Rectangle) {
-    const padding = this.cleanupPadding
+    const padding = CLEANUP_PADDING
     return (
       x < view.left - padding ||
       x > view.right + padding ||

@@ -1,20 +1,21 @@
 import type {EnemySprite, SimpleMob} from "../../types.ts";
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
-import type {SwordWeapon} from "../../weapons.ts";
+import type {SwordWeaponStats} from "../../weapons.ts";
+import type {Weapon} from "./weapon.ts";
 
-export class Sword {
+export class Sword implements Weapon {
     swordElapsed = 0
     private activeSwordSwing: ActiveSwordSwing | null = null
     private scene: Phaser.Scene;
     private context: CombatContext;
     private damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
-    private stats: SwordWeapon;
+    private stats: SwordWeaponStats;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
-        stats: SwordWeapon,
+        stats: SwordWeaponStats,
         damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
     ) {
         this.scene = scene
@@ -23,16 +24,16 @@ export class Sword {
         this.damageEnemy = damageEnemy
     }
 
-    update(dt: number, enemies: EnemySprite[]) {
+    update(_dt: number, enemies: EnemySprite[], _worldView: Phaser.Geom.Rectangle): void {
         if (this.activeSwordSwing) {
-            this.updateActiveSwordSwing(dt, enemies)
+            this.updateActiveSwordSwing(_dt, enemies)
         }
 
         const hero = this.context.hero
         if (hero.hp <= 0) return
         if (!hero.weaponIds.includes('sword')) return
 
-        this.swordElapsed += dt
+        this.swordElapsed += _dt
         if (this.activeSwordSwing) return
         if (this.swordElapsed < this.stats.cooldown) return
 

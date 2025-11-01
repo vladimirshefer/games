@@ -1,13 +1,14 @@
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
-import type {Weapon} from "../../weapons.ts";
+import type {WeaponStats} from "../../weapons.ts";
 import type {Bullet, EnemySprite, SimpleMob} from "../../types.ts";
-import {HERO_BASE_SPEED} from "../constants.ts";
+import {CLEANUP_PADDING, HERO_BASE_SPEED} from "../constants.ts";
+import type {Weapon} from "./weapon.ts";
 
-export class Pistol {
+export class Pistol implements Weapon {
     private readonly scene: Phaser.Scene;
     private readonly context: CombatContext;
-    private readonly stats: Weapon;
+    private readonly stats: WeaponStats;
     private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
 
     private bullets: Bullet[] = []
@@ -16,7 +17,7 @@ export class Pistol {
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
-        stats: Weapon,
+        stats: WeaponStats,
         damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
     ) {
         this.scene = scene
@@ -25,7 +26,7 @@ export class Pistol {
         this.damageEnemy = damageEnemy
     }
 
-    update(dt: number, enemies: EnemySprite[], worldView: Phaser.Geom.Rectangle, cleanupPadding: number) {
+    update(dt: number, enemies: EnemySprite[], worldView: Phaser.Geom.Rectangle) {
         this.bullets = this.bullets.filter((bullet) => {
             const sprite = bullet.sprite
             if (!sprite.active) return false
@@ -34,10 +35,10 @@ export class Pistol {
             sprite.y += bullet.vy * dt
 
             if (
-                sprite.x < worldView.left - cleanupPadding ||
-                sprite.x > worldView.right + cleanupPadding ||
-                sprite.y < worldView.top - cleanupPadding ||
-                sprite.y > worldView.bottom + cleanupPadding
+                sprite.x < worldView.left - CLEANUP_PADDING ||
+                sprite.x > worldView.right + CLEANUP_PADDING ||
+                sprite.y < worldView.top - CLEANUP_PADDING ||
+                sprite.y > worldView.bottom + CLEANUP_PADDING
             ) {
                 sprite.destroy()
                 return false

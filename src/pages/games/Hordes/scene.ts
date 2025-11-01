@@ -10,7 +10,7 @@ import {WaveManager} from "./waves.ts";
 import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "./game/sprite.ts";
-import {HERO_BASE_SPEED, MOB_BASE_RADIUS, WORLD_BOUNDS} from "./game/constants.ts";
+import {CLEANUP_PADDING, HERO_BASE_SPEED, MOB_BASE_RADIUS, WORLD_BOUNDS} from "./game/constants.ts";
 
 interface ExitStats {
   kills: number
@@ -27,7 +27,6 @@ export class HordesScene extends Phaser.Scene {
   private inputController!: InputController
   private enemies: EnemySprite[] = []
   private spawnBuffer = MOB_BASE_RADIUS * 6
-  private cleanupPadding = 260
   private background!: Phaser.GameObjects.TileSprite
   private worldBounds = WORLD_BOUNDS
   private infoText!: Phaser.GameObjects.Text
@@ -98,8 +97,8 @@ export class HordesScene extends Phaser.Scene {
         this.hero = createHero(this)
 
         this.enemies = []
-        this.xpManager = new XpCrystalManager(this, this.cleanupPadding)
-        this.pickupManager = new PickupManager(this, this.xpManager, this.cleanupPadding, {
+        this.xpManager = new XpCrystalManager(this)
+        this.pickupManager = new PickupManager(this, this.xpManager, {
             getHero: () => this.hero,
             onHeroHealed: () => this.updateHud(),
             onMagnetActivated: () => {
@@ -259,7 +258,7 @@ export class HordesScene extends Phaser.Scene {
                 this.handleHeroHit(enemy, mob)
             }
 
-            const offscreenPadding = this.cleanupPadding + enemyRadius
+            const offscreenPadding = CLEANUP_PADDING + enemyRadius
             if (
                 enemy.x < view.left - offscreenPadding ||
                 enemy.x > view.right + offscreenPadding ||
@@ -274,7 +273,7 @@ export class HordesScene extends Phaser.Scene {
         })
         this.enemyManager.sync(this.enemies)
 
-        this.combat.update(dt, view, this.cleanupPadding)
+        this.combat.update(dt, view)
 
         this.xpManager.update(heroX, heroY, view, (xp) => this.awardXp(xp))
 

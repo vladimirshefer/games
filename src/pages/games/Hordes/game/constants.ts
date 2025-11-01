@@ -6,4 +6,7 @@ export const MOB_BASE_SPEED = HERO_BASE_SPEED * 0.5
 export const MOB_BASE_RADIUS = HERO_BASE_RADIUS
 export const MOB_BASE_HP = HERO_BASE_HP * 0.2
 export const MOB_BASE_DAMAGE = HERO_BASE_HP * 0.05
+// Pixels. E.g. Heal potions, Bombs.
 export const PICKUP_DEFAULT_SIZE = HERO_BASE_RADIUS * 2
+// Pixels. When pickup or projectile is out of player view more than this distance, destroy/cleanup from the world.
+export const CLEANUP_PADDING = 260

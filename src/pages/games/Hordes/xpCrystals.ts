@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import {HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
+import {CLEANUP_PADDING, HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE} from "./game/constants.ts";
 
 const MAGNET_TRIGGER_RADIUS = PICKUP_DEFAULT_SIZE * 4
 const MAGNET_COLLECT_RADIUS = PICKUP_DEFAULT_SIZE
@@ -9,12 +9,10 @@ const BASE_SIZE = PICKUP_DEFAULT_SIZE * 0.5
 
 export class XpCrystalManager {
   private scene: Phaser.Scene
-  private cleanupPadding: number
   private crystals: Phaser.GameObjects.Polygon[] = []
 
-  constructor(scene: Phaser.Scene, cleanupPadding: number) {
+  constructor(scene: Phaser.Scene) {
     this.scene = scene
-    this.cleanupPadding = cleanupPadding
   }
 
   spawn(x: number, y: number, amount: number) {
@@ -102,7 +100,7 @@ export class XpCrystalManager {
   private mergeOutOfBounds(view: Phaser.Geom.Rectangle, heroX: number, heroY: number) {
     if (this.crystals.length <= MAX_CRYSTALS) return
 
-    const padding = this.cleanupPadding
+    const padding = CLEANUP_PADDING
     let safety = 0
     while (this.crystals.length > MAX_CRYSTALS && safety < 20) {
       const offscreen = this.crystals.filter(

@@ -1,18 +1,19 @@
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
-import type {Weapon} from "../../weapons.ts";
+import type {WeaponStats} from "../../weapons.ts";
 import type {EnemySprite, SimpleMob} from "../../types.ts";
+import type {Weapon} from "./weapon.ts";
 
-export class Aura {
+export class Aura implements Weapon {
     private readonly scene: Phaser.Scene;
     private readonly context: CombatContext;
-    private readonly stats: Weapon;
+    private readonly stats: WeaponStats;
     private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
-        stats: Weapon,
+        stats: WeaponStats,
         damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
     ) {
         this.scene = scene
@@ -21,7 +22,7 @@ export class Aura {
         this.damageEnemy = damageEnemy
     }
 
-    update(_dt: number, enemies: EnemySprite[]) {
+    update(_dt: number, enemies: EnemySprite[], _worldView: Phaser.Geom.Rectangle): void {
         enemies.forEach((enemy) => {
             const mob = enemy.getData('mob') as SimpleMob | undefined
             if (!enemy.active || !mob) return false
