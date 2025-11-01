@@ -585,30 +585,31 @@ class WeaponHud extends Phaser.GameObjects.Container {
   refresh() {
     this.removeAll(true)
     this.setPosition(16, this.infoText.y + this.infoText.height + 12)
+    const ICON_SIZE = 20
 
     this.hero.weaponIds.forEach((weaponId, index) => {
       const frame = WeaponHud.frames[weaponId]
       if (frame === undefined) return
 
       const level = this.getWeaponLevel(weaponId)
-      const item = new Phaser.GameObjects.Container(this.scene, index * 52, 0)
+      const item = new Phaser.GameObjects.Container(this.scene, index * ICON_SIZE * 1.5, 0)
 
-      const background = new Phaser.GameObjects.Rectangle(this.scene, 0, 0, 44, 44, 0x1a1a2b, 0.65)
+      const background = new Phaser.GameObjects.Rectangle(this.scene, 0, 0, ICON_SIZE, ICON_SIZE, 0x1a1a2b, 0.65)
         .setOrigin(0)
         .setStrokeStyle(1, 0xffffff, 0.2)
 
-      const icon = new Phaser.GameObjects.Sprite(this.scene, 22, 18, ONE_BIT_PACK.key, frame)
+      const WHITE = 0xffffff
+      const GREEN = 0x55ff55
+      const BLUE = 0x5555ff
+      const YELLOW = 0xffff55
+      const RED = 0xff5555
+      const tint = level === 1 ? WHITE : level === 2 ? YELLOW : level === 3 ? GREEN : level === 4 ? BLUE : RED
+      const icon = new Phaser.GameObjects.Sprite(this.scene, ICON_SIZE / 2, ICON_SIZE / 2, ONE_BIT_PACK.key, frame)
         .setOrigin(0.5)
-        .setScale(2)
+        .setDisplaySize(ICON_SIZE, ICON_SIZE)
+        .setTint(tint)
 
-      const levelText = new Phaser.GameObjects.Text(this.scene, 22, 30, `${level}`, {
-        color: '#ffe082',
-        fontFamily: 'monospace',
-        fontSize: '14px'
-      })
-        .setOrigin(0.5, 0)
-
-      item.add([background, icon, levelText])
+      item.add([background, icon])
       this.add(item)
     })
   }
