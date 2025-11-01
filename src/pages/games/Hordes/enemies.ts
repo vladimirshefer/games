@@ -64,9 +64,7 @@ export class EnemyManager implements IEnemyManager {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius)
 
-    const frameIndex = ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
-
-    const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, frameIndex)
+    const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1)
     enemy.setOrigin(0.5)
     enemy.setDisplaySize(mob.size, mob.size)
     enemy.setTint(color)
