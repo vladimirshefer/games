@@ -1,15 +1,16 @@
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
 import type {WeaponStats} from "../../weapons.ts";
-import type {Bullet, EnemySprite, SimpleMob} from "../../types.ts";
+import type {EnemySprite} from "../../types.ts";
 import {CLEANUP_PADDING, HERO_BASE_SPEED} from "../constants.ts";
 import type {Weapon} from "./weapon.ts";
+import type {MobStats} from "../../enemies.ts";
 
 export class Pistol implements Weapon {
     private readonly scene: Phaser.Scene;
     private readonly context: CombatContext;
     private readonly stats: WeaponStats;
-    private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
+    private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void;
 
     private bullets: Bullet[] = []
     private shootElapsed = 0
@@ -18,7 +19,7 @@ export class Pistol implements Weapon {
         scene: Phaser.Scene,
         context: CombatContext,
         stats: WeaponStats,
-        damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
+        damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void
     ) {
         this.scene = scene
         this.context = context
@@ -45,7 +46,7 @@ export class Pistol implements Weapon {
             }
 
             for (const enemy of enemies) {
-                const mob = enemy.getData('mob') as SimpleMob | undefined
+                const mob = enemy.getData('mob') as MobStats | undefined
                 if (!enemy.active || !mob) continue
                 if (bullet.hitEnemies.has(enemy)) continue
                 if (
@@ -133,3 +134,11 @@ export class Pistol implements Weapon {
 
 const BULLET_SPEED = HERO_BASE_SPEED * 3;
 
+export interface Bullet {
+    sprite: Phaser.GameObjects.Arc
+    vx: number
+    vy: number
+    radius: number
+    piercesLeft: number
+    hitEnemies: Set<EnemySprite>
+}

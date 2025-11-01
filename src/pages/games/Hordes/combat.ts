@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
-import type {EnemySprite, HeroState, SimpleMob} from './types'
+import type {EnemySprite, HeroState} from './types'
 import type {WeaponStats} from "./weapons.ts";
 import {Sword} from "./game/weapons/sword.ts";
 import {Bomb} from "./game/weapons/bomb.ts";
 import {Aura} from "./game/weapons/aura.ts";
 import {Pistol} from "./game/weapons/pistol.ts";
 import type {Weapon} from "./game/weapons/weapon.ts";
+import type {MobStats} from "./enemies.ts";
 
 export interface CombatConfig {
   pistolWeapon?: WeaponStats | null
@@ -17,7 +18,7 @@ export interface CombatConfig {
 export interface CombatContext {
   hero: HeroState
   getEnemies(): EnemySprite[]
-  onEnemyKilled(enemy: EnemySprite, mob: SimpleMob): void
+  onEnemyKilled(enemy: EnemySprite, mob: MobStats): void
 }
 
 export class CombatSystem {
@@ -54,7 +55,7 @@ export class CombatSystem {
     this.aura?.update(dt, enemies, worldView)
   }
 
-  private damageEnemy(enemy: EnemySprite, amount: number, mob: SimpleMob) {
+  private damageEnemy(enemy: EnemySprite, amount: number, mob: MobStats) {
     if (!enemy.active) return false
 
     const currentHp =

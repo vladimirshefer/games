@@ -3,9 +3,9 @@ import {CombatSystem} from './combat'
 import {createHero, damageHero, moveHero} from './hero'
 import type {InputController} from './input'
 import {createInputController} from './input'
-import type {EnemySprite, HeroState, SimpleMob} from './types'
+import type {EnemySprite, HeroState} from './types'
 import {XpCrystalManager} from "./xpCrystals.ts";
-import {EnemyManager} from "./enemies.ts";
+import {EnemyManager, type MobStats} from "./enemies.ts";
 import {WaveManager} from "./waves.ts";
 import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
@@ -247,7 +247,7 @@ export class HordesScene extends Phaser.Scene {
         const view = this.cameras.main.worldView
 
         this.enemies = this.enemies.filter((enemy) => {
-            const mob = enemy.getData('mob') as SimpleMob | undefined
+            const mob = enemy.getData('mob') as MobStats | undefined
             if (!enemy.active || !mob) return false
             const enemyRadius = mob.size / 2
             const dx = heroX - enemy.x
@@ -324,7 +324,7 @@ export class HordesScene extends Phaser.Scene {
         this.supportTimersStarted = false
     }
 
-    private attachEnemyHpOverlay(enemy: EnemySprite, mob: SimpleMob) {
+    private attachEnemyHpOverlay(enemy: EnemySprite, mob: MobStats) {
         const hpText = this.add
             .text(enemy.x, enemy.y, `${mob.health}`, {
                 color: '#ffffff',
@@ -338,7 +338,7 @@ export class HordesScene extends Phaser.Scene {
         this.positionEnemyHpText(enemy, mob)
     }
 
-    private positionEnemyHpText(enemy: EnemySprite, mob: SimpleMob) {
+    private positionEnemyHpText(enemy: EnemySprite, mob: MobStats) {
         const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
         if (!hpText || !hpText.active) return
         hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
@@ -347,7 +347,7 @@ export class HordesScene extends Phaser.Scene {
     /**
      * Applies damage from an enemy to the hero with per-enemy cooldown and restarts on death.
      */
-    private handleHeroHit(enemy: EnemySprite, mob: SimpleMob) {
+    private handleHeroHit(enemy: EnemySprite, mob: MobStats) {
         if (this.hero.hp <= 0) return
 
         const now = this.time.now

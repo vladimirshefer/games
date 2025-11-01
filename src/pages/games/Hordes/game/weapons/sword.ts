@@ -1,22 +1,23 @@
-import type {EnemySprite, SimpleMob} from "../../types.ts";
+import type {EnemySprite} from "../../types.ts";
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
 import type {WeaponStats} from "../../weapons.ts";
 import type {Weapon} from "./weapon.ts";
+import type {MobStats} from "../../enemies.ts";
 
 export class Sword implements Weapon {
     swordElapsed = 0
     private activeSwordSwing: ActiveSwordSwing | null = null
     private scene: Phaser.Scene;
     private context: CombatContext;
-    private damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
+    private damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void;
     private stats: WeaponStats;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
         stats: WeaponStats,
-        damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
+        damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void
     ) {
         this.scene = scene
         this.context = context
@@ -124,7 +125,7 @@ export class Sword implements Weapon {
         for (const enemy of enemies) {
             if (swing.hitEnemies.has(enemy)) continue
 
-            const mob = enemy.getData('mob') as SimpleMob | undefined
+            const mob = enemy.getData('mob') as MobStats | undefined
             if (!enemy.active || !mob) continue
 
             const dx = enemy.x - origin.x

@@ -2,9 +2,10 @@ import type {WeaponStats} from "../../weapons.ts";
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "../sprite.ts";
 import {PICKUP_DEFAULT_SIZE} from "../constants.ts";
 import Phaser from "phaser";
-import type {EnemySprite, SimpleMob} from "../../types.ts";
+import type {EnemySprite} from "../../types.ts";
 import type {CombatContext} from "../../combat.ts";
 import type {Weapon} from "./weapon.ts";
+import type {MobStats} from "../../enemies.ts";
 
 export class Bomb implements Weapon{
 
@@ -18,13 +19,13 @@ export class Bomb implements Weapon{
     private scene: Phaser.Scene;
     private context: CombatContext;
     private readonly stats: WeaponStats;
-    private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
+    private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
         stats: WeaponStats,
-        damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
+        damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void
     ) {
         this.scene = scene
         this.context = context
@@ -94,7 +95,7 @@ export class Bomb implements Weapon{
         const radius = weapon.area
         const damage = weapon.damage
         for (const enemy of enemies) {
-            const mob = enemy.getData('mob') as SimpleMob | undefined
+            const mob = enemy.getData('mob') as MobStats | undefined
             if (!enemy.active || !mob) continue
 
             const dist = Phaser.Math.Distance.Between(sprite.x, sprite.y, enemy.x, enemy.y)

@@ -1,20 +1,21 @@
 import Phaser from "phaser";
 import type {CombatContext} from "../../combat.ts";
 import type {WeaponStats} from "../../weapons.ts";
-import type {EnemySprite, SimpleMob} from "../../types.ts";
+import type {EnemySprite} from "../../types.ts";
 import type {Weapon} from "./weapon.ts";
+import type {MobStats} from "../../enemies.ts";
 
 export class Aura implements Weapon {
     private readonly scene: Phaser.Scene;
     private readonly context: CombatContext;
     private readonly stats: WeaponStats;
-    private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void;
+    private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void;
 
     constructor(
         scene: Phaser.Scene,
         context: CombatContext,
         stats: WeaponStats,
-        damageEnemy: (enemy: EnemySprite, amount: number, mob: SimpleMob) => void
+        damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void
     ) {
         this.scene = scene
         this.context = context
@@ -24,7 +25,7 @@ export class Aura implements Weapon {
 
     update(_dt: number, enemies: EnemySprite[], _worldView: Phaser.Geom.Rectangle): void {
         enemies.forEach((enemy) => {
-            const mob = enemy.getData('mob') as SimpleMob | undefined
+            const mob = enemy.getData('mob') as MobStats | undefined
             if (!enemy.active || !mob) return false
 
             const dx = this.context.hero.sprite.x - enemy.x
@@ -38,7 +39,7 @@ export class Aura implements Weapon {
     applyAuraDamage(
         enemy: EnemySprite,
         distanceToHero: number,
-        mob: SimpleMob,
+        mob: MobStats,
     ) {
         if (distanceToHero > this.stats.area + mob.size / 2) return false
 

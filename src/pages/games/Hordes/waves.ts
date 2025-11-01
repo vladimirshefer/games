@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import type {EnemySprite, HeroState, SimpleMob} from './types'
-import {EnemyManager} from './enemies.ts'
+import type {EnemySprite, HeroState} from './types'
+import {EnemyManager, type MobStats} from './enemies.ts'
 import {
   HERO_BASE_SPEED,
   MOB_BASE_DAMAGE,
@@ -12,7 +12,7 @@ import {
 
 interface WaveHooks {
   getHero(): HeroState
-  onEnemySpawned(enemy: EnemySprite, mob: SimpleMob): void
+  onEnemySpawned(enemy: EnemySprite, mob: MobStats): void
   onWaveAdvanced(wave: number): void
 }
 
@@ -118,7 +118,7 @@ export class WaveManager {
     this.hooks.onEnemySpawned(enemy, mob)
   }
 
-  private generateMobStats(powerMultiplier: number): SimpleMob {
+  private generateMobStats(powerMultiplier: number): MobStats {
     const MAX_SPEED = Math.min(MOB_BASE_SPEED * powerMultiplier, HERO_BASE_SPEED)
     const MAX_HEALTH = MOB_BASE_HP * powerMultiplier
     const MAX_DAMAGE = MOB_BASE_DAMAGE * powerMultiplier
@@ -139,7 +139,7 @@ export class WaveManager {
     const health = Math.round(relativeHealth * MAX_HEALTH)
     const damage = Math.round(relativeDamage * MAX_DAMAGE)
 
-    const mob: SimpleMob = {
+    const mob: MobStats = {
       size: MOB_BASE_RADIUS * 2,
       speed,
       health,

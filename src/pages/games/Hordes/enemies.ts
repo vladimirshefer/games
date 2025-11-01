@@ -1,8 +1,8 @@
 import Phaser from 'phaser'
-import type {EnemySprite, SimpleMob} from './types'
+import type {EnemySprite} from './types'
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from './game/sprite.ts'
 
-interface SpawnContext {
+export interface SpawnContext {
   heroX: number
   heroY: number
   halfWidth: number
@@ -10,7 +10,38 @@ interface SpawnContext {
   buffer: number
 }
 
-export class EnemyManager {
+export interface MobStats {
+  health: number
+  damage: number
+  speed: number
+  xp: number
+  size: number
+}
+
+export interface IEnemyManager {
+  /**
+   * Updates the internal list of enemies managed by this manager
+   * @param enemies New list of enemies to manage
+   */
+  sync(enemies: EnemySprite[]): void
+
+  /**
+   * Spawns a new enemy at the specified edge of the screen
+   * @param edge Screen edge index (0: top, 1: right, 2: bottom, 3: left)
+   * @param mob Enemy stats and properties
+   * @param color Tint color to apply to the enemy sprite
+   * @param context Spawn position calculation context
+   * @returns The newly created enemy sprite
+   */
+  spawn(edge: number, mob: MobStats, color: number, context: SpawnContext): EnemySprite
+
+  /**
+   * Resolves collisions between enemies by pushing them apart
+   */
+  resolveOverlaps(): void
+}
+
+export class EnemyManager implements IEnemyManager {
   private scene: Phaser.Scene
   private enemies: EnemySprite[]
 
@@ -23,7 +54,7 @@ export class EnemyManager {
     this.enemies = enemies
   }
 
-  spawn(edge: number, mob: SimpleMob, color: number, context: SpawnContext) {
+  spawn(edge: number, mob: MobStats, color: number, context: SpawnContext) {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius, context)
 
@@ -54,14 +85,14 @@ export class EnemyManager {
     for (let i = 0; i < this.enemies.length; i += 1) {
       const enemyA = this.enemies[i]
       if (!enemyA.active) continue
-      const mobA = enemyA.getData('mob') as SimpleMob | undefined
+      const mobA = enemyA.getData('mob') as MobStats | undefined
       if (!mobA) continue
       const radiusA = mobA.size / 2
 
       for (let j = i + 1; j < this.enemies.length; j += 1) {
         const enemyB = this.enemies[j]
         if (!enemyB.active) continue
-        const mobB = enemyB.getData('mob') as SimpleMob | undefined
+        const mobB = enemyB.getData('mob') as MobStats | undefined
         if (!mobB) continue
         const radiusB = mobB.size / 2
 
@@ -139,7 +170,7 @@ export class EnemyManager {
     const SPACING = 6
     for (const enemy of this.enemies) {
       if (!enemy.active) continue
-      const mob = enemy.getData('mob') as SimpleMob | undefined
+      const mob = enemy.getData('mob') as MobStats | undefined
       if (!mob) continue
       const otherRadius = mob.size / 2
       const dist = Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y)
@@ -150,7 +181,7 @@ export class EnemyManager {
     return true
   }
 
-  private updateHpLabel(enemy: EnemySprite, mob: SimpleMob) {
+  private updateHpLabel(enemy: EnemySprite, mob: MobStats) {
     const label = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
     if (!label || !label.active) return
     label.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
