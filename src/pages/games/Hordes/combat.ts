@@ -5,6 +5,7 @@ import {Sword} from "./game/weapons/sword.ts";
 import {Bomb} from "./game/weapons/bomb.ts";
 import {Aura} from "./game/weapons/aura.ts";
 import {Pistol} from "./game/weapons/pistol.ts";
+import type {Weapon} from "./game/weapons/weapon.ts";
 
 export interface CombatConfig {
   pistolWeapon?: WeaponStats | null
@@ -23,10 +24,10 @@ export class CombatSystem {
   private readonly scene: Phaser.Scene
   private readonly config: CombatConfig
   private readonly context: CombatContext
-  private sword: Sword | null = null
-  private bomb: Bomb | null = null
-  private aura: Aura | null = null
-  private pistol: Pistol | null = null
+  private sword: Weapon | null = null
+  private bomb: Weapon | null = null
+  private aura: Weapon | null = null
+  private pistol: Weapon | null = null
 
   constructor(scene: Phaser.Scene, config: CombatConfig, context: CombatContext) {
     this.scene = scene

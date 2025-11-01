@@ -10,7 +10,14 @@ import {WaveManager} from "./waves.ts";
 import {UpgradeManager} from "./upgradeManager.ts";
 import {PickupManager} from "./pickups.ts";
 import {ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES} from "./game/sprite.ts";
-import {CLEANUP_PADDING, HERO_BASE_SPEED, MOB_BASE_RADIUS, WORLD_BOUNDS} from "./game/constants.ts";
+import {
+    CLEANUP_PADDING,
+    HERO_BASE_SPEED,
+    LEVEL_BASE_PROGRESSION,
+    LEVEL_BASE_XP,
+    MOB_BASE_RADIUS,
+    WORLD_BOUNDS
+} from "./game/constants.ts";
 
 interface ExitStats {
   kills: number
@@ -498,9 +505,7 @@ export class HordesScene extends Phaser.Scene {
     }
 
     private getNextLevelXp(level: number) {
-        const baseXp = 40
-        const growthRate = 1.3
-        return Math.ceil(baseXp * Math.pow(growthRate, level - 1))
+        return Math.ceil(LEVEL_BASE_XP * Math.pow(LEVEL_BASE_PROGRESSION, level - 1))
     }
 
     private togglePause() {
