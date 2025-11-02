@@ -115,6 +115,12 @@ export class HordesScene extends Phaser.Scene {
   private supportTimersStarted = false
   private pickupTimers: Phaser.Time.TimerEvent[] = []
   private wavesOver: boolean = false
+  private isGameOver = false
+  private exitHandled = false
+  private gameOverTitle?: Phaser.GameObjects.Text
+  private gameOverStatsText?: Phaser.GameObjects.Text
+  private exitButtonDefaultPosition = { x: 0, y: 0 }
+  private exitButtonDefaultOrigin = { x: 1, y: 0 }
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
@@ -135,6 +141,12 @@ export class HordesScene extends Phaser.Scene {
    */
   create() {
     const { width, height } = this.scale
+    this.isGameOver = false
+    this.exitHandled = false
+    this.gameOverTitle?.destroy()
+    this.gameOverStatsText?.destroy()
+    this.gameOverTitle = undefined
+    this.gameOverStatsText = undefined
     this.cameras.main.setBackgroundColor('#101014')
     this.time.timeScale = 1
     this.isPaused = false
@@ -275,6 +287,8 @@ export class HordesScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
     this.exitButton.on('pointerdown', () => this.handleExit())
+    this.exitButtonDefaultPosition = { x: this.exitButton.x, y: this.exitButton.y }
+    this.exitButtonDefaultOrigin = { x: this.exitButton.originX, y: this.exitButton.originY }
     this.hidePauseHud()
 
     if (this.hero.weaponIds.length === 0) {
@@ -312,7 +326,7 @@ export class HordesScene extends Phaser.Scene {
     })
 
     if (this.enemies.length === 0 && this.wavesOver) {
-      this.handleExit()
+      this.showGameOverHud('complete')
     }
 
     this.combat.update(dt, view)
@@ -378,7 +392,7 @@ export class HordesScene extends Phaser.Scene {
 
     if (hp <= 0) {
       this.cameras.main.shake(250, 0.02)
-      this.time.delayedCall(260, () => this.handleExit())
+      this.time.delayedCall(260, () => this.showGameOverHud('killed'))
     }
   }
 
@@ -410,6 +424,15 @@ export class HordesScene extends Phaser.Scene {
   }
 
   private handleExit() {
+    if (this.exitHandled) return
+    this.exitHandled = true
+    if (this.exitButton) {
+      this.exitButton.disableInteractive()
+    }
+    this.gameOverTitle?.destroy()
+    this.gameOverStatsText?.destroy()
+    this.gameOverTitle = undefined
+    this.gameOverStatsText = undefined
     const handler = HordesScene.exitHandler
     if (handler) {
       handler({
@@ -520,14 +543,71 @@ export class HordesScene extends Phaser.Scene {
     })
   }
 
+  private showGameOverHud(result: 'killed' | 'complete') {
+    if (this.isGameOver) return
+
+    this.isGameOver = true
+    this.isPaused = true
+    this.time.timeScale = 0
+
+    if (this.pauseButton) {
+      this.pauseButton.disableInteractive()
+      this.pauseButton.setVisible(false)
+    }
+
+    const title = result === 'killed' ? 'Game Over' : 'Complete'
+    const titleColor = result === 'killed' ? '#ff5252' : '#69f0ae'
+
+    this.gameOverTitle?.destroy()
+    this.gameOverStatsText?.destroy()
+
+    this.gameOverTitle = this.add
+      .text(this.scale.width / 2, this.scale.height / 2 - 48, title, {
+        color: titleColor,
+        fontFamily: 'monospace',
+        fontSize: '36px',
+        backgroundColor: '#1a1a25ee',
+        padding: { x: 18, y: 10 }
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(6)
+
+    this.gameOverStatsText = this.add
+      .text(this.scale.width / 2, this.scale.height / 2 + 4, `Wave ${this.wave} | Kills ${this.kills}`, {
+        color: '#f5f5f5',
+        fontFamily: 'monospace',
+        fontSize: '20px',
+        backgroundColor: '#1a1a25cc',
+        padding: { x: 14, y: 6 }
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(6)
+
+    this.showPauseHud()
+    if (this.exitButton) {
+      this.exitButton.setPosition(this.scale.width / 2, this.scale.height / 2 + 64)
+      this.exitButton.setOrigin(0.5, 0)
+      this.exitButton.setDepth(6)
+      this.exitButton.setVisible(true)
+      this.exitButton.setInteractive({ useHandCursor: true })
+    }
+  }
+
   private showPauseHud() {
     if (!this.exitButton) return
+    if (!this.isGameOver) {
+      this.exitButton.setOrigin(this.exitButtonDefaultOrigin.x, this.exitButtonDefaultOrigin.y)
+      this.exitButton.setPosition(this.exitButtonDefaultPosition.x, this.exitButtonDefaultPosition.y)
+      this.exitButton.setDepth(2)
+    }
     this.exitButton.setVisible(true)
     this.exitButton.setInteractive({ useHandCursor: true })
   }
 
   private hidePauseHud() {
-    if (!this.exitButton) return
+    if (!this.exitButton || this.isGameOver) return
     this.exitButton.setVisible(false)
     this.exitButton.disableInteractive()
   }
@@ -537,7 +617,7 @@ export class HordesScene extends Phaser.Scene {
   }
 
   private togglePause() {
-    if (this.upgradeManager.isActive()) return
+    if (this.upgradeManager.isActive() || this.isGameOver) return
     this.isPaused = !this.isPaused
     this.pauseButton.setText(this.isPaused ? 'Resume' : 'Pause')
     this.time.timeScale = this.isPaused ? 0 : 1
