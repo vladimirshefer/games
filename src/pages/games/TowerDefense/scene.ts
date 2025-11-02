@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
+import { TowerDefenseMapGenerator, type GameMap, type TileType } from './game/map.ts'
 import {
   BASE_HP,
   ENEMY_BASE_HP,
@@ -52,122 +53,7 @@ type Enemy = {
   leakDamage: number
 }
 
-// Grid dimensions (columns x rows).
-const GRID_COLS = 12
-const GRID_ROWS = 8
-
-type TileType = 'road' | 'build' | 'obstacle'
-
 type Direction = 'up' | 'down' | 'left' | 'right'
-
-// Layout of every tile on the board.
-const GRID_MAP: TileType[][] = [
-  [
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle'
-  ],
-  [
-    'obstacle',
-    'build',
-    'build',
-    'build',
-    'obstacle',
-    'build',
-    'build',
-    'build',
-    'obstacle',
-    'build',
-    'build',
-    'obstacle'
-  ],
-  ['road', 'road', 'road', 'road', 'road', 'road', 'obstacle', 'road', 'road', 'road', 'road', 'road'],
-  ['obstacle', 'build', 'build', 'obstacle', 'build', 'road', 'road', 'road', 'obstacle', 'build', 'build', 'obstacle'],
-  [
-    'obstacle',
-    'build',
-    'build',
-    'obstacle',
-    'build',
-    'obstacle',
-    'obstacle',
-    'build',
-    'obstacle',
-    'build',
-    'build',
-    'obstacle'
-  ],
-  [
-    'obstacle',
-    'build',
-    'build',
-    'obstacle',
-    'build',
-    'build',
-    'build',
-    'build',
-    'obstacle',
-    'build',
-    'build',
-    'obstacle'
-  ],
-  [
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'build',
-    'build',
-    'build',
-    'obstacle',
-    'build',
-    'build',
-    'obstacle'
-  ],
-  [
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle',
-    'obstacle'
-  ]
-]
-
-// Ordered cells the mobs traverse.
-const PATH_SEQUENCE = [
-  { col: 0, row: 2 },
-  { col: 1, row: 2 },
-  { col: 2, row: 2 },
-  { col: 3, row: 2 },
-  { col: 4, row: 2 },
-  { col: 5, row: 2 },
-  { col: 5, row: 3 },
-  { col: 6, row: 3 },
-  { col: 7, row: 3 },
-  { col: 7, row: 2 },
-  { col: 8, row: 2 },
-  { col: 9, row: 2 },
-  { col: 10, row: 2 },
-  { col: 11, row: 2 }
-]
-
 // Frames used to visualize the grid tiles.
 const TILE_FRAME_POOL = [
   ONE_BIT_PACK_KNOWN_FRAMES.portalOpens,
@@ -181,6 +67,8 @@ const TILE_FRAME_POOL = [
 export class TowerDefenseScene extends Phaser.Scene {
   private static exitHandler?: (stats: ExitStats) => void
 
+  private readonly mapGenerator = new TowerDefenseMapGenerator()
+  private readonly gameMap: GameMap = this.mapGenerator.getMap()
   private buildSpots: BuildSpot[] = []
   private towers: Tower[] = []
   private enemies: Enemy[] = []
@@ -257,13 +145,14 @@ export class TowerDefenseScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.recalculateGridMetrics(width, height)
     this.pathIndexByCell.clear()
-    PATH_SEQUENCE.forEach((cell, index) => {
+    const path = this.gameMap.path
+    path.forEach((cell, index) => {
       this.pathIndexByCell.set(this.cellKey(cell.col, cell.row), index)
     })
-    const firstPoint = this.gridToWorldCenter(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row)
+    const firstPoint = this.gridToWorldCenter(path[0].col, path[0].row)
     this.path = new Phaser.Curves.Path(firstPoint.x, firstPoint.y)
-    for (let i = 1; i < PATH_SEQUENCE.length; i += 1) {
-      const point = this.gridToWorldCenter(PATH_SEQUENCE[i].col, PATH_SEQUENCE[i].row)
+    for (let i = 1; i < path.length; i += 1) {
+      const point = this.gridToWorldCenter(path[i].col, path[i].row)
       this.path.lineTo(point.x, point.y)
     }
     this.pathLength = this.path.getLength()
@@ -273,7 +162,8 @@ export class TowerDefenseScene extends Phaser.Scene {
   // Draws the goal/base tile.
   private createBaseMarker() {
     this.baseMarker?.destroy()
-    const target = PATH_SEQUENCE[PATH_SEQUENCE.length - 1]
+    const path = this.gameMap.path
+    const target = path[path.length - 1]
     const endPoint = this.gridToWorldCenter(target.col, target.row)
     const size = this.gridTileSize * 0.9
     this.baseMarker = this.add
@@ -286,9 +176,9 @@ export class TowerDefenseScene extends Phaser.Scene {
   private createBuildSpots() {
     this.buildSpots = []
     let index = 0
-    for (let row = 0; row < GRID_ROWS; row += 1) {
-      for (let col = 0; col < GRID_COLS; col += 1) {
-        if (GRID_MAP[row][col] !== 'build') continue
+    for (let row = 0; row < this.gameMap.rows; row += 1) {
+      for (let col = 0; col < this.gameMap.cols; col += 1) {
+        if (this.gameMap.tiles[row][col] !== 'build') continue
         const marker = this.tileSpriteLookup.get(this.cellKey(col, row))
         if (!marker) continue
         const spot: BuildSpot = {
@@ -620,11 +510,11 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Derives tile size/origin based on viewport.
   private recalculateGridMetrics(width: number, height: number) {
-    const tileWidth = width / GRID_COLS
-    const tileHeight = height / GRID_ROWS
+    const tileWidth = width / this.gameMap.cols
+    const tileHeight = height / this.gameMap.rows
     this.gridTileSize = Math.min(tileWidth, tileHeight)
-    const mapWidth = this.gridTileSize * GRID_COLS
-    const mapHeight = this.gridTileSize * GRID_ROWS
+    const mapWidth = this.gridTileSize * this.gameMap.cols
+    const mapHeight = this.gridTileSize * this.gameMap.rows
     this.gridOriginX = (width - mapWidth) / 2
     this.gridOriginY = (height - mapHeight) / 2
   }
@@ -637,9 +527,9 @@ export class TowerDefenseScene extends Phaser.Scene {
       return
     }
     const displaySize = this.gridTileSize * 0.98
-    for (let row = 0; row < GRID_ROWS; row += 1) {
-      for (let col = 0; col < GRID_COLS; col += 1) {
-        const type = GRID_MAP[row][col]
+    for (let row = 0; row < this.gameMap.rows; row += 1) {
+      for (let col = 0; col < this.gameMap.cols; col += 1) {
+        const type = this.gameMap.tiles[row][col]
         const key = this.cellKey(col, row)
         const center = this.gridToWorldCenter(col, row)
         const appearance = this.appearanceForTile(col, row, type)
@@ -697,14 +587,16 @@ export class TowerDefenseScene extends Phaser.Scene {
         angle: 0
       }
     }
-    const prev = index > 0 ? PATH_SEQUENCE[index - 1] : undefined
-    const next = index < PATH_SEQUENCE.length - 1 ? PATH_SEQUENCE[index + 1] : undefined
+    const path = this.gameMap.path
+    const current = path[index]
+    const prev = index > 0 ? path[index - 1] : undefined
+    const next = index < path.length - 1 ? path[index + 1] : undefined
     const connections = new Set<Direction>()
     if (prev) {
-      connections.add(this.oppositeDirection(this.directionBetween(prev, PATH_SEQUENCE[index])))
+      connections.add(this.oppositeDirection(this.directionBetween(prev, current)))
     }
     if (next) {
-      connections.add(this.directionBetween(PATH_SEQUENCE[index], next))
+      connections.add(this.directionBetween(current, next))
     }
     const connectsUp = connections.has('up')
     const connectsDown = connections.has('down')
