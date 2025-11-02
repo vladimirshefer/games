@@ -436,7 +436,7 @@ export class HordesScene extends Phaser.Scene {
     if (handler) {
       handler({
         kills: this.kills,
-        waves: this.wave
+        waves: this.wave + 1
       })
     }
   }
@@ -573,7 +573,7 @@ export class HordesScene extends Phaser.Scene {
       .setDepth(6)
 
     this.gameOverStatsText = this.add
-      .text(this.scale.width / 2, this.scale.height / 2 + 4, `Wave ${this.wave} | Kills ${this.kills}`, {
+      .text(this.scale.width / 2, this.scale.height / 2 + 4, `Wave ${this.wave + 1} | Kills ${this.kills}`, {
         color: '#f5f5f5',
         fontFamily: 'monospace',
         fontSize: '20px',
@@ -632,7 +632,7 @@ export class HordesScene extends Phaser.Scene {
    */
   private updateHud() {
     this.infoText.setText(
-      `Wave ${this.wave} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` + `Kills ${this.kills}`
+      `Wave ${this.wave + 1} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` + `Kills ${this.kills}`
     )
     this.weaponHud.refresh()
     this.heroHpBar.updateValue(this.hero.hp, this.hero.maxHp)
