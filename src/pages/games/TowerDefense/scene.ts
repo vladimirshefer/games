@@ -254,17 +254,20 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Builds the grid visuals and path curve.
   private createPath() {
-    this.refreshGridTiles()
+    const { width, height } = this.scale
+    this.recalculateGridMetrics(width, height)
+    this.pathIndexByCell.clear()
+    PATH_SEQUENCE.forEach((cell, index) => {
+      this.pathIndexByCell.set(this.cellKey(cell.col, cell.row), index)
+    })
     const firstPoint = this.gridToWorldCenter(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row)
     this.path = new Phaser.Curves.Path(firstPoint.x, firstPoint.y)
-    this.pathIndexByCell.clear()
-    this.pathIndexByCell.set(this.cellKey(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row), 0)
     for (let i = 1; i < PATH_SEQUENCE.length; i += 1) {
       const point = this.gridToWorldCenter(PATH_SEQUENCE[i].col, PATH_SEQUENCE[i].row)
       this.path.lineTo(point.x, point.y)
-      this.pathIndexByCell.set(this.cellKey(PATH_SEQUENCE[i].col, PATH_SEQUENCE[i].row), i)
     }
     this.pathLength = this.path.getLength()
+    this.refreshGridTiles()
   }
 
   // Draws the goal/base tile.
