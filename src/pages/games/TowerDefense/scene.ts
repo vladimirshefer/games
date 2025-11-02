@@ -778,7 +778,7 @@ export class TowerDefenseScene extends Phaser.Scene {
   // Highlights build tiles based on occupancy.
   private applyBuildSpotTint(spot: BuildSpot) {
     const tint = spot.occupied ? 0x2563eb : 0x60a5fa
-    spot.marker.setTint(tint)
+    spot.marker.setTint(tint).setVisible(!spot.occupied)
   }
 
   // Compact key for tile lookups.
