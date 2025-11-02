@@ -13,6 +13,9 @@ import {
   ENEMY_SPEED_PER_WAVE,
   ENEMY_HP_PER_WAVE,
   MIN_SPAWN_DELAY,
+  MAP_HEIGHT,
+  MAP_WIDTH,
+  MAP_ROAD_LENGTH,
   TOWER_COST,
   TOWER_DAMAGE,
   TOWER_RANGE,
@@ -60,7 +63,11 @@ type Enemy = {
 export class TowerDefenseScene extends Phaser.Scene {
   private static exitHandler?: (stats: ExitStats) => void
 
-  private readonly mapGenerator = new TowerDefenseMapGenerator()
+  private readonly mapGenerator = new TowerDefenseMapGenerator({
+    height: MAP_HEIGHT,
+    width: MAP_WIDTH,
+    roadLength: MAP_ROAD_LENGTH
+  })
   private readonly gameMap: GameMap = this.mapGenerator.getMap()
   private mapRenderer!: MapRenderer
   private buildSpots: BuildSpot[] = []

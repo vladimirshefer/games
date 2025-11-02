@@ -9,135 +9,18 @@ export type GameMap = {
   path: PathNode[]
 }
 
+export type MapGeneratorConfig = {
+  height: number
+  width: number
+  roadLength: number
+}
+
 export class TowerDefenseMapGenerator {
   private readonly map: GameMap
 
-  constructor() {
-    const tiles: TileType[][] = [
-      [
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle'
-      ],
-      [
-        'obstacle',
-        'build',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'build',
-        'obstacle'
-      ],
-      ['road', 'road', 'road', 'road', 'road', 'road', 'obstacle', 'road', 'road', 'road', 'road', 'road'],
-      [
-        'obstacle',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'road',
-        'road',
-        'road',
-        'obstacle',
-        'build',
-        'build',
-        'obstacle'
-      ],
-      [
-        'obstacle',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'obstacle',
-        'obstacle',
-        'build',
-        'obstacle',
-        'build',
-        'build',
-        'obstacle'
-      ],
-      [
-        'obstacle',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'build',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'build',
-        'obstacle'
-      ],
-      [
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'build',
-        'build',
-        'build',
-        'obstacle',
-        'build',
-        'build',
-        'obstacle'
-      ],
-      [
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle',
-        'obstacle'
-      ]
-    ]
-
-    const path: PathNode[] = [
-      { col: 0, row: 2 },
-      { col: 1, row: 2 },
-      { col: 2, row: 2 },
-      { col: 3, row: 2 },
-      { col: 4, row: 2 },
-      { col: 5, row: 2 },
-      { col: 5, row: 3 },
-      { col: 6, row: 3 },
-      { col: 7, row: 3 },
-      { col: 7, row: 2 },
-      { col: 8, row: 2 },
-      { col: 9, row: 2 },
-      { col: 10, row: 2 },
-      { col: 11, row: 2 }
-    ]
-
-    this.map = {
-      cols: tiles[0]?.length ?? 0,
-      rows: tiles.length,
-      tiles,
-      path
-    }
+  constructor(config: MapGeneratorConfig = { height: 8, width: 12, roadLength: 14 }) {
+    const normalized = this.normalizeConfig(config)
+    this.map = this.generateMap(normalized.height, normalized.width, normalized.roadLength)
   }
 
   getMap(): GameMap {
@@ -147,5 +30,66 @@ export class TowerDefenseMapGenerator {
       tiles: this.map.tiles.map((row) => [...row]),
       path: this.map.path.map((node) => ({ ...node }))
     }
+  }
+
+  private normalizeConfig(config: MapGeneratorConfig): MapGeneratorConfig {
+    const height = Math.max(3, Math.floor(config.height))
+    const width = Math.max(3, Math.floor(config.width))
+    const maxRoadLength = height * width
+    const requestedLength = Math.floor(config.roadLength)
+    const roadLength = Math.min(Math.max(2, requestedLength), maxRoadLength)
+    return { height, width, roadLength }
+  }
+
+  private generateMap(height: number, width: number, roadLength: number): GameMap {
+    const tiles: TileType[][] = Array.from({ length: height }, () => Array.from({ length: width }, () => 'build'))
+
+    this.applyObstacles(tiles)
+    const path = this.generatePath(height, width, roadLength)
+    path.forEach(({ col, row }) => {
+      tiles[row][col] = 'road'
+    })
+
+    return {
+      cols: width,
+      rows: height,
+      tiles,
+      path
+    }
+  }
+
+  private applyObstacles(tiles: TileType[][]) {
+    const rows = tiles.length
+    const cols = tiles[0]?.length ?? 0
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const isBorder = row === 0 || row === rows - 1 || col === 0 || col === cols - 1
+        if (isBorder) {
+          tiles[row][col] = 'obstacle'
+        }
+      }
+    }
+  }
+
+  private generatePath(rows: number, cols: number, roadLength: number): PathNode[] {
+    const serpentine: PathNode[] = []
+    for (let row = 0; row < rows; row += 1) {
+      const leftToRight = row % 2 === 0
+      if (leftToRight) {
+        for (let col = 0; col < cols; col += 1) {
+          serpentine.push({ col, row })
+        }
+      } else {
+        for (let col = cols - 1; col >= 0; col -= 1) {
+          serpentine.push({ col, row })
+        }
+      }
+    }
+
+    if (roadLength > serpentine.length) {
+      throw new Error('Road length exceeds available tiles for map size.')
+    }
+
+    return serpentine.slice(0, roadLength)
   }
 }
