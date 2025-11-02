@@ -66,30 +66,131 @@ export class TowerDefenseMapGenerator {
         const isBorder = row === 0 || row === rows - 1 || col === 0 || col === cols - 1
         if (isBorder) {
           tiles[row][col] = 'obstacle'
+          continue
+        }
+        const randomObstacleChance = 0.12
+        if (Math.random() < randomObstacleChance) {
+          tiles[row][col] = 'obstacle'
         }
       }
     }
   }
 
   private generatePath(rows: number, cols: number, roadLength: number): PathNode[] {
-    const serpentine: PathNode[] = []
-    for (let row = 0; row < rows; row += 1) {
-      const leftToRight = row % 2 === 0
-      if (leftToRight) {
-        for (let col = 0; col < cols; col += 1) {
-          serpentine.push({ col, row })
-        }
-      } else {
-        for (let col = cols - 1; col >= 0; col -= 1) {
-          serpentine.push({ col, row })
-        }
+    const edgeCells = this.shuffle(this.collectEdgeCells(rows, cols))
+    for (const start of edgeCells) {
+      const path = this.buildPath(start, rows, cols, roadLength)
+      if (path) {
+        return path
       }
     }
 
-    if (roadLength > serpentine.length) {
-      throw new Error('Road length exceeds available tiles for map size.')
+    throw new Error('Failed to generate a valid path with the provided configuration.')
+  }
+
+  private buildPath(start: PathNode, rows: number, cols: number, roadLength: number): PathNode[] | undefined {
+    const path: PathNode[] = [start]
+    const visited = new Set<string>([this.cellKey(start.col, start.row)])
+    if (roadLength === 1) {
+      return this.isEdge(start, rows, cols) ? path : undefined
+    }
+    const success = this.extendPath(path, visited, rows, cols, roadLength)
+    return success ? path : undefined
+  }
+
+  private extendPath(path: PathNode[], visited: Set<string>, rows: number, cols: number, roadLength: number): boolean {
+    if (path.length === roadLength) {
+      const last = path[path.length - 1]
+      return this.isEdge(last, rows, cols)
     }
 
-    return serpentine.slice(0, roadLength)
+    const current = path[path.length - 1]
+    const candidates = this.shuffle(
+      this.neighbors(current, rows, cols).filter((node) => !visited.has(this.cellKey(node.col, node.row)))
+    )
+    const remainingSteps = roadLength - path.length
+
+    for (const candidate of candidates) {
+      const distanceToEdge = this.distanceToEdge(candidate, rows, cols)
+      if (distanceToEdge > remainingSteps - 1) {
+        continue
+      }
+
+      const key = this.cellKey(candidate.col, candidate.row)
+      path.push(candidate)
+      visited.add(key)
+
+      if (this.extendPath(path, visited, rows, cols, roadLength)) {
+        return true
+      }
+
+      visited.delete(key)
+      path.pop()
+    }
+
+    return false
+  }
+
+  private neighbors(node: PathNode, rows: number, cols: number): PathNode[] {
+    const deltas = [
+      { col: 1, row: 0 },
+      { col: -1, row: 0 },
+      { col: 0, row: 1 },
+      { col: 0, row: -1 }
+    ]
+    const neighbors: PathNode[] = []
+    for (const delta of deltas) {
+      const col = node.col + delta.col
+      const row = node.row + delta.row
+      if (col >= 0 && col < cols && row >= 0 && row < rows) {
+        neighbors.push({ col, row })
+      }
+    }
+    return neighbors
+  }
+
+  private collectEdgeCells(rows: number, cols: number): PathNode[] {
+    const cells: PathNode[] = []
+    for (let col = 0; col < cols; col += 1) {
+      cells.push({ col, row: 0 })
+    }
+    for (let row = 1; row < rows; row += 1) {
+      cells.push({ col: cols - 1, row })
+    }
+    for (let col = cols - 2; col >= 0; col -= 1) {
+      if (rows > 1) {
+        cells.push({ col, row: rows - 1 })
+      }
+    }
+    for (let row = rows - 2; row > 0; row -= 1) {
+      if (cols > 1) {
+        cells.push({ col: 0, row })
+      }
+    }
+    return cells
+  }
+
+  private distanceToEdge(node: PathNode, rows: number, cols: number) {
+    const distanceRow = Math.min(node.row, rows - 1 - node.row)
+    const distanceCol = Math.min(node.col, cols - 1 - node.col)
+    return Math.min(distanceRow, distanceCol)
+  }
+
+  private isEdge(node: PathNode, rows: number, cols: number) {
+    return node.row === 0 || node.row === rows - 1 || node.col === 0 || node.col === cols - 1
+  }
+
+  private cellKey(col: number, row: number) {
+    return `${col},${row}`
+  }
+
+  private shuffle<T>(items: T[]): T[] {
+    for (let i = items.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1))
+      const temp = items[i]
+      items[i] = items[j]
+      items[j] = temp
+    }
+    return items
   }
 }
