@@ -26,10 +26,10 @@ type ExitStats = {
 
 type BuildSpot = {
   id: number
-  rx: number
-  ry: number
+  col: number
+  row: number
   occupied: boolean
-  marker: Phaser.GameObjects.Arc
+  marker: Phaser.GameObjects.Rectangle
 }
 
 type Tower = {
@@ -51,22 +51,37 @@ type Enemy = {
   leakDamage: number
 }
 
-const PATH_POINTS = [
-  { x: 0.08, y: 0.78 },
-  { x: 0.32, y: 0.78 },
-  { x: 0.32, y: 0.28 },
-  { x: 0.64, y: 0.28 },
-  { x: 0.64, y: 0.62 },
-  { x: 0.9, y: 0.62 }
+const GRID_COLS = 12
+const GRID_ROWS = 8
+
+type TileType = 'spawn' | 'path' | 'base' | 'build' | 'wall'
+
+const GRID_MAP: TileType[][] = [
+  ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
+  ['wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
+  ['spawn', 'path', 'path', 'path', 'path', 'path', 'wall', 'path', 'path', 'path', 'path', 'base'],
+  ['wall', 'build', 'build', 'wall', 'build', 'path', 'path', 'path', 'wall', 'build', 'build', 'wall'],
+  ['wall', 'build', 'build', 'wall', 'build', 'wall', 'wall', 'build', 'wall', 'build', 'build', 'wall'],
+  ['wall', 'build', 'build', 'wall', 'build', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
+  ['wall', 'wall', 'wall', 'wall', 'wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
+  ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
 ]
 
-const SPOT_FRACTIONS = [
-  { x: 0.18, y: 0.48 },
-  { x: 0.24, y: 0.18 },
-  { x: 0.44, y: 0.52 },
-  { x: 0.52, y: 0.16 },
-  { x: 0.74, y: 0.44 },
-  { x: 0.78, y: 0.86 }
+const PATH_SEQUENCE = [
+  { col: 0, row: 2 },
+  { col: 1, row: 2 },
+  { col: 2, row: 2 },
+  { col: 3, row: 2 },
+  { col: 4, row: 2 },
+  { col: 5, row: 2 },
+  { col: 5, row: 3 },
+  { col: 6, row: 3 },
+  { col: 7, row: 3 },
+  { col: 7, row: 2 },
+  { col: 8, row: 2 },
+  { col: 9, row: 2 },
+  { col: 10, row: 2 },
+  { col: 11, row: 2 }
 ]
 
 /**
@@ -80,7 +95,7 @@ export class TowerDefenseScene extends Phaser.Scene {
   private enemies: Enemy[] = []
   private path!: Phaser.Curves.Path
   private pathLength = 0
-  private pathGraphics?: Phaser.GameObjects.Graphics
+  private gridGraphics?: Phaser.GameObjects.Graphics
   private enemyOverlay?: Phaser.GameObjects.Graphics
   private towerOverlay?: Phaser.GameObjects.Graphics
   private timers: Phaser.Time.TimerEvent[] = []
@@ -96,6 +111,9 @@ export class TowerDefenseScene extends Phaser.Scene {
   private exitButton!: Phaser.GameObjects.Text
   private baseMarker!: Phaser.GameObjects.Rectangle
   private runEnded = false
+  private gridTileSize = 0
+  private gridOriginX = 0
+  private gridOriginY = 0
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     TowerDefenseScene.exitHandler = handler
@@ -139,26 +157,28 @@ export class TowerDefenseScene extends Phaser.Scene {
   }
 
   private createPath() {
-    this.pathGraphics?.destroy()
+    this.gridGraphics?.destroy()
     const { width, height } = this.scale
-    const firstPoint = this.toWorldPoint(PATH_POINTS[0], width, height)
+    this.recalculateGridMetrics(width, height)
+    this.gridGraphics = this.add.graphics().setDepth(0)
+    this.drawGrid()
+
+    const firstPoint = this.gridToWorldCenter(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row)
     this.path = new Phaser.Curves.Path(firstPoint.x, firstPoint.y)
-    for (let i = 1; i < PATH_POINTS.length; i += 1) {
-      const point = this.toWorldPoint(PATH_POINTS[i], width, height)
+    for (let i = 1; i < PATH_SEQUENCE.length; i += 1) {
+      const point = this.gridToWorldCenter(PATH_SEQUENCE[i].col, PATH_SEQUENCE[i].row)
       this.path.lineTo(point.x, point.y)
     }
     this.pathLength = this.path.getLength()
-    this.pathGraphics = this.add.graphics({ lineStyle: { color: 0x243046, width: 12 } })
-    this.path.draw(this.pathGraphics, 64)
-    this.pathGraphics.setDepth(1)
   }
 
   private createBaseMarker() {
     this.baseMarker?.destroy()
-    const endPoint = new Phaser.Math.Vector2()
-    this.path.getPoint(1, endPoint)
+    const target = PATH_SEQUENCE[PATH_SEQUENCE.length - 1]
+    const endPoint = this.gridToWorldCenter(target.col, target.row)
+    const size = this.gridTileSize * 0.9
     this.baseMarker = this.add
-      .rectangle(endPoint.x, endPoint.y, 48, 48, 0x14222f)
+      .rectangle(endPoint.x, endPoint.y, size, size, 0x14222f)
       .setStrokeStyle(2, 0x3ad0ff, 0.6)
       .setDepth(2)
   }
@@ -166,21 +186,26 @@ export class TowerDefenseScene extends Phaser.Scene {
   private createBuildSpots() {
     this.buildSpots.forEach((spot) => spot.marker.destroy())
     this.buildSpots = []
-    SPOT_FRACTIONS.forEach((fraction, index) => {
-      const { width, height } = this.scale
-      const world = this.toWorldPoint(fraction, width, height)
-      const marker = this.add
-        .arc(world.x, world.y, 22, 0, 360, false, 0x1e2c40, 0.45)
-        .setStrokeStyle(2, 0x4fd4ff, 0.55)
-        .setDepth(3)
-      this.buildSpots.push({
-        id: index,
-        rx: fraction.x,
-        ry: fraction.y,
-        occupied: false,
-        marker
-      })
-    })
+    let index = 0
+    for (let row = 0; row < GRID_ROWS; row += 1) {
+      for (let col = 0; col < GRID_COLS; col += 1) {
+        if (GRID_MAP[row][col] !== 'build') continue
+        const world = this.gridToWorldCenter(col, row)
+        const size = this.gridTileSize * 0.7
+        const marker = this.add
+          .rectangle(world.x, world.y, size, size, 0x1e2c40, 0.45)
+          .setStrokeStyle(2, 0x4fd4ff, 0.55)
+          .setDepth(3)
+        this.buildSpots.push({
+          id: index,
+          col,
+          row,
+          occupied: false,
+          marker
+        })
+        index += 1
+      }
+    }
   }
 
   private createHud() {
@@ -203,7 +228,7 @@ export class TowerDefenseScene extends Phaser.Scene {
       .text(
         this.scale.width / 2,
         this.scale.height - 24,
-        'Click glowing pads to build towers. Towers fire automatically.',
+        'Click glowing squares to build towers. Towers fire automatically.',
         {
           ...this.hudStyle(),
           fontSize: '14px',
@@ -218,11 +243,11 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', () => this.endRun())
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.runEnded) return
-      const spot = this.buildSpots.find(
-        (candidate) =>
-          !candidate.occupied &&
-          Phaser.Math.Distance.Squared(pointer.worldX, pointer.worldY, candidate.marker.x, candidate.marker.y) < 34 * 34
-      )
+      const spot = this.buildSpots.find((candidate) => {
+        if (candidate.occupied) return false
+        const bounds = candidate.marker.getBounds()
+        return bounds.contains(pointer.worldX, pointer.worldY)
+      })
       if (!spot) {
         return
       }
@@ -265,10 +290,11 @@ export class TowerDefenseScene extends Phaser.Scene {
     const reward = ENEMY_BASE_REWARD + (this.wave - 1) * ENEMY_REWARD_PER_WAVE
     const startPoint = new Phaser.Math.Vector2()
     this.path.getPoint(0, startPoint)
+    const enemySize = this.gridTileSize * 0.7
     const sprite = this.add
       .sprite(startPoint.x, startPoint.y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1)
       .setOrigin(0.5)
-      .setDisplaySize(28, 28)
+      .setDisplaySize(enemySize, enemySize)
       .setTint(0xdc5c72)
       .setDepth(6)
     if (this.anims.exists('enemy-walk')) {
@@ -287,8 +313,9 @@ export class TowerDefenseScene extends Phaser.Scene {
   }
 
   private placeTower(spot: BuildSpot) {
+    const size = this.gridTileSize * 0.6
     const towerSprite = this.add
-      .rectangle(spot.marker.x, spot.marker.y, 24, 24, 0x4fd4ff, 0.9)
+      .rectangle(spot.marker.x, spot.marker.y, size, size, 0x4fd4ff, 0.9)
       .setStrokeStyle(2, 0xffffff, 0.7)
       .setDepth(7)
     this.towers.push({
@@ -303,7 +330,8 @@ export class TowerDefenseScene extends Phaser.Scene {
     spot.marker.setStrokeStyle(2, 0x3b82f6, 0.45).setFillStyle(0x1d4ed8, 0.35)
     this.coins -= TOWER_COST
     this.refreshHud()
-    this.showFloatingText(towerSprite.x, towerSprite.y - 26, 'Tower ready')
+    const offset = Math.max(24, this.gridTileSize * 0.5)
+    this.showFloatingText(towerSprite.x, towerSprite.y - offset, 'Tower ready')
   }
 
   private updateEnemies(deltaSeconds: number) {
@@ -351,11 +379,11 @@ export class TowerDefenseScene extends Phaser.Scene {
     if (!this.enemyOverlay) return
     this.enemyOverlay.clear()
     this.enemyOverlay.fillStyle(0x1f2937, 0.8)
-    const barWidth = 28
-    const barHeight = 4
+    const barWidth = Math.max(24, this.gridTileSize * 0.7)
+    const barHeight = Math.max(4, this.gridTileSize * 0.12)
     for (const enemy of this.enemies) {
       const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1)
-      const offsetY = enemy.sprite.displayHeight / 2 + 6
+      const offsetY = enemy.sprite.displayHeight / 2 + Math.max(6, this.gridTileSize * 0.15)
       this.enemyOverlay.fillRect(enemy.sprite.x - barWidth / 2, enemy.sprite.y - offsetY, barWidth, barHeight)
       this.enemyOverlay.fillStyle(0xf97316, 0.9)
       this.enemyOverlay.fillRect(
@@ -402,7 +430,8 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.coins += enemy.reward
     this.coinsEarned += enemy.reward
     this.refreshHud()
-    this.showFloatingText(x, y - 18, `+${enemy.reward}`, '#34d399')
+    const offset = Math.max(18, this.gridTileSize * 0.45)
+    this.showFloatingText(x, y - offset, `+${enemy.reward}`, '#34d399')
   }
 
   private refreshHud() {
@@ -418,17 +447,28 @@ export class TowerDefenseScene extends Phaser.Scene {
   private handleResize(gameSize: Phaser.Structs.Size) {
     const { width, height } = gameSize
     if (!width || !height) return
-    this.pathGraphics?.destroy()
+    const previousLength = this.pathLength
     this.createPath()
     this.createBaseMarker()
+    const spotSize = this.gridTileSize * 0.7
     this.buildSpots.forEach((spot) => {
-      const world = this.toWorldPoint({ x: spot.rx, y: spot.ry }, width, height)
-      spot.marker.setPosition(world.x, world.y)
+      const world = this.gridToWorldCenter(spot.col, spot.row)
+      spot.marker.setPosition(world.x, world.y).setDisplaySize(spotSize, spotSize)
       const tower = this.towers.find((candidate) => candidate.spotId === spot.id)
       if (tower) {
-        tower.sprite.setPosition(world.x, world.y)
+        tower.sprite
+          .setPosition(world.x, world.y)
+          .setDisplaySize(this.gridTileSize * 0.6, this.gridTileSize * 0.6)
       }
     })
+    const enemySize = this.gridTileSize * 0.7
+    const point = new Phaser.Math.Vector2()
+    for (const enemy of this.enemies) {
+      const progress = previousLength > 0 ? enemy.distance / previousLength : 0
+      enemy.distance = progress * this.pathLength
+      this.path.getPoint(progress, point)
+      enemy.sprite.setPosition(point.x, point.y).setDisplaySize(enemySize, enemySize)
+    }
     this.exitButton.setPosition(width - 20, 16)
   }
 
@@ -448,13 +488,14 @@ export class TowerDefenseScene extends Phaser.Scene {
   }
 
   private showFloatingText(x: number, y: number, message: string, color = '#fbbf24') {
+    const travel = Math.max(28, this.gridTileSize * 0.5)
     const text = this.add
       .text(x, y, message, { ...this.hudStyle(), fontSize: '14px', color })
       .setOrigin(0.5, 1)
       .setDepth(10)
     this.tweens.add({
       targets: text,
-      y: y - 28,
+      y: y - travel,
       alpha: 0,
       duration: 900,
       ease: 'Sine.easeOut',
@@ -470,8 +511,52 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
-  private toWorldPoint(fraction: { x: number; y: number }, width: number, height: number): Phaser.Math.Vector2 {
-    return new Phaser.Math.Vector2(fraction.x * width, fraction.y * height)
+  private recalculateGridMetrics(width: number, height: number) {
+    const tileWidth = width / GRID_COLS
+    const tileHeight = height / GRID_ROWS
+    this.gridTileSize = Math.min(tileWidth, tileHeight)
+    const mapWidth = this.gridTileSize * GRID_COLS
+    const mapHeight = this.gridTileSize * GRID_ROWS
+    this.gridOriginX = (width - mapWidth) / 2
+    this.gridOriginY = (height - mapHeight) / 2
+  }
+
+  private drawGrid() {
+    if (!this.gridGraphics) return
+    this.gridGraphics.clear()
+    const colors: Record<TileType, number> = {
+      wall: 0x0b1220,
+      build: 0x1b283b,
+      path: 0x2a3f5f,
+      spawn: 0x334d6d,
+      base: 0x22344d
+    }
+    for (let row = 0; row < GRID_ROWS; row += 1) {
+      for (let col = 0; col < GRID_COLS; col += 1) {
+        const tile = GRID_MAP[row][col]
+        const left = this.gridOriginX + col * this.gridTileSize
+        const top = this.gridOriginY + row * this.gridTileSize
+        const color = colors[tile]
+        const alpha = tile === 'wall' ? 0.88 : 0.95
+        this.gridGraphics.fillStyle(color, alpha)
+        this.gridGraphics.fillRect(left, top, this.gridTileSize, this.gridTileSize)
+      }
+    }
+    this.gridGraphics.lineStyle(1, 0x0f172a, 0.55)
+    for (let col = 0; col <= GRID_COLS; col += 1) {
+      const x = this.gridOriginX + col * this.gridTileSize
+      this.gridGraphics.lineBetween(x, this.gridOriginY, x, this.gridOriginY + GRID_ROWS * this.gridTileSize)
+    }
+    for (let row = 0; row <= GRID_ROWS; row += 1) {
+      const y = this.gridOriginY + row * this.gridTileSize
+      this.gridGraphics.lineBetween(this.gridOriginX, y, this.gridOriginX + GRID_COLS * this.gridTileSize, y)
+    }
+  }
+
+  private gridToWorldCenter(col: number, row: number): Phaser.Math.Vector2 {
+    const x = this.gridOriginX + col * this.gridTileSize + this.gridTileSize / 2
+    const y = this.gridOriginY + row * this.gridTileSize + this.gridTileSize / 2
+    return new Phaser.Math.Vector2(x, y)
   }
 
   private ensureEnemyWalkAnimation() {
