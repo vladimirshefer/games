@@ -15,7 +15,8 @@ import {
   TOWER_DAMAGE,
   TOWER_RANGE,
   TOWER_FIRE_RATE,
-  STARTING_COINS
+  STARTING_COINS,
+  WAVE_BREAK
 } from './game/constants.ts'
 
 type ExitStats = {
@@ -278,22 +279,23 @@ export class TowerDefenseScene extends Phaser.Scene {
 
     const enemiesThisWave = ENEMIES_PER_WAVE + Math.max(0, this.wave - 1) * ENEMIES_PER_WAVE_GROWTH
     const spawnDelay = Math.max(MIN_SPAWN_DELAY, 900 - this.wave * 40)
-    let _spawned = 0
-
     const timer = this.time.addEvent({
       delay: spawnDelay,
       repeat: enemiesThisWave - 1,
       callback: () => {
-        _spawned += 1
         this.spawnEnemy()
       }
-      // onComplete: () => {
-      //     this.timers = this.timers.filter((current) => current !== timer)
-      //     this.time.delayedCall(WAVE_BREAK, () => this.startNextWave())
-      // },
     })
     this.timers.push(timer)
     this.spawnEnemy()
+    const totalSpawnTime = spawnDelay * Math.max(enemiesThisWave - 1, 0)
+    // Schedule downtime before the next wave.
+    const breakTimer = this.time.delayedCall(totalSpawnTime + WAVE_BREAK, () => {
+      this.timers = this.timers.filter((current) => current !== breakTimer)
+      if (this.runEnded) return
+      this.startNextWave()
+    })
+    this.timers.push(breakTimer)
   }
 
   // Spawns a new enemy at the path start.
