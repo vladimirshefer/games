@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
 import {
   BASE_HP,
   ENEMY_BASE_HP,
@@ -41,7 +42,7 @@ type Tower = {
 }
 
 type Enemy = {
-  sprite: Phaser.GameObjects.Arc
+  sprite: Phaser.GameObjects.Sprite
   distance: number
   speed: number
   hp: number
@@ -102,11 +103,19 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   preload() {
     this.load.setPath('')
+    if (!this.textures.exists(ONE_BIT_PACK.key)) {
+      this.load.spritesheet(ONE_BIT_PACK.key, ONE_BIT_PACK.url, {
+        frameWidth: ONE_BIT_PACK.frameWidth,
+        frameHeight: ONE_BIT_PACK.frameHeight,
+        spacing: ONE_BIT_PACK.spacing
+      })
+    }
   }
 
   create() {
     // const {width, height} = this.scale
     this.cameras.main.setBackgroundColor('#0b0f19')
+    this.ensureEnemyWalkAnimation()
 
     this.enemyOverlay = this.add.graphics().setDepth(5)
     this.towerOverlay = this.add.graphics().setDepth(4)
@@ -256,7 +265,16 @@ export class TowerDefenseScene extends Phaser.Scene {
     const reward = ENEMY_BASE_REWARD + (this.wave - 1) * ENEMY_REWARD_PER_WAVE
     const startPoint = new Phaser.Math.Vector2()
     this.path.getPoint(0, startPoint)
-    const sprite = this.add.arc(startPoint.x, startPoint.y, 14, 0, 360, false, 0xdc5c72, 0.95).setDepth(6)
+    const sprite = this.add
+      .sprite(startPoint.x, startPoint.y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1)
+      .setOrigin(0.5)
+      .setDisplaySize(28, 28)
+      .setTint(0xdc5c72)
+      .setDepth(6)
+    if (this.anims.exists('enemy-walk')) {
+      sprite.play('enemy-walk')
+      sprite.anims.setProgress(Math.random())
+    }
     this.enemies.push({
       sprite,
       distance: 0,
@@ -337,11 +355,12 @@ export class TowerDefenseScene extends Phaser.Scene {
     const barHeight = 4
     for (const enemy of this.enemies) {
       const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1)
-      this.enemyOverlay.fillRect(enemy.sprite.x - barWidth / 2, enemy.sprite.y - 22, barWidth, barHeight)
+      const offsetY = enemy.sprite.displayHeight / 2 + 6
+      this.enemyOverlay.fillRect(enemy.sprite.x - barWidth / 2, enemy.sprite.y - offsetY, barWidth, barHeight)
       this.enemyOverlay.fillStyle(0xf97316, 0.9)
       this.enemyOverlay.fillRect(
         enemy.sprite.x - barWidth / 2 + 1,
-        enemy.sprite.y - 22 + 1,
+        enemy.sprite.y - offsetY + 1,
         (barWidth - 2) * ratio,
         barHeight - 2
       )
@@ -453,6 +472,21 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   private toWorldPoint(fraction: { x: number; y: number }, width: number, height: number): Phaser.Math.Vector2 {
     return new Phaser.Math.Vector2(fraction.x * width, fraction.y * height)
+  }
+
+  private ensureEnemyWalkAnimation() {
+    if (!this.textures.exists(ONE_BIT_PACK.key)) return
+    if (this.anims.exists('enemy-walk')) return
+    const frames = [ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk2].map((frame) => ({
+      key: ONE_BIT_PACK.key,
+      frame
+    }))
+    this.anims.create({
+      key: 'enemy-walk',
+      frames,
+      frameRate: 6,
+      repeat: -1
+    })
   }
 }
 
