@@ -413,12 +413,7 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Places a tower on the chosen pad.
   private placeTower(spot: BuildSpot) {
-    const size = this.gridTileSize * 0.6
-    const towerSprite = this.add
-      .sprite(spot.marker.x, spot.marker.y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.tower1)
-      .setDisplaySize(size, size)
-      .setDepth(7)
-    towerSprite.setTint(0xf1f5f9)
+    const towerSprite = spot.marker
     this.towers.push({
       spotId: spot.id,
       sprite: towerSprite,
@@ -777,8 +772,23 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Highlights build tiles based on occupancy.
   private applyBuildSpotTint(spot: BuildSpot) {
-    const tint = spot.occupied ? 0x2563eb : 0x60a5fa
-    spot.marker.setTint(tint).setVisible(!spot.occupied)
+    if (spot.occupied) {
+      const size = this.gridTileSize * 0.6
+      spot.marker
+        .setFrame(ONE_BIT_PACK_KNOWN_FRAMES.tower1)
+        .setDisplaySize(size, size)
+        .setDepth(7)
+        .setTint(0xf1f5f9)
+        .setAngle(0)
+    } else {
+      const size = this.gridTileSize * 0.98
+      spot.marker
+        .setFrame(TILE_FRAME_POOL[1])
+        .setDisplaySize(size, size)
+        .setDepth(0)
+        .setTint(0x60a5fa)
+        .setAngle(0)
+    }
   }
 
   // Compact key for tile lookups.
