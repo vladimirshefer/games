@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router'
 import Phaser from 'phaser'
 import { TowerDefenseScene, type ExitStats } from './scene'
 
@@ -151,68 +152,77 @@ const TowerDefensePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-start bg-slate-950 px-6 py-6 text-slate-100">
-      <h1 className="mb-4 text-3xl font-semibold">Tower Defence</h1>
-      <div className="flex w-full max-w-[1100px] flex-col gap-6 lg:flex-row">
-        <div className="flex-1 rounded-lg border border-white/10 bg-slate-900/60 p-5">
-          <h2 className="mb-3 text-xl font-semibold">High Scores</h2>
-          {highScores.length === 0 ? (
-            <p className="text-sm opacity-70">No waves cleared yet. Place some towers!</p>
-          ) : (
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-white/5 text-left">
-                  <th className="px-1 py-1">#</th>
-                  <th className="px-1 py-1">Waves</th>
-                  <th className="px-1 py-1">Leaks</th>
-                  <th className="px-1 py-1">Coins</th>
-                  <th className="px-1 py-1">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lastStats && (
-                  <tr>
-                    <td className="px-1 py-1">Last</td>
-                    <td className="px-1 py-1">{lastStats.waves}</td>
-                    <td className="px-1 py-1">{lastStats.leaks}</td>
-                    <td className="px-1 py-1">{lastStats.coinsEarned}</td>
-                    <td className="px-1 py-1">—</td>
+    <>
+      <div className="flex min-h-screen flex-col items-center justify-start bg-slate-950 px-6 py-6 pb-28 text-slate-100">
+        <h1 className="mb-4 text-3xl font-semibold">Tower Defence</h1>
+        <div className="flex w-full max-w-[1100px] flex-col gap-6 lg:flex-row">
+          <div className="flex-1 rounded-lg border border-white/10 bg-slate-900/60 p-5">
+            <h2 className="mb-3 text-xl font-semibold">High Scores</h2>
+            {highScores.length === 0 ? (
+              <p className="text-sm opacity-70">No waves cleared yet. Place some towers!</p>
+            ) : (
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-white/5 text-left">
+                    <th className="px-1 py-1">#</th>
+                    <th className="px-1 py-1">Waves</th>
+                    <th className="px-1 py-1">Leaks</th>
+                    <th className="px-1 py-1">Coins</th>
+                    <th className="px-1 py-1">Date</th>
                   </tr>
-                )}
-                {highScores.map((score, index) => (
-                  <tr key={`${score.timestamp}-${index}`} className="border-b border-white/5">
-                    <td className="px-1 py-2">{index + 1}</td>
-                    <td className="px-1 py-2">{score.waves}</td>
-                    <td className="px-1 py-2">{score.leaks}</td>
-                    <td className="px-1 py-2">{score.coinsEarned}</td>
-                    <td className="px-1 py-2">{new Date(score.timestamp).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          <button
-            onClick={handlePlayClick}
-            className="mt-4 w-full rounded-md bg-blue-600 px-4 py-2 text-base font-semibold
-            text-white transition hover:bg-blue-500"
-          >
-            Play
-          </button>
-        </div>
-        <div
-          className="flex w-full max-w-sm flex-col gap-3 rounded-lg border border-white/10
+                </thead>
+                <tbody>
+                  {lastStats && (
+                    <tr>
+                      <td className="px-1 py-1">Last</td>
+                      <td className="px-1 py-1">{lastStats.waves}</td>
+                      <td className="px-1 py-1">{lastStats.leaks}</td>
+                      <td className="px-1 py-1">{lastStats.coinsEarned}</td>
+                      <td className="px-1 py-1">—</td>
+                    </tr>
+                  )}
+                  {highScores.map((score, index) => (
+                    <tr key={`${score.timestamp}-${index}`} className="border-b border-white/5">
+                      <td className="px-1 py-2">{index + 1}</td>
+                      <td className="px-1 py-2">{score.waves}</td>
+                      <td className="px-1 py-2">{score.leaks}</td>
+                      <td className="px-1 py-2">{score.coinsEarned}</td>
+                      <td className="px-1 py-2">{new Date(score.timestamp).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <div
+            className="flex w-full max-w-sm flex-col gap-3 rounded-lg border border-white/10
         bg-slate-900/60 p-5 text-sm"
-        >
-          <h2 className="text-xl font-semibold">How to Play</h2>
-          <ul className="list-disc space-y-1 pl-5 opacity-80">
-            <li>Click a glowing pad to spend 25 coins on a tower.</li>
-            <li>Towers auto-target creeps closest to your base.</li>
-            <li>Kills drop coins; leaks damage the base.</li>
-            <li>Survive as long as you can — waves keep scaling.</li>
-          </ul>
+          >
+            <h2 className="text-xl font-semibold">How to Play</h2>
+            <ul className="list-disc space-y-1 pl-5 opacity-80">
+              <li>Click a glowing pad to spend 25 coins on a tower.</li>
+              <li>Towers auto-target creeps closest to your base.</li>
+              <li>Kills drop coins; leaks damage the base.</li>
+              <li>Survive as long as you can — waves keep scaling.</li>
+            </ul>
+          </div>
         </div>
+        <Link
+          to="/"
+          className="mt-6 inline-flex items-center justify-center rounded-md border border-slate-600
+          bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700"
+        >
+          Back to main page
+        </Link>
       </div>
-    </div>
+      <button
+        onClick={handlePlayClick}
+        className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-3rem)] max-w-md -translate-x-1/2 transform rounded-md
+        bg-blue-600 px-4 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-blue-500"
+      >
+        Play
+      </button>
+    </>
   )
 }
 
