@@ -12,13 +12,19 @@ export type GameMap = {
 export type MapGeneratorConfig = {
   height: number
   width: number
+  roadLength?: number
+}
+
+type NormalizedMapConfig = {
+  height: number
+  width: number
   roadLength: number
 }
 
 export class TowerDefenseMapGenerator {
   private readonly map: GameMap
 
-  constructor(config: MapGeneratorConfig = { height: 8, width: 12, roadLength: 14 }) {
+  constructor(config: MapGeneratorConfig = { height: 8, width: 12 }) {
     const normalized = this.normalizeConfig(config)
     this.map = this.generateMap(normalized.height, normalized.width, normalized.roadLength)
   }
@@ -32,11 +38,12 @@ export class TowerDefenseMapGenerator {
     }
   }
 
-  private normalizeConfig(config: MapGeneratorConfig): MapGeneratorConfig {
+  private normalizeConfig(config: MapGeneratorConfig): NormalizedMapConfig {
     const height = Math.max(3, Math.floor(config.height))
     const width = Math.max(3, Math.floor(config.width))
     const maxRoadLength = height * width
-    const requestedLength = Math.floor(config.roadLength)
+    const defaultRoadLength = (height + width) * 2
+    const requestedLength = Math.floor(config.roadLength ?? defaultRoadLength)
     const roadLength = Math.min(Math.max(2, requestedLength), maxRoadLength)
     return { height, width, roadLength }
   }
@@ -120,6 +127,12 @@ export class TowerDefenseMapGenerator {
       path.push(candidate)
       visited.add(key)
 
+      if (this.violatesSpacing(candidate, visited, rows, cols)) {
+        visited.delete(key)
+        path.pop()
+        continue
+      }
+
       if (this.extendPath(path, visited, rows, cols, roadLength)) {
         return true
       }
@@ -178,6 +191,60 @@ export class TowerDefenseMapGenerator {
 
   private isEdge(node: PathNode, rows: number, cols: number) {
     return node.row === 0 || node.row === rows - 1 || node.col === 0 || node.col === cols - 1
+  }
+
+  private violatesSpacing(candidate: PathNode, visited: Set<string>, rows: number, cols: number): boolean {
+    const limit = 4
+    if (this.countRoadNeighbors(candidate, visited, rows, cols) > limit) {
+      return true
+    }
+
+    const neighborOffsets = [
+      { col: -1, row: -1 },
+      { col: 0, row: -1 },
+      { col: 1, row: -1 },
+      { col: -1, row: 0 },
+      { col: 1, row: 0 },
+      { col: -1, row: 1 },
+      { col: 0, row: 1 },
+      { col: 1, row: 1 }
+    ]
+
+    for (const offset of neighborOffsets) {
+      const col = candidate.col + offset.col
+      const row = candidate.row + offset.row
+      if (col < 0 || col >= cols || row < 0 || row >= rows) {
+        continue
+      }
+      const key = this.cellKey(col, row)
+      if (!visited.has(key)) {
+        continue
+      }
+      if (this.countRoadNeighbors({ col, row }, visited, rows, cols) > limit) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  private countRoadNeighbors(node: PathNode, visited: Set<string>, rows: number, cols: number) {
+    let count = 0
+    for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+      for (let colOffset = -1; colOffset <= 1; colOffset += 1) {
+        if (rowOffset === 0 && colOffset === 0) continue
+        const col = node.col + colOffset
+        const row = node.row + rowOffset
+        if (col < 0 || col >= cols || row < 0 || row >= rows) {
+          continue
+        }
+        const key = this.cellKey(col, row)
+        if (visited.has(key)) {
+          count += 1
+        }
+      }
+    }
+    return count
   }
 
   private cellKey(col: number, row: number) {

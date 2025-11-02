@@ -16,4 +16,4 @@ export const WAVE_BREAK = 3000
 export const MIN_SPAWN_DELAY = 400
 export const MAP_HEIGHT = 8
 export const MAP_WIDTH = 12
-export const MAP_ROAD_LENGTH = 18
+export const MAP_ROAD_LENGTH = (MAP_HEIGHT + MAP_WIDTH) * 2
