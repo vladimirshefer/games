@@ -35,7 +35,7 @@ type BuildSpot = {
 
 type Tower = {
   spotId: number
-  sprite: Phaser.GameObjects.Rectangle
+  sprite: Phaser.GameObjects.Sprite
   range: number
   fireRate: number
   cooldown: number
@@ -415,9 +415,10 @@ export class TowerDefenseScene extends Phaser.Scene {
   private placeTower(spot: BuildSpot) {
     const size = this.gridTileSize * 0.6
     const towerSprite = this.add
-      .rectangle(spot.marker.x, spot.marker.y, size, size, 0x4fd4ff, 0.9)
-      .setStrokeStyle(2, 0xffffff, 0.7)
+      .sprite(spot.marker.x, spot.marker.y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.tower1)
+      .setDisplaySize(size, size)
       .setDepth(7)
+    towerSprite.setTint(0xf1f5f9)
     this.towers.push({
       spotId: spot.id,
       sprite: towerSprite,
