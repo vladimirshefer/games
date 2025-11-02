@@ -58,6 +58,8 @@ const GRID_ROWS = 8
 
 type TileType = 'road' | 'build' | 'obstacle'
 
+type Direction = 'up' | 'down' | 'left' | 'right'
+
 // Layout of every tile on the board.
 const GRID_MAP: TileType[][] = [
   [
@@ -184,6 +186,7 @@ export class TowerDefenseScene extends Phaser.Scene {
   private enemies: Enemy[] = []
   private path!: Phaser.Curves.Path
   private pathLength = 0
+  private pathIndexByCell = new Map<string, number>()
   private enemyOverlay?: Phaser.GameObjects.Graphics
   private towerOverlay?: Phaser.GameObjects.Graphics
   private timers: Phaser.Time.TimerEvent[] = []
@@ -254,9 +257,12 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.refreshGridTiles()
     const firstPoint = this.gridToWorldCenter(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row)
     this.path = new Phaser.Curves.Path(firstPoint.x, firstPoint.y)
+    this.pathIndexByCell.clear()
+    this.pathIndexByCell.set(this.cellKey(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row), 0)
     for (let i = 1; i < PATH_SEQUENCE.length; i += 1) {
       const point = this.gridToWorldCenter(PATH_SEQUENCE[i].col, PATH_SEQUENCE[i].row)
       this.path.lineTo(point.x, point.y)
+      this.pathIndexByCell.set(this.cellKey(PATH_SEQUENCE[i].col, PATH_SEQUENCE[i].row), i)
     }
     this.pathLength = this.path.getLength()
   }
@@ -637,15 +643,16 @@ export class TowerDefenseScene extends Phaser.Scene {
         const type = GRID_MAP[row][col]
         const key = this.cellKey(col, row)
         const center = this.gridToWorldCenter(col, row)
-        const frame = this.frameForTile(type)
+        const appearance = this.appearanceForTile(col, row, type)
         const depth = type === 'obstacle' ? 2 : 0
         let sprite = this.tileSpriteLookup.get(key)
         if (!sprite) {
           sprite = this.add
-            .sprite(center.x, center.y, ONE_BIT_PACK.key, frame)
+            .sprite(center.x, center.y, ONE_BIT_PACK.key, appearance.frame)
             .setOrigin(0.5)
             .setDisplaySize(displaySize, displaySize)
             .setDepth(depth)
+          sprite.setAngle(appearance.angle)
           sprite.setTint(this.tintForTile(type))
           this.tileSpriteLookup.set(key, sprite)
           this.tileSprites.push(sprite)
@@ -653,8 +660,9 @@ export class TowerDefenseScene extends Phaser.Scene {
           sprite
             .setPosition(center.x, center.y)
             .setDisplaySize(displaySize, displaySize)
-            .setFrame(frame)
+            .setFrame(appearance.frame)
             .setDepth(depth)
+            .setAngle(appearance.angle)
           const buildSpot = this.findBuildSpot(col, row)
           if (!buildSpot) {
             sprite.setTint(this.tintForTile(type))
@@ -667,13 +675,96 @@ export class TowerDefenseScene extends Phaser.Scene {
   }
 
   // Deterministic frame pick per tile.
-  private frameForTile(type: TileType) {
-    const offsets: Record<TileType, number> = {
-      road: 0,
+  private appearanceForTile(col: number, row: number, type: TileType) {
+    if (type === 'road') {
+      return this.roadAppearance(col, row)
+    }
+    const offsets: Record<Exclude<TileType, 'road'>, number> = {
       build: 1,
       obstacle: 2
     }
-    return TILE_FRAME_POOL[offsets[type]]
+    return {
+      frame: TILE_FRAME_POOL[offsets[type]],
+      angle: 0
+    }
+  }
+
+  private roadAppearance(col: number, row: number) {
+    const key = this.cellKey(col, row)
+    const index = this.pathIndexByCell.get(key)
+    if (index === undefined) {
+      return {
+        frame: ONE_BIT_PACK_KNOWN_FRAMES.roadStraight,
+        angle: 0
+      }
+    }
+    const prev = index > 0 ? PATH_SEQUENCE[index - 1] : undefined
+    const next = index < PATH_SEQUENCE.length - 1 ? PATH_SEQUENCE[index + 1] : undefined
+    const connections = new Set<Direction>()
+    if (prev) {
+      connections.add(this.oppositeDirection(this.directionBetween(prev, PATH_SEQUENCE[index])))
+    }
+    if (next) {
+      connections.add(this.directionBetween(PATH_SEQUENCE[index], next))
+    }
+    const connectsUp = connections.has('up')
+    const connectsDown = connections.has('down')
+    const connectsLeft = connections.has('left')
+    const connectsRight = connections.has('right')
+
+    if ((connectsUp || connectsDown) && (connectsLeft || connectsRight)) {
+      return {
+        frame: ONE_BIT_PACK_KNOWN_FRAMES.roadTurn,
+        angle: this.cornerAngle(connectsUp, connectsDown, connectsLeft, connectsRight)
+      }
+    }
+    if (connectsLeft || connectsRight) {
+      return {
+        frame: ONE_BIT_PACK_KNOWN_FRAMES.roadStraight,
+        angle: 90
+      }
+    }
+    return {
+      frame: ONE_BIT_PACK_KNOWN_FRAMES.roadStraight,
+      angle: 0
+    }
+  }
+
+  private cornerAngle(
+    connectsUp: boolean,
+    connectsDown: boolean,
+    connectsLeft: boolean,
+    connectsRight: boolean
+  ) {
+    if (connectsDown && connectsRight) return 0
+    if (connectsUp && connectsRight) return -90
+    if (connectsUp && connectsLeft) return 180
+    if (connectsDown && connectsLeft) return 90
+    return 0
+  }
+
+  private directionBetween(
+    from: { col: number; row: number },
+    to: { col: number; row: number }
+  ): Direction {
+    if (to.col > from.col) return 'right'
+    if (to.col < from.col) return 'left'
+    if (to.row > from.row) return 'down'
+    return 'up'
+  }
+
+  private oppositeDirection(direction: Direction): Direction {
+    switch (direction) {
+      case 'up':
+        return 'down'
+      case 'down':
+        return 'up'
+      case 'left':
+        return 'right'
+      case 'right':
+      default:
+        return 'left'
+    }
   }
 
   // Base tint per tile type.

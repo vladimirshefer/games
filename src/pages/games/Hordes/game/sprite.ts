@@ -14,6 +14,8 @@ export const ONE_BIT_PACK = {
 
 export const ONE_BIT_PACK_KNOWN_FRAMES = {
   portalOpens: 2 * ENEMY_SPRITESHEET_COLUMNS + 45, // 3rd row (0-indexed), 4th from the right
+  roadStraight: 4 * ENEMY_SPRITESHEET_COLUMNS + 8, // Top to bottom.
+  roadTurn: 4 * ENEMY_SPRITESHEET_COLUMNS + 9, // Bottom to right turn.
   hero: 4 * ENEMY_SPRITESHEET_COLUMNS + 30,
   mobWalk1: 7 * ENEMY_SPRITESHEET_COLUMNS + 18, // 8th row (0-indexed), 19th column
   mobWalk2: 7 * ENEMY_SPRITESHEET_COLUMNS + 19, // 8th row (0-indexed), 20th column
