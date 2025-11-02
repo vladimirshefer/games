@@ -11,8 +11,17 @@ type TileAppearance = {
 
 const TILE_FRAME_POOL = [
   ONE_BIT_PACK_KNOWN_FRAMES.portalOpens,
-  ONE_BIT_PACK_KNOWN_FRAMES.aura,
-  ONE_BIT_PACK_KNOWN_FRAMES.healPotion
+  ONE_BIT_PACK_KNOWN_FRAMES.empty,
+  ONE_BIT_PACK_KNOWN_FRAMES.tree1
+]
+
+const OBSTACLE_TILE_FRAME_POOL = [
+  ONE_BIT_PACK_KNOWN_FRAMES.tree1,
+  ONE_BIT_PACK_KNOWN_FRAMES.tree2,
+  ONE_BIT_PACK_KNOWN_FRAMES.tree3,
+  ONE_BIT_PACK_KNOWN_FRAMES.tree4,
+  ONE_BIT_PACK_KNOWN_FRAMES.tree5,
+  ONE_BIT_PACK_KNOWN_FRAMES.tree6
 ]
 
 export class MapRenderer {
@@ -45,14 +54,12 @@ export class MapRenderer {
         const key = this.cellKey(col, row)
         const center = this.gridToWorldCenter(col, row)
         const appearance = this.appearanceForTile(col, row, type)
-        const depth = type === 'obstacle' ? 2 : 0
         let sprite = this.tileSpriteLookup.get(key)
         if (!sprite) {
           sprite = this.scene.add
             .sprite(center.x, center.y, ONE_BIT_PACK.key, appearance.frame)
             .setOrigin(0.5)
             .setDisplaySize(displaySize, displaySize)
-            .setDepth(depth)
           sprite.setAngle(appearance.angle)
           sprite.setTint(this.tintForTile(type))
           this.tileSpriteLookup.set(key, sprite)
@@ -61,7 +68,6 @@ export class MapRenderer {
             .setPosition(center.x, center.y)
             .setDisplaySize(displaySize, displaySize)
             .setFrame(appearance.frame)
-            .setDepth(depth)
             .setAngle(appearance.angle)
           sprite.setTint(this.tintForTile(type))
         }
@@ -95,12 +101,7 @@ export class MapRenderer {
       return
     }
     const size = this.gridTileSize * 0.98
-    sprite
-      .setFrame(TILE_FRAME_POOL[1])
-      .setDisplaySize(size, size)
-      .setDepth(0)
-      .setTint(0x60a5fa)
-      .setAngle(0)
+    sprite.setFrame(TILE_FRAME_POOL[1]).setDisplaySize(size, size).setDepth(0).setTint(0x60a5fa).setAngle(0)
   }
 
   private updateMetrics(width: number, height: number) {
@@ -117,12 +118,14 @@ export class MapRenderer {
     if (type === 'road') {
       return this.roadAppearance(col, row)
     }
-    const offsets: Record<Exclude<TileType, 'road'>, number> = {
-      build: 1,
-      obstacle: 2
+    if (type === 'obstacle') {
+      return {
+        frame: OBSTACLE_TILE_FRAME_POOL[Phaser.Math.Between(0, OBSTACLE_TILE_FRAME_POOL.length)],
+        angle: 0
+      }
     }
     return {
-      frame: TILE_FRAME_POOL[offsets[type]],
+      frame: ONE_BIT_PACK_KNOWN_FRAMES.empty,
       angle: 0
     }
   }
@@ -200,9 +203,9 @@ export class MapRenderer {
   }
 
   private tintForTile(type: TileType) {
-    if (type === 'road') return 0xffffff
-    if (type === 'build') return 0xbcd7ff
-    return 0x6b7280
+    if (type === 'road') return 0xccccaa
+    if (type === 'build') return 0xc0d0ff
+    return 0x607080
   }
 
   private cellKey(col: number, row: number) {
