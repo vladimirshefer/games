@@ -190,7 +190,6 @@ export class HordesScene extends Phaser.Scene {
     this.enemyManager = new EnemyManager(this, this.enemies)
     this.waveManager = new WaveManager(this, this.enemyManager, {
       getHero: () => this.hero,
-      onEnemySpawned: (enemy, mob) => this.enemyManager.attachHpLabel(enemy, mob),
       onWaveAdvanced: (newWave) => {
         this.wave = newWave
       }

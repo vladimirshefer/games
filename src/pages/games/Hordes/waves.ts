@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type { EnemySprite, HeroState } from './types'
+import type { HeroState } from './types'
 import { EnemyManager, type MobStats } from './enemies.ts'
 import {
   MOB_BASE_DAMAGE,
@@ -12,7 +12,6 @@ import {
 
 interface WaveHooks {
   getHero(): HeroState
-  onEnemySpawned(enemy: EnemySprite, mob: MobStats): void
   onWaveAdvanced(wave: number): void
 }
 
@@ -101,8 +100,7 @@ export class WaveManager {
     const powerMultiplier = 1 + this.wave / 20
     const mobDamageRelative = (stats.damage / MOB_BASE_DAMAGE) * powerMultiplier
     const color = grbToHex(0.5 + mobDamageRelative / 2, 0.4, 0.5 + (1 - mobDamageRelative) / 2)
-    const enemy = this.enemyManager.spawn(edge, stats, color)
-    this.hooks.onEnemySpawned(enemy, stats)
+    this.enemyManager.spawn(edge, stats, color)
   }
 
   private gameover() {

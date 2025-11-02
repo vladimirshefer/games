@@ -82,6 +82,7 @@ export class EnemyManager implements IEnemyManager {
     }
 
     this.enemies.push(enemy)
+    this.attachHpLabel(enemy, mob)
     return enemy
   }
 
