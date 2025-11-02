@@ -275,6 +275,7 @@ export class HordesScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
     this.exitButton.on('pointerdown', () => this.handleExit())
+    this.hidePauseHud()
 
     if (this.hero.weaponIds.length === 0) {
       this.pendingLevelUps = Math.max(this.pendingLevelUps, 1)
@@ -425,6 +426,7 @@ export class HordesScene extends Phaser.Scene {
       this.pauseButton.disableInteractive()
       this.pauseButton.setText('Upgrade')
     }
+    this.hidePauseHud()
   }
 
   private resumeFromUpgrade() {
@@ -434,6 +436,7 @@ export class HordesScene extends Phaser.Scene {
       this.pauseButton.setText('Pause')
       this.pauseButton.setInteractive({ useHandCursor: true })
     }
+    this.hidePauseHud()
   }
 
   private onUpgradeMenuClosed() {
@@ -517,6 +520,18 @@ export class HordesScene extends Phaser.Scene {
     })
   }
 
+  private showPauseHud() {
+    if (!this.exitButton) return
+    this.exitButton.setVisible(true)
+    this.exitButton.setInteractive({ useHandCursor: true })
+  }
+
+  private hidePauseHud() {
+    if (!this.exitButton) return
+    this.exitButton.setVisible(false)
+    this.exitButton.disableInteractive()
+  }
+
   private getNextLevelXp(level: number) {
     return Math.ceil(LEVEL_BASE_XP * Math.pow(LEVEL_BASE_PROGRESSION, level - 1))
   }
@@ -526,6 +541,11 @@ export class HordesScene extends Phaser.Scene {
     this.isPaused = !this.isPaused
     this.pauseButton.setText(this.isPaused ? 'Resume' : 'Pause')
     this.time.timeScale = this.isPaused ? 0 : 1
+    if (this.isPaused) {
+      this.showPauseHud()
+    } else {
+      this.hidePauseHud()
+    }
   }
 
   /**
