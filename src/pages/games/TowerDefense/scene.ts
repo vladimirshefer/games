@@ -51,11 +51,13 @@ type Enemy = {
   leakDamage: number
 }
 
+// Grid dimensions (columns x rows).
 const GRID_COLS = 12
 const GRID_ROWS = 8
 
 type TileType = 'spawn' | 'path' | 'base' | 'build' | 'wall'
 
+// Layout of every tile on the board.
 const GRID_MAP: TileType[][] = [
   ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
   ['wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
@@ -67,6 +69,7 @@ const GRID_MAP: TileType[][] = [
   ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
 ]
 
+// Ordered cells the mobs traverse.
 const PATH_SEQUENCE = [
   { col: 0, row: 2 },
   { col: 1, row: 2 },
@@ -119,6 +122,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     TowerDefenseScene.exitHandler = handler
   }
 
+  // Loads shared sprite sheet when needed.
   preload() {
     this.load.setPath('')
     if (!this.textures.exists(ONE_BIT_PACK.key)) {
@@ -130,6 +134,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Scene setup entry point.
   create() {
     // const {width, height} = this.scale
     this.cameras.main.setBackgroundColor('#0b0f19')
@@ -148,6 +153,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.time.delayedCall(600, () => this.startNextWave())
   }
 
+  // Frame update loop.
   update(_: number, delta: number) {
     if (this.runEnded) return
     const deltaSeconds = delta / 1000
@@ -156,6 +162,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.renderOverlays()
   }
 
+  // Builds the grid visuals and path curve.
   private createPath() {
     this.gridGraphics?.destroy()
     const { width, height } = this.scale
@@ -172,6 +179,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.pathLength = this.path.getLength()
   }
 
+  // Draws the goal/base tile.
   private createBaseMarker() {
     this.baseMarker?.destroy()
     const target = PATH_SEQUENCE[PATH_SEQUENCE.length - 1]
@@ -183,6 +191,7 @@ export class TowerDefenseScene extends Phaser.Scene {
       .setDepth(2)
   }
 
+  // Spawns clickable tower pads.
   private createBuildSpots() {
     this.buildSpots.forEach((spot) => spot.marker.destroy())
     this.buildSpots = []
@@ -208,6 +217,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Initializes HUD labels/tooltips.
   private createHud() {
     this.hudWave?.destroy()
     this.hudHp?.destroy()
@@ -239,6 +249,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.refreshHud()
   }
 
+  // Wires pointer and keyboard input.
   private configureInput() {
     this.input.keyboard?.on('keydown-ESC', () => this.endRun())
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -259,6 +270,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     })
   }
 
+  // Begins the next wave timer.
   private startNextWave() {
     if (this.runEnded) return
     this.wave += 1
@@ -284,6 +296,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.spawnEnemy()
   }
 
+  // Spawns a new enemy at the path start.
   private spawnEnemy() {
     const hp = ENEMY_BASE_HP + (this.wave - 1) * ENEMY_HP_PER_WAVE
     const speed = ENEMY_BASE_SPEED + (this.wave - 1) * ENEMY_SPEED_PER_WAVE
@@ -312,6 +325,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     })
   }
 
+  // Places a tower on the chosen pad.
   private placeTower(spot: BuildSpot) {
     const size = this.gridTileSize * 0.6
     const towerSprite = this.add
@@ -334,6 +348,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.showFloatingText(towerSprite.x, towerSprite.y - offset, 'Tower ready')
   }
 
+  // Advances enemies along the path.
   private updateEnemies(deltaSeconds: number) {
     const point = new Phaser.Math.Vector2()
     const remaining: Enemy[] = []
@@ -352,6 +367,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.enemies = remaining
   }
 
+  // Handles tower cooldowns and attacks.
   private updateTowers(delta: number) {
     const deltaMs = delta
     this.towerOverlay?.clear()
@@ -375,6 +391,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Redraws enemy HP bars.
   private renderOverlays() {
     if (!this.enemyOverlay) return
     this.enemyOverlay.clear()
@@ -396,6 +413,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Chooses the furthest enemy within range.
   private findTargetForTower(tower: Tower) {
     let selection: Enemy | undefined
     let selectionProgress = -Infinity
@@ -413,6 +431,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     return selection
   }
 
+  // Processes enemies reaching the base.
   private handleLeak(enemy: Enemy) {
     this.baseHp = Math.max(0, this.baseHp - enemy.leakDamage)
     this.leaks += 1
@@ -423,6 +442,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Rewards the player for a kill.
   private handleKill(enemy: Enemy) {
     const { x, y } = enemy.sprite
     enemy.sprite.destroy()
@@ -434,6 +454,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.showFloatingText(x, y - offset, `+${enemy.reward}`, '#34d399')
   }
 
+  // Updates HUD stats each frame.
   private refreshHud() {
     this.hudWave.setText(`Wave ${this.wave}`)
     this.hudHp.setText(`Base HP: ${this.baseHp}`)
@@ -444,6 +465,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Repositions everything when the canvas resizes.
   private handleResize(gameSize: Phaser.Structs.Size) {
     const { width, height } = gameSize
     if (!width || !height) return
@@ -456,9 +478,7 @@ export class TowerDefenseScene extends Phaser.Scene {
       spot.marker.setPosition(world.x, world.y).setDisplaySize(spotSize, spotSize)
       const tower = this.towers.find((candidate) => candidate.spotId === spot.id)
       if (tower) {
-        tower.sprite
-          .setPosition(world.x, world.y)
-          .setDisplaySize(this.gridTileSize * 0.6, this.gridTileSize * 0.6)
+        tower.sprite.setPosition(world.x, world.y).setDisplaySize(this.gridTileSize * 0.6, this.gridTileSize * 0.6)
       }
     })
     const enemySize = this.gridTileSize * 0.7
@@ -472,6 +492,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.exitButton.setPosition(width - 20, 16)
   }
 
+  // Stops the scene and reports results.
   private endRun() {
     if (this.runEnded) return
     this.runEnded = true
@@ -487,6 +508,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.scene.stop()
   }
 
+  // Creates a short-lived floating label.
   private showFloatingText(x: number, y: number, message: string, color = '#fbbf24') {
     const travel = Math.max(28, this.gridTileSize * 0.5)
     const text = this.add
@@ -503,6 +525,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     })
   }
 
+  // Shared HUD text styling.
   private hudStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       fontFamily: 'monospace',
@@ -511,6 +534,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Derives tile size/origin based on viewport.
   private recalculateGridMetrics(width: number, height: number) {
     const tileWidth = width / GRID_COLS
     const tileHeight = height / GRID_ROWS
@@ -521,6 +545,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.gridOriginY = (height - mapHeight) / 2
   }
 
+  // Paints the tile background and grid lines.
   private drawGrid() {
     if (!this.gridGraphics) return
     this.gridGraphics.clear()
@@ -553,12 +578,14 @@ export class TowerDefenseScene extends Phaser.Scene {
     }
   }
 
+  // Converts a grid cell to pixel coordinates.
   private gridToWorldCenter(col: number, row: number): Phaser.Math.Vector2 {
     const x = this.gridOriginX + col * this.gridTileSize + this.gridTileSize / 2
     const y = this.gridOriginY + row * this.gridTileSize + this.gridTileSize / 2
     return new Phaser.Math.Vector2(x, y)
   }
 
+  // Registers the shared mob walk animation.
   private ensureEnemyWalkAnimation() {
     if (!this.textures.exists(ONE_BIT_PACK.key)) return
     if (this.anims.exists('enemy-walk')) return
