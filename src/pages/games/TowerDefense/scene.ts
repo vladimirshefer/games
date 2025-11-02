@@ -30,7 +30,7 @@ type BuildSpot = {
   col: number
   row: number
   occupied: boolean
-  marker: Phaser.GameObjects.Rectangle
+  marker: Phaser.GameObjects.Sprite
 }
 
 type Tower = {
@@ -56,18 +56,96 @@ type Enemy = {
 const GRID_COLS = 12
 const GRID_ROWS = 8
 
-type TileType = 'spawn' | 'path' | 'base' | 'build' | 'wall'
+type TileType = 'road' | 'build' | 'obstacle'
 
 // Layout of every tile on the board.
 const GRID_MAP: TileType[][] = [
-  ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
-  ['wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
-  ['spawn', 'path', 'path', 'path', 'path', 'path', 'wall', 'path', 'path', 'path', 'path', 'base'],
-  ['wall', 'build', 'build', 'wall', 'build', 'path', 'path', 'path', 'wall', 'build', 'build', 'wall'],
-  ['wall', 'build', 'build', 'wall', 'build', 'wall', 'wall', 'build', 'wall', 'build', 'build', 'wall'],
-  ['wall', 'build', 'build', 'wall', 'build', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
-  ['wall', 'wall', 'wall', 'wall', 'wall', 'build', 'build', 'build', 'wall', 'build', 'build', 'wall'],
-  ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
+  [
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle'
+  ],
+  [
+    'obstacle',
+    'build',
+    'build',
+    'build',
+    'obstacle',
+    'build',
+    'build',
+    'build',
+    'obstacle',
+    'build',
+    'build',
+    'obstacle'
+  ],
+  ['road', 'road', 'road', 'road', 'road', 'road', 'obstacle', 'road', 'road', 'road', 'road', 'road'],
+  ['obstacle', 'build', 'build', 'obstacle', 'build', 'road', 'road', 'road', 'obstacle', 'build', 'build', 'obstacle'],
+  [
+    'obstacle',
+    'build',
+    'build',
+    'obstacle',
+    'build',
+    'obstacle',
+    'obstacle',
+    'build',
+    'obstacle',
+    'build',
+    'build',
+    'obstacle'
+  ],
+  [
+    'obstacle',
+    'build',
+    'build',
+    'obstacle',
+    'build',
+    'build',
+    'build',
+    'build',
+    'obstacle',
+    'build',
+    'build',
+    'obstacle'
+  ],
+  [
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'build',
+    'build',
+    'build',
+    'obstacle',
+    'build',
+    'build',
+    'obstacle'
+  ],
+  [
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle',
+    'obstacle'
+  ]
 ]
 
 // Ordered cells the mobs traverse.
@@ -88,6 +166,13 @@ const PATH_SEQUENCE = [
   { col: 11, row: 2 }
 ]
 
+// Frames used to visualize the grid tiles.
+const TILE_FRAME_POOL = [
+  ONE_BIT_PACK_KNOWN_FRAMES.portalOpens,
+  ONE_BIT_PACK_KNOWN_FRAMES.aura,
+  ONE_BIT_PACK_KNOWN_FRAMES.healPotion
+]
+
 /**
  * Lightweight Phaser scene implementing a simple tower defence loop.
  */
@@ -99,7 +184,6 @@ export class TowerDefenseScene extends Phaser.Scene {
   private enemies: Enemy[] = []
   private path!: Phaser.Curves.Path
   private pathLength = 0
-  private gridGraphics?: Phaser.GameObjects.Graphics
   private enemyOverlay?: Phaser.GameObjects.Graphics
   private towerOverlay?: Phaser.GameObjects.Graphics
   private timers: Phaser.Time.TimerEvent[] = []
@@ -118,6 +202,8 @@ export class TowerDefenseScene extends Phaser.Scene {
   private gridTileSize = 0
   private gridOriginX = 0
   private gridOriginY = 0
+  private tileSprites: Phaser.GameObjects.Sprite[] = []
+  private tileSpriteLookup = new Map<string, Phaser.GameObjects.Sprite>()
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     TowerDefenseScene.exitHandler = handler
@@ -165,12 +251,7 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Builds the grid visuals and path curve.
   private createPath() {
-    this.gridGraphics?.destroy()
-    const { width, height } = this.scale
-    this.recalculateGridMetrics(width, height)
-    this.gridGraphics = this.add.graphics().setDepth(0)
-    this.drawGrid()
-
+    this.refreshGridTiles()
     const firstPoint = this.gridToWorldCenter(PATH_SEQUENCE[0].col, PATH_SEQUENCE[0].row)
     this.path = new Phaser.Curves.Path(firstPoint.x, firstPoint.y)
     for (let i = 1; i < PATH_SEQUENCE.length; i += 1) {
@@ -194,25 +275,22 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Spawns clickable tower pads.
   private createBuildSpots() {
-    this.buildSpots.forEach((spot) => spot.marker.destroy())
     this.buildSpots = []
     let index = 0
     for (let row = 0; row < GRID_ROWS; row += 1) {
       for (let col = 0; col < GRID_COLS; col += 1) {
         if (GRID_MAP[row][col] !== 'build') continue
-        const world = this.gridToWorldCenter(col, row)
-        const size = this.gridTileSize * 0.7
-        const marker = this.add
-          .rectangle(world.x, world.y, size, size, 0x1e2c40, 0.45)
-          .setStrokeStyle(2, 0x4fd4ff, 0.55)
-          .setDepth(3)
-        this.buildSpots.push({
+        const marker = this.tileSpriteLookup.get(this.cellKey(col, row))
+        if (!marker) continue
+        const spot: BuildSpot = {
           id: index,
           col,
           row,
           occupied: false,
           marker
-        })
+        }
+        this.buildSpots.push(spot)
+        this.applyBuildSpotTint(spot)
         index += 1
       }
     }
@@ -239,7 +317,7 @@ export class TowerDefenseScene extends Phaser.Scene {
       .text(
         this.scale.width / 2,
         this.scale.height - 24,
-        'Click glowing squares to build towers. Towers fire automatically.',
+        'Click any build tile to place a tower. Towers fire automatically.',
         {
           ...this.hudStyle(),
           fontSize: '14px',
@@ -343,7 +421,7 @@ export class TowerDefenseScene extends Phaser.Scene {
       damage: TOWER_DAMAGE
     })
     spot.occupied = true
-    spot.marker.setStrokeStyle(2, 0x3b82f6, 0.45).setFillStyle(0x1d4ed8, 0.35)
+    this.applyBuildSpotTint(spot)
     this.coins -= TOWER_COST
     this.refreshHud()
     const offset = Math.max(24, this.gridTileSize * 0.5)
@@ -474,14 +552,13 @@ export class TowerDefenseScene extends Phaser.Scene {
     const previousLength = this.pathLength
     this.createPath()
     this.createBaseMarker()
-    const spotSize = this.gridTileSize * 0.7
     this.buildSpots.forEach((spot) => {
       const world = this.gridToWorldCenter(spot.col, spot.row)
-      spot.marker.setPosition(world.x, world.y).setDisplaySize(spotSize, spotSize)
       const tower = this.towers.find((candidate) => candidate.spotId === spot.id)
       if (tower) {
         tower.sprite.setPosition(world.x, world.y).setDisplaySize(this.gridTileSize * 0.6, this.gridTileSize * 0.6)
       }
+      this.applyBuildSpotTint(spot)
     })
     const enemySize = this.gridTileSize * 0.7
     const point = new Phaser.Math.Vector2()
@@ -547,37 +624,79 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.gridOriginY = (height - mapHeight) / 2
   }
 
-  // Paints the tile background and grid lines.
-  private drawGrid() {
-    if (!this.gridGraphics) return
-    this.gridGraphics.clear()
-    const colors: Record<TileType, number> = {
-      wall: 0x0b1220,
-      build: 0x1b283b,
-      path: 0x2a3f5f,
-      spawn: 0x334d6d,
-      base: 0x22344d
+  // Keeps tile sprites aligned to the viewport.
+  private refreshGridTiles() {
+    const { width, height } = this.scale
+    this.recalculateGridMetrics(width, height)
+    if (!this.textures.exists(ONE_BIT_PACK.key)) {
+      return
     }
+    const displaySize = this.gridTileSize * 0.98
     for (let row = 0; row < GRID_ROWS; row += 1) {
       for (let col = 0; col < GRID_COLS; col += 1) {
-        const tile = GRID_MAP[row][col]
-        const left = this.gridOriginX + col * this.gridTileSize
-        const top = this.gridOriginY + row * this.gridTileSize
-        const color = colors[tile]
-        const alpha = tile === 'wall' ? 0.88 : 0.95
-        this.gridGraphics.fillStyle(color, alpha)
-        this.gridGraphics.fillRect(left, top, this.gridTileSize, this.gridTileSize)
+        const type = GRID_MAP[row][col]
+        const key = this.cellKey(col, row)
+        const center = this.gridToWorldCenter(col, row)
+        const frame = this.frameForTile(type)
+        const depth = type === 'obstacle' ? 2 : 0
+        let sprite = this.tileSpriteLookup.get(key)
+        if (!sprite) {
+          sprite = this.add
+            .sprite(center.x, center.y, ONE_BIT_PACK.key, frame)
+            .setOrigin(0.5)
+            .setDisplaySize(displaySize, displaySize)
+            .setDepth(depth)
+          sprite.setTint(this.tintForTile(type))
+          this.tileSpriteLookup.set(key, sprite)
+          this.tileSprites.push(sprite)
+        } else {
+          sprite
+            .setPosition(center.x, center.y)
+            .setDisplaySize(displaySize, displaySize)
+            .setFrame(frame)
+            .setDepth(depth)
+          const buildSpot = this.findBuildSpot(col, row)
+          if (!buildSpot) {
+            sprite.setTint(this.tintForTile(type))
+          } else if (buildSpot.occupied) {
+            this.applyBuildSpotTint(buildSpot)
+          }
+        }
       }
     }
-    this.gridGraphics.lineStyle(1, 0x0f172a, 0.55)
-    for (let col = 0; col <= GRID_COLS; col += 1) {
-      const x = this.gridOriginX + col * this.gridTileSize
-      this.gridGraphics.lineBetween(x, this.gridOriginY, x, this.gridOriginY + GRID_ROWS * this.gridTileSize)
+  }
+
+  // Deterministic frame pick per tile.
+  private frameForTile(type: TileType) {
+    const offsets: Record<TileType, number> = {
+      road: 0,
+      build: 1,
+      obstacle: 2
     }
-    for (let row = 0; row <= GRID_ROWS; row += 1) {
-      const y = this.gridOriginY + row * this.gridTileSize
-      this.gridGraphics.lineBetween(this.gridOriginX, y, this.gridOriginX + GRID_COLS * this.gridTileSize, y)
-    }
+    return TILE_FRAME_POOL[offsets[type]]
+  }
+
+  // Base tint per tile type.
+  private tintForTile(type: TileType) {
+    if (type === 'road') return 0xffffff
+    if (type === 'build') return 0xbcd7ff
+    return 0x6b7280
+  }
+
+  // Highlights build tiles based on occupancy.
+  private applyBuildSpotTint(spot: BuildSpot) {
+    const tint = spot.occupied ? 0x2563eb : 0x60a5fa
+    spot.marker.setTint(tint)
+  }
+
+  // Compact key for tile lookups.
+  private cellKey(col: number, row: number) {
+    return `${col},${row}`
+  }
+
+  // Returns the build spot for a grid cell if present.
+  private findBuildSpot(col: number, row: number) {
+    return this.buildSpots.find((spot) => spot.col === col && spot.row === row)
   }
 
   // Converts a grid cell to pixel coordinates.
