@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
-import { TowerDefenseMapGenerator, type GameMap } from './game/map.ts'
+import { TowerDefenseMapGenerator, type GameMap, printGameMap } from './game/map.ts'
 import { MapRenderer } from './game/mapRenderer.ts'
 import {
   BASE_HP,
@@ -109,6 +109,7 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Scene setup entry point.
   create() {
+    printGameMap(this.gameMap)
     // const {width, height} = this.scale
     this.cameras.main.setBackgroundColor('#0b0f19')
     this.ensureEnemyWalkAnimation()

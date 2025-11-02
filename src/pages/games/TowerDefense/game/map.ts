@@ -9,6 +9,12 @@ export type GameMap = {
   path: PathNode[]
 }
 
+const TILE_PRINT_LOOKUP: Record<TileType, string> = {
+  obstacle: 'X',
+  road: '#',
+  build: '_'
+}
+
 export type MapGeneratorConfig = {
   height: number
   width: number
@@ -260,4 +266,10 @@ export class TowerDefenseMapGenerator {
     }
     return items
   }
+}
+
+export function printGameMap(map: GameMap) {
+  const lines = map.tiles.map((row) => row.map((tile) => TILE_PRINT_LOOKUP[tile]).join(''))
+  console.log('Generated Tower Defense map:')
+  lines.forEach((line) => console.log(line))
 }
