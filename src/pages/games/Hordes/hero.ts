@@ -26,7 +26,9 @@ export function createHero(scene: Phaser.Scene): HeroState {
     hasAura: false,
     upgrades: [],
     weaponIds: [],
-    direction: new Phaser.Math.Vector2(0, 0)
+    direction: new Phaser.Math.Vector2(0, 0),
+    areaMultiplier: 1,
+    damageMultiplier: 1
   }
 }
 

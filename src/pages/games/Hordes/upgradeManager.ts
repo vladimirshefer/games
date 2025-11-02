@@ -198,6 +198,12 @@ export class UpgradeManager {
       case 'swordMk5':
         this.handleSwordUpgrade(SWORD_MK5_WEAPON, 'Sword Mk V slices everything!')
         break
+      case 'area1':
+        this.applyAreaUpgrade()
+        break
+      case 'damage1':
+        this.applyDamageUpgrade()
+        break
       default:
         break
     }
@@ -237,7 +243,7 @@ export class UpgradeManager {
       this.hero.weaponIds.push('aura')
     }
     this.hero.aura.setVisible(true)
-    this.hero.aura.setRadius(weapon.area)
+    this.hero.aura.setRadius(weapon.area * this.hero.areaMultiplier)
     this.combat.setAuraWeapon(weapon)
     this.hooks.onShowMessage(message)
   }
@@ -264,5 +270,17 @@ export class UpgradeManager {
     }
     this.combat.setSwordWeapon(weapon)
     this.hooks.onShowMessage(message)
+  }
+
+  private applyAreaUpgrade() {
+    this.hero.areaMultiplier *= 1.1
+    this.combat.refreshWeapons()
+    this.hooks.onShowMessage('Area increased by 10%!')
+  }
+
+  private applyDamageUpgrade() {
+    this.hero.damageMultiplier *= 1.1
+    this.combat.refreshWeapons()
+    this.hooks.onShowMessage('Damage increased by 10%!')
   }
 }

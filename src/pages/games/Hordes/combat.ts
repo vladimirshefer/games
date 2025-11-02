@@ -55,6 +55,13 @@ export class CombatSystem {
     this.aura?.update(dt, enemies, worldView)
   }
 
+  refreshWeapons() {
+    this.setPistolWeapon(this.config.pistolWeapon ?? null)
+    this.setBombWeapon(this.config.bombWeapon ?? null)
+    this.setSwordWeapon(this.config.swordWeapon ?? null)
+    this.setAuraWeapon(this.config.auraWeapon ?? null)
+  }
+
   private damageEnemy(enemy: EnemySprite, amount: number, mob: MobStats) {
     if (!enemy.active) return false
 
@@ -81,7 +88,8 @@ export class CombatSystem {
     this.pistol?.reset()
     this.config.pistolWeapon = weapon
     if (weapon) {
-      this.pistol = new Pistol(this.scene, this.context, weapon, this.damageEnemy)
+      const configured = this.withModifiers(weapon)
+      this.pistol = new Pistol(this.scene, this.context, configured, this.damageEnemy)
     } else {
       this.pistol = null
     }
@@ -92,9 +100,12 @@ export class CombatSystem {
     this.aura?.reset()
     this.config.auraWeapon = weapon ?? null
     if (weapon) {
-      this.aura = new Aura(this.scene, this.context, weapon, this.damageEnemy)
+      const configured = this.withModifiers(weapon)
+      this.aura = new Aura(this.scene, this.context, configured, this.damageEnemy)
+      this.context.hero.aura.setRadius(configured.area)
     } else {
       this.aura = null
+      this.context.hero.aura.setRadius(0)
     }
     this.aura?.reset()
   }
@@ -103,7 +114,8 @@ export class CombatSystem {
     this.bomb?.reset()
     this.config.bombWeapon = weapon ?? null
     if (weapon) {
-      this.bomb = new Bomb(this.scene, this.context, weapon, this.damageEnemy)
+      const configured = this.withModifiers(weapon)
+      this.bomb = new Bomb(this.scene, this.context, configured, this.damageEnemy)
     } else {
       this.bomb = null
     }
@@ -114,10 +126,23 @@ export class CombatSystem {
     this.sword?.reset()
     this.config.swordWeapon = weapon
     if (weapon) {
-      this.sword = new Sword(this.scene, this.context, weapon, this.damageEnemy)
+      const configured = this.withModifiers(weapon)
+      this.sword = new Sword(this.scene, this.context, configured, this.damageEnemy)
     } else {
       this.sword = null
     }
     this.sword?.reset()
+  }
+
+  private withModifiers(base: WeaponStats): WeaponStats {
+    const hero = this.context.hero
+    const areaMultiplier = hero.areaMultiplier ?? 1
+    const damageMultiplier = hero.damageMultiplier ?? 1
+
+    return {
+      ...base,
+      area: base.area * areaMultiplier,
+      damage: base.damage * damageMultiplier
+    }
   }
 }

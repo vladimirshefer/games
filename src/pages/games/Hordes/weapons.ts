@@ -194,5 +194,10 @@ export const upgrades: UpgradeOption[] = [
     id: 'area1',
     label: 'Area +10%',
     description: 'Increase area of effect by 10%'
+  },
+  {
+    id: 'damage1',
+    label: 'Damage +10%',
+    description: 'Increase all weapon damage by 10%.'
   }
 ]
