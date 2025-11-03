@@ -1,8 +1,11 @@
 export type TileType = 'road' | 'build' | 'obstacle'
 
-export type PathNode = { col: number; row: number }
+export interface PathNode {
+  col: number
+  row: number
+}
 
-export type GameMap = {
+export interface GameMap {
   cols: number
   rows: number
   tiles: TileType[][]
@@ -15,13 +18,13 @@ const TILE_PRINT_LOOKUP: Record<TileType, string> = {
   build: '_'
 }
 
-export type MapGeneratorConfig = {
+export interface MapGeneratorConfig {
   height: number
   width: number
   roadLength?: number
 }
 
-type NormalizedMapConfig = {
+interface NormalizedMapConfig {
   height: number
   width: number
   roadLength: number

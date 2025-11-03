@@ -24,13 +24,13 @@ import {
   WAVE_BREAK
 } from './game/constants.ts'
 
-type ExitStats = {
+interface ExitStats {
   waves: number
   leaks: number
   coinsEarned: number
 }
 
-type BuildSpot = {
+interface BuildSpot {
   id: number
   col: number
   row: number
@@ -38,7 +38,7 @@ type BuildSpot = {
   marker: Phaser.GameObjects.Sprite
 }
 
-type Tower = {
+interface Tower {
   spotId: number
   sprite: Phaser.GameObjects.Sprite
   range: number
@@ -47,7 +47,7 @@ type Tower = {
   damage: number
 }
 
-type Enemy = {
+interface Enemy {
   sprite: Phaser.GameObjects.Sprite
   distance: number
   speed: number
@@ -442,7 +442,7 @@ export class TowerDefenseScene extends Phaser.Scene {
   }
 
   // Repositions everything when the canvas resizes.
-  private handleResize(gameSize: Phaser.Structs.Size) {
+  private handleResize(gameSize: Phaser.Structs.Size): void {
     const { width, height } = gameSize
     if (!width || !height || !this.mapRenderer) return
     const previousLength = this.pathLength

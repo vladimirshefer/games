@@ -4,7 +4,7 @@ import type { GameMap, TileType } from './map.ts'
 
 type Direction = 'up' | 'down' | 'left' | 'right'
 
-type TileAppearance = {
+interface TileAppearance {
   frame: number
   angle: number
 }
