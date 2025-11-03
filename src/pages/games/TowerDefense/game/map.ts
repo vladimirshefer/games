@@ -129,6 +129,15 @@ export class TowerDefenseMapGenerator {
         continue
       }
 
+      const nextRemaining = remainingSteps - 1
+      const candidateIsEdge = this.isEdge(candidate, rows, cols)
+      if (nextRemaining > 0 && candidateIsEdge) {
+        continue
+      }
+      if (nextRemaining === 0 && !candidateIsEdge) {
+        continue
+      }
+
       const key = this.cellKey(candidate.col, candidate.row)
       path.push(candidate)
       visited.add(key)
