@@ -9,6 +9,7 @@ import {
   MOB_BASE_XP,
   WAVE_BASE_AMOUNT
 } from './game/constants.ts'
+import { ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
 
 interface WaveHooks {
   getHero(): HeroState
@@ -133,7 +134,8 @@ const STRONG_MOB_STATS = {
   speed: MOB_BASE_SPEED,
   health: MOB_BASE_HP * 3,
   xp: MOB_BASE_XP * 2,
-  damage: MOB_BASE_DAMAGE * 1.5
+  damage: MOB_BASE_DAMAGE * 1.5,
+  frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy1
 }
 
 export const WAVES: Wave[] = [

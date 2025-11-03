@@ -16,6 +16,7 @@ export interface MobStats {
   speed: number
   xp: number
   size: number
+  frame?: number
 }
 
 export interface IEnemyManager {
@@ -64,7 +65,8 @@ export class EnemyManager implements IEnemyManager {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius)
 
-    const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1)
+    const frame = mob.frame ?? ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
+    const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, frame)
     enemy.setOrigin(0.5)
     enemy.setDisplaySize(mob.size, mob.size)
     enemy.setTint(color)
@@ -76,7 +78,7 @@ export class EnemyManager implements IEnemyManager {
     enemy.setData('lastAuraTick', 0)
     enemy.setData('auraKnockback', 40)
     enemy.setData('radius', radius)
-    if (this.scene.anims.exists('enemy-walk')) {
+    if (!mob.frame && this.scene.anims.exists('enemy-walk')) {
       enemy.play('enemy-walk')
       enemy.anims.setProgress(Math.random())
     }

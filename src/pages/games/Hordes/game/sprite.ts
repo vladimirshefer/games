@@ -20,6 +20,7 @@ export const ONE_BIT_PACK_KNOWN_FRAMES = {
   tree4: ENEMY_SPRITESHEET_COLUMNS + 3,
   tree5: ENEMY_SPRITESHEET_COLUMNS + 4,
   tree6: ENEMY_SPRITESHEET_COLUMNS + 5,
+  enemy1: ENEMY_SPRITESHEET_COLUMNS + 24,
   portalOpens: 2 * ENEMY_SPRITESHEET_COLUMNS + 45, // 3rd row (0-indexed), 4th from the right
   roadStraight: 4 * ENEMY_SPRITESHEET_COLUMNS + 8, // Top to bottom.
   roadTurn: 4 * ENEMY_SPRITESHEET_COLUMNS + 9, // Bottom to right turn.
