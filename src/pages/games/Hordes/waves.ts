@@ -138,6 +138,15 @@ const STRONG_MOB_STATS = {
   frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy1
 }
 
+const ELITE_MOB_STATS = {
+  size: MOB_BASE_RADIUS * 3,
+  speed: MOB_BASE_SPEED,
+  health: MOB_BASE_HP * 5,
+  xp: MOB_BASE_XP * 4,
+  damage: MOB_BASE_DAMAGE * 2.5,
+  frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy2
+}
+
 export const WAVES: Wave[] = [
   ...repeat(3, {
     mobs: [
@@ -204,6 +213,34 @@ export const WAVES: Wave[] = [
       {
         stats: STRONG_MOB_STATS,
         amount: WAVE_BASE_AMOUNT
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: DEFAULT_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT
+      },
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT
+      },
+      {
+        stats: ELITE_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT / 4
+      }
+    ]
+  },
+  {
+    mobs: [
+      {
+        stats: STRONG_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT
+      },
+      {
+        stats: ELITE_MOB_STATS,
+        amount: WAVE_BASE_AMOUNT / 2
       }
     ]
   }
