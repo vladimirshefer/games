@@ -18,7 +18,10 @@ const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   }
 }
 
-type ExitStats = { kills: number; waves: number }
+interface ExitStats {
+  kills: number
+  waves: number
+}
 
 type HighScore = ExitStats & { timestamp: number }
 

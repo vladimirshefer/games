@@ -275,7 +275,7 @@ class EnemyHpLabel {
 
   static update(enemy: EnemySprite, mob: MobStats) {
     const label = EnemyHpLabel.get(enemy)
-    if (!label || !label.active) return
+    if (!label?.active) return
     label.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
   }
 

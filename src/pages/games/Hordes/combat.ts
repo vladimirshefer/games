@@ -70,7 +70,7 @@ export class CombatSystem {
     enemy.setData('hp', nextHp)
 
     const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
-    if (hpText && hpText.active) {
+    if (hpText?.active) {
       hpText.setText(`${Math.max(nextHp, 0)}`)
     }
 

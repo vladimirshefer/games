@@ -59,7 +59,7 @@ export class Aura implements Weapon {
     enemy.y += (dy / length) * knockback
 
     const hpText = enemy.getData('hpText') as Phaser.GameObjects.Text | undefined
-    if (hpText && hpText.active) {
+    if (hpText?.active) {
       hpText.setPosition(enemy.x, enemy.y - mob.size / 2 - 8)
     }
   }

@@ -97,8 +97,8 @@ export class HordesScene extends Phaser.Scene {
   private heroHpBar!: HeroHpBar
   private infoText!: Phaser.GameObjects.Text
   private weaponHud!: WeaponHud
-  private kills = 0
-  private wave = 0
+  private kills: number = 0
+  private wave: number = 0
   private combat!: CombatSystem
   private xpManager!: XpCrystalManager
   private enemyManager!: EnemyManager
@@ -107,16 +107,16 @@ export class HordesScene extends Phaser.Scene {
   private upgradeManager!: UpgradeManager
   private pauseButton!: Phaser.GameObjects.Text
   private exitButton!: Phaser.GameObjects.Text
-  private isPaused = false
-  private totalXp = 0
-  private level = 1
-  private nextLevelXp = 100
-  private pendingLevelUps = 0
+  private isPaused: boolean = false
+  private totalXp: number = 0
+  private level: number = 1
+  private nextLevelXp: number = 100
+  private pendingLevelUps: number = 0
   private supportTimersStarted = false
   private pickupTimers: Phaser.Time.TimerEvent[] = []
   private wavesOver: boolean = false
-  private isGameOver = false
-  private exitHandled = false
+  private isGameOver: boolean = false
+  private exitHandled: boolean = false
   private gameOverTitle?: Phaser.GameObjects.Text
   private gameOverStatsText?: Phaser.GameObjects.Text
   private exitButtonDefaultPosition = { x: 0, y: 0 }

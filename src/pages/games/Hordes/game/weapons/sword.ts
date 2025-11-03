@@ -58,7 +58,7 @@ export class Sword implements Weapon {
       this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, followHero)
       this.scene.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup)
       gfx.destroy()
-      if (this.activeSwordSwing && this.activeSwordSwing.gfx === gfx) {
+      if (this.activeSwordSwing?.gfx === gfx) {
         this.activeSwordSwing = null
       }
     }
@@ -143,7 +143,7 @@ export class Sword implements Weapon {
   }
 }
 
-type ActiveSwordSwing = {
+interface ActiveSwordSwing {
   gfx: Phaser.GameObjects.Graphics
   angleDeg: number
   halfArc: number
