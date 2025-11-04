@@ -20,31 +20,31 @@ function w(stats: Partial<WeaponStats>): WeaponStats {
   }
 }
 
-export const PISTOL_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE, cooldown: 0.3, pierce: 1, area: 6 })
-export const PISTOL_MK2_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.1, cooldown: 0.28, pierce: 2, area: 6 })
-export const PISTOL_MK3_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.2, cooldown: 0.26, pierce: 3, area: 6 })
-export const PISTOL_MK4_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.5, cooldown: 0.24, pierce: 5, area: 6 })
-export const PISTOL_MK5_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 2.0, cooldown: 0.22, pierce: 8, area: 6 })
+export const PISTOL_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE, cooldown: 0.5, pierce: 1, area: 6 })
+export const PISTOL_MK2_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.1, cooldown: 0.45, pierce: 2, area: 6 })
+export const PISTOL_MK3_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.2, cooldown: 0.4, pierce: 3, area: 6 })
+export const PISTOL_MK4_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.5, cooldown: 0.35, pierce: 5, area: 6 })
+export const PISTOL_MK5_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 2.0, cooldown: 0.3, pierce: 8, area: 6 })
 
-export const AURA_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE, cooldown: 0.5, area: AURA_RADIUS })
+export const AURA_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE, cooldown: 1.0, area: AURA_RADIUS })
 export const AURA_MK2_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.2,
-  cooldown: 0.45,
+  damage: HERO_BASE_DAMAGE * 1.1,
+  cooldown: 0.9,
   area: AURA_RADIUS * 1.2
 })
 export const AURA_MK3_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.3,
-  cooldown: 0.42,
+  damage: HERO_BASE_DAMAGE * 1.2,
+  cooldown: 0.8,
   area: AURA_RADIUS * 1.4
 })
 export const AURA_MK4_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.5,
-  cooldown: 0.38,
+  damage: HERO_BASE_DAMAGE * 1.3,
+  cooldown: 0.7,
   area: AURA_RADIUS * 1.7
 })
 export const AURA_MK5_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 2.0,
-  cooldown: 0.35,
+  damage: HERO_BASE_DAMAGE * 1.5,
+  cooldown: 0.6,
   area: AURA_RADIUS * 2.0
 })
 
