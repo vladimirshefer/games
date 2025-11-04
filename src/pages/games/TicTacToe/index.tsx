@@ -12,7 +12,7 @@ interface GameState {
 
 const TicTacToe = () => {
   const [gameState, setGameState] = useState<GameState>({
-    board: Array(9).fill(null),
+    board: Array<CellValue>(9).fill(null),
     isXNext: true,
     status: 'playing'
   })
@@ -55,7 +55,7 @@ const TicTacToe = () => {
 
   const resetGame = () => {
     setGameState({
-      board: Array(9).fill(null),
+      board: Array<CellValue>(9).fill(null),
       isXNext: true,
       status: 'playing'
     })
