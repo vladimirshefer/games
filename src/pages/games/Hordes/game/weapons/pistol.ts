@@ -90,7 +90,7 @@ export class Pistol implements Weapon {
     if (!length) return
 
     const radius = this.stats.area
-    const bulletSprite = this.scene.add.circle(sprite.x, sprite.y, radius, 0xffeb3b)
+    const bulletSprite = this.scene.add.circle(sprite.x, sprite.y, radius, 0xaaaaaa)
     const vx = (dx / length) * BULLET_SPEED
     const vy = (dy / length) * BULLET_SPEED
 
