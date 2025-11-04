@@ -3,18 +3,20 @@ import { Link } from 'react-router'
 import Phaser from 'phaser'
 import { HordesScene } from './scene'
 
+const DEFAULT_GAME_WIDTH = 600
+const DEFAULT_GAME_HEIGHT = 800
 const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: DEFAULT_GAME_WIDTH,
+  height: DEFAULT_GAME_HEIGHT,
   backgroundColor: '#101014',
   scene: HordesScene,
   fps: {
     target: 60
   },
   scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    mode: Phaser.Scale.ScaleModes.FIT,
+    autoCenter: Phaser.Scale.Center.CENTER_BOTH
   }
 }
 
@@ -107,27 +109,33 @@ const HordesPage = () => {
 
     HordesScene.registerExitHandler(handleExit)
 
+    const AREA = DEFAULT_GAME_WIDTH * DEFAULT_GAME_HEIGHT
+    const ratio = parent.clientWidth / parent.clientHeight
+    const width = Math.sqrt(AREA) * Math.sqrt(ratio)
+    const height = Math.sqrt(AREA) / Math.sqrt(ratio)
+    console.log('RATIO', ratio, width, 'X', height, ';', parent.clientWidth, 'X', parent.clientHeight)
     const game = new Phaser.Game({
       parent,
-      ...GAME_CONFIG
+      ...GAME_CONFIG,
+      width,
+      height
     })
-    gameRef.current = game
 
+    gameRef.current = game
     const resizeGame = () => {
-      const width = parent.clientWidth
-      const height = parent.clientHeight
-      if (width && height) {
-        game.scale.resize(width, height)
-      }
+      // const ratio = parent.clientWidth / parent.clientHeight
+      // const width = Math.sqrt(AREA) * Math.sqrt(ratio)
+      // const height = Math.sqrt(AREA) / Math.sqrt(ratio)
+      // if (width && height) {
+      //   console.log('RATIO', ratio, width, 'X', height)
+      //   game.scale.resize(width, height)
+      // }
     }
 
     resizeGame()
 
-    let observer: ResizeObserver | undefined
-    if (typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(resizeGame)
-      observer.observe(parent)
-    }
+    const observer: ResizeObserver | undefined = new ResizeObserver(resizeGame)
+    observer.observe(parent)
 
     return () => {
       HordesScene.registerExitHandler(undefined)
