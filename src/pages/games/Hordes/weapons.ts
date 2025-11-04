@@ -83,121 +83,142 @@ export interface UpgradeOption {
   label: string
   description: string
   requires?: string[]
+  category?: 'WEAPON_NEW' | 'WEAPON_UPGRADE' | 'PASSIVE_NEW' | 'PASSIVE_UPGRADE'
 }
 
 export const upgrades: UpgradeOption[] = [
   {
     id: 'aura',
     label: 'Unlock Aura',
-    description: 'Activate a damaging circle around you.'
+    description: 'Activate a damaging circle around you.',
+    category: 'WEAPON_NEW'
   },
   {
     id: 'auraMk2',
     label: 'Aura Mk II',
     description: 'Aura deals more damage and ticks faster.',
-    requires: ['aura']
+    requires: ['aura'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'auraMk3',
     label: 'Aura Mk III',
     description: 'Further improve aura damage and size.',
-    requires: ['auraMk2']
+    requires: ['auraMk2'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'auraMk4',
     label: 'Aura Mk IV',
     description: 'Aura grows stronger and covers more ground.',
-    requires: ['auraMk3']
+    requires: ['auraMk3'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'auraMk5',
     label: 'Aura Mk V',
     description: 'Maximum aura damage and reach.',
-    requires: ['auraMk4']
+    requires: ['auraMk4'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'pistol',
     label: 'Equip Pistol',
-    description: 'Basic ranged damage with moderate fire rate.'
+    description: 'Basic ranged damage with moderate fire rate.',
+    category: 'WEAPON_NEW'
   },
   {
     id: 'pistolMk2',
     label: 'Pistol Mk II',
     description: 'Increase bullet damage and pierce.',
-    requires: ['pistol']
+    requires: ['pistol'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'pistolMk3',
     label: 'Pistol Mk III',
     description: 'Boost pistol power with extra pierce.',
-    requires: ['pistolMk2']
+    requires: ['pistolMk2'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'pistolMk4',
     label: 'Pistol Mk IV',
     description: 'Fires faster with heavier rounds.',
-    requires: ['pistolMk3']
+    requires: ['pistolMk3'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'pistolMk5',
     label: 'Pistol Mk V',
     description: 'Ultimate pistol damage and pierce.',
-    requires: ['pistolMk4']
+    requires: ['pistolMk4'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'bomb',
     label: 'Deploy Bombs',
-    description: 'Drop timed explosives dealing area damage.'
+    description: 'Drop timed explosives dealing area damage.',
+    category: 'WEAPON_NEW'
   },
   {
     id: 'bombMk2',
     label: 'Bombs Mk II',
     description: 'Bombs spawn faster with bigger blasts.',
-    requires: ['bomb']
+    requires: ['bomb'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'bombMk3',
     label: 'Bombs Mk III',
     description: 'Maximum bomb power and frequency.',
-    requires: ['bombMk2']
+    requires: ['bombMk2'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'sword',
     label: 'Equip Sword',
-    description: 'Unlock a melee sword slash in your movement direction.'
+    description: 'Unlock a melee sword slash in your movement direction.',
+    category: 'WEAPON_NEW'
   },
   {
     id: 'swordMk2',
     label: 'Sword Mk II',
     description: 'Sword swings faster and further.',
-    requires: ['sword']
+    requires: ['sword'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'swordMk3',
     label: 'Sword Mk III',
     description: 'More sword damage with a wider arc.',
-    requires: ['swordMk2']
+    requires: ['swordMk2'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'swordMk4',
     label: 'Sword Mk IV',
     description: 'Sword reaches farther and swings quicker.',
-    requires: ['swordMk3']
+    requires: ['swordMk3'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'swordMk5',
     label: 'Sword Mk V',
     description: 'Maximum sword damage, arc, and speed.',
-    requires: ['swordMk4']
+    requires: ['swordMk4'],
+    category: 'WEAPON_UPGRADE'
   },
   {
     id: 'area1',
     label: 'Area +10%',
-    description: 'Increase area of effect by 10%'
+    description: 'Increase area of effect by 10%',
+    category: 'PASSIVE_NEW'
   },
   {
     id: 'damage1',
     label: 'Damage +10%',
-    description: 'Increase all weapon damage by 10%.'
+    description: 'Increase all weapon damage by 10%.',
+    category: 'PASSIVE_NEW'
   }
 ]

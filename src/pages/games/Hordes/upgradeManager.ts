@@ -25,8 +25,6 @@ import {
   type WeaponStats
 } from './weapons.ts'
 
-const STARTER_UPGRADES = new Set(['pistol', 'sword', 'aura', 'bomb'])
-
 interface UpgradeHooks {
   onMenuOpened(): void
   onMenuClosed(): void
@@ -86,8 +84,7 @@ export class UpgradeManager {
       .setStrokeStyle(2, 0xffeb3b, 0.5)
     this.overlay.push(panel)
 
-    const needsStarter = this.hero.weaponIds.length === 0
-    const titleText = needsStarter ? 'Choose Starting Weapon' : 'Choose Upgrade'
+    const titleText = 'Choose Upgrade'
     const title = this.scene.add
       .text(centerX, centerY - panelHeight / 2 + 40, titleText, {
         color: '#ffe082',
@@ -225,16 +222,39 @@ export class UpgradeManager {
 
   private getAvailableUpgrades(): UpgradeOption[] {
     const needsStarter = this.hero.weaponIds.length === 0
-    return upgrades.filter((option) => {
+    const availableUpgrades = upgrades.filter((option) => {
       if (this.hero.upgrades.includes(option.id)) return false
       if (option.requires && !option.requires.every((req) => this.hero.upgrades.includes(req))) {
         return false
       }
       if (needsStarter) {
-        return STARTER_UPGRADES.has(option.id)
+        return option.category === 'WEAPON_NEW'
       }
       return true
     })
+
+    function randomOf<T>(arr: T[]): T | null {
+      if (arr.length > 0) {
+        return arr[Phaser.Math.Between(0, arr.length - 1)]
+      }
+      return null
+    }
+
+    const weaponUpgradeOption =
+      randomOf(availableUpgrades.filter((it) => it.category === 'WEAPON_UPGRADE')) ??
+      randomOf(availableUpgrades.filter((it) => it.category === 'WEAPON_NEW')) ??
+      randomOf(availableUpgrades)
+
+    const passiveUpgradeOption =
+      randomOf(availableUpgrades.filter((it) => it.category === 'PASSIVE_UPGRADE')) ??
+      randomOf(availableUpgrades.filter((it) => it.category === 'PASSIVE_NEW')) ??
+      randomOf(availableUpgrades.filter((it) => it.id !== weaponUpgradeOption?.id))
+
+    const otherUpgradeOption = randomOf(
+      availableUpgrades.filter((it) => it.id !== weaponUpgradeOption?.id && it.id !== passiveUpgradeOption?.id)
+    )
+
+    return [weaponUpgradeOption, passiveUpgradeOption, otherUpgradeOption].filter((it) => it) as UpgradeOption[]
   }
 
   private handleAuraUpgrade(weapon: WeaponStats, message: string) {
