@@ -89,14 +89,14 @@ export class MapRenderer {
     return new Phaser.Math.Vector2(x, y)
   }
 
-  applyBuildSpotAppearance(sprite: Phaser.GameObjects.Sprite, occupied: boolean) {
+  applyBuildSpotAppearance(sprite: Phaser.GameObjects.Sprite, occupied: boolean, frame?: number, tint?: number) {
     if (occupied) {
       const size = this.gridTileSize * 0.6
       sprite
-        .setFrame(ONE_BIT_PACK_KNOWN_FRAMES.tower1)
+        .setFrame(frame ?? ONE_BIT_PACK_KNOWN_FRAMES.tower1)
         .setDisplaySize(size, size)
         .setDepth(7)
-        .setTint(0xf1f5f9)
+        .setTint(tint ?? 0xf1f5f9)
         .setAngle(0)
       return
     }
