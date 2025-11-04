@@ -221,7 +221,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     roadLength: MAP_ROAD_LENGTH
   })
   private readonly gameMap: GameMap = this.mapGenerator.getMap()
-  private mapRenderer!: MapRenderer | undefined
+  private mapRenderer!: MapRenderer
   private buildSpots: BuildSpot[] = []
   private towers: Tower[] = []
   private enemies: Enemy[] = []
@@ -236,14 +236,14 @@ export class TowerDefenseScene extends Phaser.Scene {
   private baseHp = BASE_HP
   private coins = STARTING_COINS
   private coinsEarned = 0
-  private hudWave!: Phaser.GameObjects.Text | undefined
-  private hudHp!: Phaser.GameObjects.Text | undefined
-  private hudCoins!: Phaser.GameObjects.Text | undefined
-  private hudLeaks!: Phaser.GameObjects.Text | undefined
-  private hudTower!: Phaser.GameObjects.Text | undefined
-  private hudHint!: Phaser.GameObjects.Text | undefined
-  private exitButton!: Phaser.GameObjects.Text | undefined
-  private baseMarker!: Phaser.GameObjects.Rectangle | undefined
+  private hudWave!: Phaser.GameObjects.Text
+  private hudHp!: Phaser.GameObjects.Text
+  private hudCoins!: Phaser.GameObjects.Text
+  private hudLeaks!: Phaser.GameObjects.Text
+  private hudTower!: Phaser.GameObjects.Text
+  private hudHint!: Phaser.GameObjects.Text
+  private exitButton!: Phaser.GameObjects.Text
+  private baseMarker!: Phaser.GameObjects.Rectangle
   private runEnded = false
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
