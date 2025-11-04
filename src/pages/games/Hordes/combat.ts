@@ -136,8 +136,8 @@ export class CombatSystem {
 
   private withModifiers(base: WeaponStats): WeaponStats {
     const hero = this.context.hero
-    const areaMultiplier = hero.areaMultiplier ?? 1
-    const damageMultiplier = hero.damageMultiplier ?? 1
+    const areaMultiplier = hero.areaMultiplier
+    const damageMultiplier = hero.damageMultiplier
 
     return {
       ...base,

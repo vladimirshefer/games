@@ -64,5 +64,7 @@ export class Aura implements Weapon {
     }
   }
 
-  reset() {}
+  reset() {
+    // empty
+  }
 }

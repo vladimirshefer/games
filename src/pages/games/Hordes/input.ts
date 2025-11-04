@@ -100,10 +100,10 @@ export function createInputController(scene: Phaser.Scene): InputController {
     getDirection() {
       tempVector.copy(joystickVector)
 
-      if (cursors.left?.isDown) tempVector.x -= 1
-      if (cursors.right?.isDown) tempVector.x += 1
-      if (cursors.up?.isDown) tempVector.y -= 1
-      if (cursors.down?.isDown) tempVector.y += 1
+      if (cursors.left.isDown) tempVector.x -= 1
+      if (cursors.right.isDown) tempVector.x += 1
+      if (cursors.up.isDown) tempVector.y -= 1
+      if (cursors.down.isDown) tempVector.y += 1
 
       const magnitude = tempVector.length()
       if (magnitude > 1) {

@@ -35,10 +35,6 @@ const readHighScores = (): HighScore[] => {
     const parsed = JSON.parse(raw) as HighScore[]
     if (!Array.isArray(parsed)) return []
     return parsed
-      .filter(
-        (entry) =>
-          typeof entry?.kills === 'number' && typeof entry?.waves === 'number' && typeof entry?.timestamp === 'number'
-      )
       .sort((a, b) => {
         if (b.kills !== a.kills) return b.kills - a.kills
         if (b.waves !== a.waves) return b.waves - a.waves
@@ -52,7 +48,6 @@ const readHighScores = (): HighScore[] => {
 }
 
 const persistHighScores = (scores: HighScore[]) => {
-  if (typeof window === 'undefined' || !window.localStorage) return
   try {
     window.localStorage.setItem(HIGH_SCORE_STORAGE_KEY, JSON.stringify(scores))
   } catch (error) {
@@ -178,8 +173,8 @@ const HordesPage = () => {
                   {lastStats && (
                     <tr>
                       <td className="px-1 py-1">Last</td>
-                      <td className="px-1 py-1">{lastStats?.kills}</td>
-                      <td className="px-1 py-1">{lastStats?.waves}</td>
+                      <td className="px-1 py-1">{lastStats.kills}</td>
+                      <td className="px-1 py-1">{lastStats.waves}</td>
                     </tr>
                   )}
                   {highScores.map((score, index) => (

@@ -38,14 +38,14 @@ export class XpCrystalManager {
   }
 
   update(heroX: number, heroY: number, view: Phaser.Geom.Rectangle, onCollect: (xp: number) => void) {
-    const dt = Phaser.Math.Clamp(this.scene.game.loop.delta ?? 16, 8, 48) / 1000
+    const dt = Phaser.Math.Clamp(this.scene.game.loop.delta, 8, 48) / 1000
     this.crystals = this.crystals.filter((crystal) => {
       if (!crystal.active) {
         crystal.destroy()
         return false
       }
 
-      const isMagnetized = crystal.getData('magnetized')
+      const isMagnetized: boolean | null = crystal.getData('magnetized')
 
       if (!isMagnetized) {
         const triggerDist = Phaser.Math.Distance.Between(crystal.x, crystal.y, heroX, heroY)
