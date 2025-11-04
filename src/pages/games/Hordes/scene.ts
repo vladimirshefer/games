@@ -89,24 +89,24 @@ class HeroHpBar {
  */
 export class HordesScene extends Phaser.Scene {
   private static exitHandler?: (stats: ExitStats) => void
-  private hero!: HeroState | undefined
-  private inputController!: InputController | undefined
+  private hero!: HeroState
+  private inputController!: InputController
   private enemies: EnemySprite[] = []
-  private background!: Phaser.GameObjects.TileSprite | undefined
+  private background!: Phaser.GameObjects.TileSprite
   private worldBounds = WORLD_BOUNDS
-  private heroHpBar!: HeroHpBar | undefined
-  private infoText!: Phaser.GameObjects.Text | undefined
-  private weaponHud!: WeaponHud | undefined
+  private heroHpBar!: HeroHpBar
+  private infoText!: Phaser.GameObjects.Text
+  private weaponHud!: WeaponHud
   private kills: number = 0
   private wave: number = 0
-  private combat!: CombatSystem | undefined
-  private xpManager!: XpCrystalManager | undefined
-  private enemyManager!: EnemyManager | undefined
-  private waveManager!: WaveManager | undefined
-  private pickupManager!: PickupManager | undefined
-  private upgradeManager!: UpgradeManager | undefined
-  private pauseButton!: Phaser.GameObjects.Text | undefined
-  private exitButton!: Phaser.GameObjects.Text | undefined
+  private combat!: CombatSystem
+  private xpManager!: XpCrystalManager
+  private enemyManager!: EnemyManager
+  private waveManager!: WaveManager
+  private pickupManager!: PickupManager
+  private upgradeManager!: UpgradeManager
+  private pauseButton!: Phaser.GameObjects.Text
+  private exitButton!: Phaser.GameObjects.Text
   private isPaused: boolean = false
   private totalXp: number = 0
   private level: number = 1
