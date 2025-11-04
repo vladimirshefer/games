@@ -16,7 +16,9 @@ const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   }
 }
 
-type HighScore = ExitStats & { timestamp: number }
+interface HighScore extends ExitStats {
+  timestamp: number
+}
 
 const STORAGE_KEY = 'towerDefenseHighScores'
 const MAX_HIGH_SCORES = 5
@@ -29,13 +31,6 @@ const readHighScores = (): HighScore[] => {
     const parsed = JSON.parse(raw) as HighScore[]
     if (!Array.isArray(parsed)) return []
     return parsed
-      .filter(
-        (score) =>
-          typeof score?.waves === 'number' &&
-          typeof score?.leaks === 'number' &&
-          typeof score?.coinsEarned === 'number' &&
-          typeof score?.timestamp === 'number'
-      )
       .sort((a, b) => {
         if (b.waves !== a.waves) return b.waves - a.waves
         if (a.leaks !== b.leaks) return a.leaks - b.leaks
@@ -49,7 +44,6 @@ const readHighScores = (): HighScore[] => {
 }
 
 const persistHighScores = (scores: HighScore[]) => {
-  if (typeof window === 'undefined' || !window.localStorage) return
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(scores))
   } catch (error) {

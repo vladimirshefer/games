@@ -69,7 +69,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     roadLength: MAP_ROAD_LENGTH
   })
   private readonly gameMap: GameMap = this.mapGenerator.getMap()
-  private mapRenderer!: MapRenderer
+  private mapRenderer!: MapRenderer | undefined
   private buildSpots: BuildSpot[] = []
   private towers: Tower[] = []
   private enemies: Enemy[] = []
@@ -83,12 +83,12 @@ export class TowerDefenseScene extends Phaser.Scene {
   private baseHp = BASE_HP
   private coins = STARTING_COINS
   private coinsEarned = 0
-  private hudWave!: Phaser.GameObjects.Text
-  private hudHp!: Phaser.GameObjects.Text
-  private hudCoins!: Phaser.GameObjects.Text
-  private hudLeaks!: Phaser.GameObjects.Text
-  private exitButton!: Phaser.GameObjects.Text
-  private baseMarker!: Phaser.GameObjects.Rectangle
+  private hudWave!: Phaser.GameObjects.Text | undefined
+  private hudHp!: Phaser.GameObjects.Text | undefined
+  private hudCoins!: Phaser.GameObjects.Text | undefined
+  private hudLeaks!: Phaser.GameObjects.Text | undefined
+  private exitButton!: Phaser.GameObjects.Text | undefined
+  private baseMarker!: Phaser.GameObjects.Rectangle | undefined
   private runEnded = false
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
@@ -159,7 +159,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     if (path.length === 0 || !this.mapRenderer) return
     const target = path[path.length - 1]
     const endPoint = this.mapRenderer.gridToWorldCenter(target.col, target.row)
-    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSize() : 64
+    const tileSize = this.mapRenderer.getTileSize()
     const size = tileSize * 0.9
     this.baseMarker = this.add
       .rectangle(endPoint.x, endPoint.y, size, size, 0x14222f)
