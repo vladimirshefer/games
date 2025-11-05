@@ -17,9 +17,11 @@ interface ExitStats {
   waves: number
 }
 
+const HERO_HP_BAR_HEIGHT = 6
+
 class HeroHpBar {
   private readonly width
-  private readonly height = 6
+  private readonly height = HERO_HP_BAR_HEIGHT
   private readonly padding = 1
   private bg: Phaser.GameObjects.Rectangle
   private fill: Phaser.GameObjects.Rectangle
@@ -83,6 +85,64 @@ class HeroHpBar {
   }
 }
 
+class HeroXpBar {
+  private width
+  private readonly height = 5
+  private readonly padding = 1
+  private bg: Phaser.GameObjects.Rectangle
+  private fill: Phaser.GameObjects.Rectangle
+
+  private hero: HeroState
+
+  constructor(scene: Scene, hero: HeroState) {
+    this.hero = hero
+    const offsetY = this.getOffsetY()
+    this.width = hero.sprite.displayWidth
+
+    this.bg = scene.add
+      .rectangle(hero.sprite.x, hero.sprite.y - offsetY, this.width, this.height, 0x000000, 0.7)
+      .setOrigin(0.5)
+      .setDepth(1)
+
+    this.fill = scene.add
+      .rectangle(
+        hero.sprite.x - this.width / 2 + this.padding,
+        this.bg.y,
+        this.width - this.padding * 2,
+        this.height - this.padding * 2,
+        0x2090f0
+      )
+      .setOrigin(0, 0.5)
+      .setDepth(1.1)
+
+    this.updateValue(0)
+  }
+
+  syncPosition() {
+    const x = this.hero.sprite.x
+    const y = this.hero.sprite.y + this.getOffsetY()
+    const leftEdge = x - this.width / 2 + this.padding
+
+    this.bg.setPosition(x, y)
+    this.fill.setPosition(leftEdge, y)
+  }
+
+  updateValue(ratio: number) {
+    const clamped = Phaser.Math.Clamp(ratio, 0, 1)
+    const innerWidth = Math.max(0, this.width - this.padding * 2)
+    this.fill.displayWidth = innerWidth * clamped
+  }
+
+  destroy() {
+    this.bg.destroy()
+    this.fill.destroy()
+  }
+
+  private getOffsetY() {
+    return this.hero.sprite.displayHeight / 2 + HERO_HP_BAR_HEIGHT
+  }
+}
+
 /**
  * Core Phaser scene for the Hordes mode: handles hero state, enemy waves,
  * auto-shooting, and camera-following infinite background.
@@ -95,6 +155,7 @@ export class HordesScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.TileSprite
   private worldBounds = WORLD_BOUNDS
   private heroHpBar!: HeroHpBar
+  private heroXpBar!: HeroXpBar
   private infoText!: Phaser.GameObjects.Text
   private weaponHud!: WeaponHud
   private kills: number = 0
@@ -112,6 +173,7 @@ export class HordesScene extends Phaser.Scene {
   private level: number = 1
   private nextLevelXp: number = 100
   private pendingLevelUps: number = 0
+  private currentLevelXpBase: number = 0
   private supportTimersStarted = false
   private pickupTimers: Phaser.Time.TimerEvent[] = []
   private wavesOver: boolean = false
@@ -176,6 +238,7 @@ export class HordesScene extends Phaser.Scene {
 
     this.hero = createHero(this)
     this.heroHpBar = new HeroHpBar(this, this.hero)
+    this.heroXpBar = new HeroXpBar(this, this.hero)
 
     this.enemies = []
     this.xpManager = new XpCrystalManager(this)
@@ -201,6 +264,7 @@ export class HordesScene extends Phaser.Scene {
     this.level = 1
     this.nextLevelXp = this.getNextLevelXp(this.level)
     this.pendingLevelUps = 0
+    this.currentLevelXpBase = 0
     this.hero.hasAura = false
     this.hero.aura.setVisible(false)
 
@@ -226,6 +290,7 @@ export class HordesScene extends Phaser.Scene {
       this.xpManager.destroyAll()
       this.upgradeManager.destroy()
       this.heroHpBar.destroy()
+      this.heroXpBar.destroy()
       this.pickupManager.destroy()
       this.waveManager.destroy()
       this.clearSupportTimers()
@@ -308,6 +373,7 @@ export class HordesScene extends Phaser.Scene {
     this.background.tilePositionX = camera.scrollX
     this.background.tilePositionY = camera.scrollY
     this.heroHpBar.syncPosition()
+    this.heroXpBar.syncPosition()
 
     const view = this.cameras.main.worldView
 
@@ -390,9 +456,11 @@ export class HordesScene extends Phaser.Scene {
     if (amount > 0) {
       this.totalXp += amount
       while (this.totalXp >= this.nextLevelXp) {
+        const previousThreshold = this.nextLevelXp
         this.level += 1
         this.pendingLevelUps += 1
         this.showLevelUp()
+        this.currentLevelXpBase = previousThreshold
         this.nextLevelXp += this.getNextLevelXp(this.level)
       }
       this.tryOpenUpgradeMenu()
@@ -622,11 +690,13 @@ export class HordesScene extends Phaser.Scene {
    * Writes the latest wave, level, and weapon values to the HUD text element.
    */
   private updateHud() {
-    this.infoText.setText(
-      `Wave ${this.wave + 1} | LVL ${this.level} (${this.totalXp}/${this.nextLevelXp})\n` + `Kills ${this.kills}`
-    )
+    this.infoText.setText(`Wave ${this.wave + 1} | LVL ${this.level}\nKills ${this.kills}`)
     this.weaponHud.refresh()
     this.heroHpBar.updateValue(this.hero.hp, this.hero.maxHp)
+    const xpForLevel = this.nextLevelXp - this.currentLevelXpBase
+    const xpIntoLevel = this.totalXp - this.currentLevelXpBase
+    const ratio = xpForLevel > 0 ? xpIntoLevel / xpForLevel : 0
+    this.heroXpBar.updateValue(ratio)
   }
 
   private ensureEnemyWalkAnimation() {
