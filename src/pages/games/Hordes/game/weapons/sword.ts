@@ -6,6 +6,7 @@ import type { Weapon } from './weapon.ts'
 import type { MobStats } from '../../enemies.ts'
 
 export class Sword implements Weapon {
+  id = () => 'sword'
   swordElapsed = 0
   private activeSwordSwing: ActiveSwordSwing | null = null
   private scene: Phaser.Scene

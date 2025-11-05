@@ -7,6 +7,7 @@ import type { Weapon } from './weapon.ts'
 import type { MobStats } from '../../enemies.ts'
 
 export class Pistol implements Weapon {
+  id = () => 'pistol'
   private readonly scene: Phaser.Scene
   private readonly context: CombatContext
   private readonly stats: WeaponStats

@@ -6,6 +6,7 @@ import type { Weapon } from './weapon.ts'
 import type { MobStats } from '../../enemies.ts'
 
 export class Aura implements Weapon {
+  id = () => 'aura'
   private readonly scene: Phaser.Scene
   private readonly context: CombatContext
   private readonly stats: WeaponStats

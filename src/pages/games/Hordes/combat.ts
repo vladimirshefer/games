@@ -25,10 +25,8 @@ export class CombatSystem {
   private readonly scene: Phaser.Scene
   private readonly config: CombatConfig
   private readonly context: CombatContext
-  private sword: Weapon | null = null
-  private bomb: Weapon | null = null
-  private aura: Weapon | null = null
-  private pistol: Weapon | null = null
+
+  private weapons: Weapon[] = []
 
   constructor(scene: Phaser.Scene, config: CombatConfig, context: CombatContext) {
     this.scene = scene
@@ -41,18 +39,12 @@ export class CombatSystem {
   }
 
   reset() {
-    this.sword?.reset()
-    this.bomb?.reset()
-    this.aura?.reset()
-    this.pistol?.reset()
+    this.weapons.forEach((it) => it.reset())
   }
 
   update(dt: number, worldView: Phaser.Geom.Rectangle) {
     const enemies = this.context.getEnemies()
-    this.pistol?.update(dt, enemies, worldView)
-    this.bomb?.update(dt, enemies, worldView)
-    this.sword?.update(dt, enemies, worldView)
-    this.aura?.update(dt, enemies, worldView)
+    this.weapons.forEach((it) => it.update(dt, enemies, worldView))
   }
 
   refreshWeapons() {
@@ -85,53 +77,60 @@ export class CombatSystem {
   }
 
   setPistolWeapon(weapon: WeaponStats | null) {
-    this.pistol?.reset()
-    this.config.pistolWeapon = weapon
-    if (weapon) {
-      const configured = this.withModifiers(weapon)
-      this.pistol = new Pistol(this.scene, this.context, configured, this.damageEnemy)
-    } else {
-      this.pistol = null
+    if (!weapon) {
+      this.unsetWeapon('pistol')
+      return
     }
-    this.pistol?.reset()
+    const configured = this.withModifiers(weapon)
+    this.setWeapon(new Pistol(this.scene, this.context, configured, this.damageEnemy))
   }
 
   setAuraWeapon(weapon: WeaponStats | null) {
-    this.aura?.reset()
-    this.config.auraWeapon = weapon ?? null
-    if (weapon) {
-      const configured = this.withModifiers(weapon)
-      this.aura = new Aura(this.scene, this.context, configured, this.damageEnemy)
-      this.context.hero.aura.setRadius(configured.area)
-    } else {
-      this.aura = null
-      this.context.hero.aura.setRadius(0)
+    if (!weapon) {
+      this.unsetWeapon('aura')
+      return
     }
-    this.aura?.reset()
+    const configured = this.withModifiers(weapon)
+    this.setWeapon(new Aura(this.scene, this.context, configured, this.damageEnemy))
   }
 
   setBombWeapon(weapon: WeaponStats | null) {
-    this.bomb?.reset()
-    this.config.bombWeapon = weapon ?? null
-    if (weapon) {
-      const configured = this.withModifiers(weapon)
-      this.bomb = new Bomb(this.scene, this.context, configured, this.damageEnemy)
-    } else {
-      this.bomb = null
+    if (!weapon) {
+      this.unsetWeapon('bomb')
+      return
     }
-    this.bomb?.reset()
+    const configured = this.withModifiers(weapon)
+    this.setWeapon(new Bomb(this.scene, this.context, configured, this.damageEnemy))
   }
 
   setSwordWeapon(weapon: WeaponStats | null) {
-    this.sword?.reset()
-    this.config.swordWeapon = weapon
-    if (weapon) {
-      const configured = this.withModifiers(weapon)
-      this.sword = new Sword(this.scene, this.context, configured, this.damageEnemy)
-    } else {
-      this.sword = null
+    if (!weapon) {
+      this.unsetWeapon('sword')
+      return
     }
-    this.sword?.reset()
+    const configured = this.withModifiers(weapon)
+    this.setWeapon(new Sword(this.scene, this.context, configured, this.damageEnemy))
+  }
+
+  setWeapon(weapon: Weapon) {
+    const index = this.weapons.findIndex((it) => it.id() === weapon.id())
+    if (index >= 0) {
+      const weapon1 = this.weapons[index]
+      weapon1.reset()
+      this.weapons[index] = weapon
+    } else {
+      this.weapons.push(weapon)
+    }
+    weapon.reset()
+  }
+
+  unsetWeapon(id: string) {
+    const index = this.weapons.findIndex((it) => it.id() === id)
+    if (index >= 0) {
+      const weapon1 = this.weapons[index]
+      weapon1.reset()
+      this.weapons.splice(index, 1)
+    }
   }
 
   private withModifiers(base: WeaponStats): WeaponStats {

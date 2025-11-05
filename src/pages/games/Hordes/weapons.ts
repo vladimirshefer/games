@@ -11,72 +11,58 @@ export interface WeaponStats {
 
 function w(stats: Partial<WeaponStats>): WeaponStats {
   return {
-    damage: HERO_BASE_DAMAGE,
-    cooldown: 2,
-    area: 0,
-    pierce: 0,
-    sectorAngle: 120,
-    ...stats
+    damage: Math.ceil(stats.damage ?? HERO_BASE_DAMAGE),
+    cooldown: stats.cooldown ?? 2,
+    area: Math.ceil(stats.area ?? 0),
+    pierce: Math.ceil(stats.pierce ?? 0),
+    sectorAngle: Math.ceil(stats.sectorAngle ?? 120)
   }
 }
 
-export const PISTOL_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE, cooldown: 0.5, pierce: 1, area: 6 })
-export const PISTOL_MK2_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.1, cooldown: 0.45, pierce: 2, area: 6 })
-export const PISTOL_MK3_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.2, cooldown: 0.4, pierce: 3, area: 6 })
-export const PISTOL_MK4_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 1.5, cooldown: 0.35, pierce: 5, area: 6 })
-export const PISTOL_MK5_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE * 2.0, cooldown: 0.3, pierce: 8, area: 6 })
+export const PISTOL_WEAPON: WeaponStats = w({
+  damage: HERO_BASE_DAMAGE,
+  cooldown: 0.5,
+  pierce: 1,
+  area: 6
+})
+const pistolUpgrade = (weapon: WeaponStats) =>
+  w({ ...weapon, damage: weapon.damage * 1.1, cooldown: weapon.cooldown * 0.9, pierce: weapon.pierce + 1 })
+export const PISTOL_MK2_WEAPON: WeaponStats = pistolUpgrade(PISTOL_WEAPON)
+export const PISTOL_MK3_WEAPON: WeaponStats = pistolUpgrade(PISTOL_MK2_WEAPON)
+export const PISTOL_MK4_WEAPON: WeaponStats = pistolUpgrade(PISTOL_MK3_WEAPON)
+export const PISTOL_MK5_WEAPON: WeaponStats = pistolUpgrade(PISTOL_MK4_WEAPON)
 
-export const AURA_WEAPON: WeaponStats = w({ damage: HERO_BASE_DAMAGE, cooldown: 1.0, area: AURA_RADIUS })
-export const AURA_MK2_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.1,
-  cooldown: 0.9,
-  area: AURA_RADIUS * 1.2
+export const AURA_WEAPON: WeaponStats = w({
+  damage: HERO_BASE_DAMAGE,
+  cooldown: 1.0,
+  area: AURA_RADIUS
 })
-export const AURA_MK3_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.2,
-  cooldown: 0.8,
-  area: AURA_RADIUS * 1.4
-})
-export const AURA_MK4_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.3,
-  cooldown: 0.7,
-  area: AURA_RADIUS * 1.7
-})
-export const AURA_MK5_WEAPON: WeaponStats = w({
-  damage: HERO_BASE_DAMAGE * 1.5,
-  cooldown: 0.6,
-  area: AURA_RADIUS * 2.0
-})
+const auraUpgrade = (weapon: WeaponStats) =>
+  w({ ...weapon, damage: weapon.damage * 1.1, cooldown: weapon.cooldown * 0.9, area: weapon.area * 1.2 })
+export const AURA_MK2_WEAPON: WeaponStats = auraUpgrade(AURA_WEAPON)
+export const AURA_MK3_WEAPON: WeaponStats = auraUpgrade(AURA_MK2_WEAPON)
+export const AURA_MK4_WEAPON: WeaponStats = auraUpgrade(AURA_MK3_WEAPON)
+export const AURA_MK5_WEAPON: WeaponStats = auraUpgrade(AURA_MK4_WEAPON)
 
 export const BOMB_WEAPON: WeaponStats = w({ cooldown: 5, damage: HERO_BASE_DAMAGE * 4, area: 100 })
-export const BOMB_MK2_WEAPON: WeaponStats = w({ cooldown: 3, damage: HERO_BASE_DAMAGE * 8, area: 150 })
-export const BOMB_MK3_WEAPON: WeaponStats = w({ cooldown: 2, damage: HERO_BASE_DAMAGE * 16, area: 200 })
+const bombUpgrade = (weapon: WeaponStats) =>
+  w({ ...weapon, damage: weapon.damage * 1.3, cooldown: weapon.cooldown * 0.7, area: weapon.area + 50 })
+export const BOMB_MK2_WEAPON: WeaponStats = bombUpgrade(BOMB_WEAPON)
+export const BOMB_MK3_WEAPON: WeaponStats = bombUpgrade(BOMB_MK2_WEAPON)
 
 export const SWORD_WEAPON: WeaponStats = w({ cooldown: 2, damage: HERO_BASE_DAMAGE * 2.0, area: 50, sectorAngle: 120 })
-export const SWORD_MK2_WEAPON: WeaponStats = w({
-  cooldown: 1.8,
-  damage: HERO_BASE_DAMAGE * 2.5,
-  area: 60,
-  sectorAngle: 130
-})
-export const SWORD_MK3_WEAPON: WeaponStats = w({
-  cooldown: 1.6,
-  damage: HERO_BASE_DAMAGE * 2.7,
-  area: 70,
-  sectorAngle: 140
-})
-export const SWORD_MK4_WEAPON: WeaponStats = w({
-  cooldown: 1.4,
-  damage: HERO_BASE_DAMAGE * 3.0,
-  area: 80,
-  sectorAngle: 150
-})
-export const SWORD_MK5_WEAPON: WeaponStats = w({
-  cooldown: 1.2,
-  damage: HERO_BASE_DAMAGE * 3.5,
-  area: 90,
-  sectorAngle: 160
-})
+const swordUpgrade = (weapon: WeaponStats) =>
+  w({
+    ...weapon,
+    damage: weapon.damage * 1.1,
+    cooldown: weapon.cooldown * 0.9,
+    area: weapon.area + 10,
+    sectorAngle: weapon.sectorAngle + 10
+  })
+export const SWORD_MK2_WEAPON: WeaponStats = swordUpgrade(SWORD_WEAPON)
+export const SWORD_MK3_WEAPON: WeaponStats = swordUpgrade(SWORD_MK2_WEAPON)
+export const SWORD_MK4_WEAPON: WeaponStats = swordUpgrade(SWORD_MK3_WEAPON)
+export const SWORD_MK5_WEAPON: WeaponStats = swordUpgrade(SWORD_MK4_WEAPON)
 
 export interface UpgradeOption {
   id: string

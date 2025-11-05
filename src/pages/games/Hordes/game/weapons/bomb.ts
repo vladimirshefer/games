@@ -8,6 +8,7 @@ import type { Weapon } from './weapon.ts'
 import type { MobStats } from '../../enemies.ts'
 
 export class Bomb implements Weapon {
+  id = () => 'bomb'
   private bombElapsed = 0
 
   private bombs: {
