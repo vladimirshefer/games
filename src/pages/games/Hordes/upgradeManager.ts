@@ -224,8 +224,17 @@ export class UpgradeManager {
     const needsStarter = this.hero.weaponIds.length === 0
     const availableUpgrades = upgrades.filter((option) => {
       if (this.hero.upgrades.includes(option.id)) return false
-      if (option.requires && !option.requires.every((req) => this.hero.upgrades.includes(req))) {
+      if (!(option.requires?.every((req) => this.hero.upgrades.includes(req)) ?? true)) {
         return false
+      }
+      if (option.weaponId && option.level && option.level > 1) {
+        const hasPreviousUpgrade = !!this.hero.upgrades.find((it) => {
+          const find = upgrades.find((u) => u.id === it)
+          return find?.level === option.level! - 1 && find.weaponId === option.weaponId
+        })
+        if (!hasPreviousUpgrade) {
+          return false
+        }
       }
       if (needsStarter) {
         return option.category === 'WEAPON_NEW'

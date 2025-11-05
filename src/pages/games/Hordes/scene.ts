@@ -205,23 +205,14 @@ export class HordesScene extends Phaser.Scene {
     this.hero.aura.setVisible(false)
 
     this.inputController = createInputController(this)
-    this.combat = new CombatSystem(
-      this,
-      {
-        pistolWeapon: null,
-        auraWeapon: null,
-        bombWeapon: null,
-        swordWeapon: null
-      },
-      {
-        hero: this.hero,
-        getEnemies: () => this.enemies,
-        onEnemyKilled: (enemy, mob) => {
-          this.kills += 1
-          this.xpManager.spawn(enemy.x, enemy.y, mob.xp)
-        }
+    this.combat = new CombatSystem(this, {
+      hero: this.hero,
+      getEnemies: () => this.enemies,
+      onEnemyKilled: (enemy, mob) => {
+        this.kills += 1
+        this.xpManager.spawn(enemy.x, enemy.y, mob.xp)
       }
-    )
+    })
     this.upgradeManager = new UpgradeManager(this, this.hero, this.combat, {
       onMenuOpened: () => this.pauseForUpgrade(),
       onMenuClosed: () => this.onUpgradeMenuClosed(),

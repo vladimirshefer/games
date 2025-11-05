@@ -32,14 +32,6 @@ export function createHero(scene: Phaser.Scene): HeroState {
   }
 }
 
-export function resetHeroState(hero: HeroState) {
-  hero.sprite.setPosition(0, 0)
-  hero.aura.setPosition(0, 0)
-  hero.aura.setVisible(hero.weaponIds.includes('aura'))
-  hero.hp = hero.maxHp
-  hero.direction.set(0, 0)
-}
-
 export function moveHero(hero: HeroState, direction: Phaser.Math.Vector2, speed: number, dt: number) {
   hero.sprite.x += direction.x * speed * dt
   hero.sprite.y += direction.y * speed * dt

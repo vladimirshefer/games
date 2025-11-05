@@ -1,19 +1,12 @@
 import Phaser from 'phaser'
 import type { EnemySprite, HeroState } from './types'
-import type { WeaponStats } from './weapons.ts'
+import { normalizeWeapon, type WeaponStats } from './weapons.ts'
 import { Sword } from './game/weapons/sword.ts'
 import { Bomb } from './game/weapons/bomb.ts'
 import { Aura } from './game/weapons/aura.ts'
 import { Pistol } from './game/weapons/pistol.ts'
 import type { Weapon } from './game/weapons/weapon.ts'
 import type { MobStats } from './enemies.ts'
-
-export interface CombatConfig {
-  pistolWeapon?: WeaponStats | null
-  auraWeapon?: WeaponStats | null
-  bombWeapon?: WeaponStats | null
-  swordWeapon?: WeaponStats | null
-}
 
 export interface CombatContext {
   hero: HeroState
@@ -23,19 +16,14 @@ export interface CombatContext {
 
 export class CombatSystem {
   private readonly scene: Phaser.Scene
-  private readonly config: CombatConfig
   private readonly context: CombatContext
 
   private weapons: Weapon[] = []
+  private originalStats: { [key: string]: WeaponStats | undefined } = {}
 
-  constructor(scene: Phaser.Scene, config: CombatConfig, context: CombatContext) {
+  constructor(scene: Phaser.Scene, context: CombatContext) {
     this.scene = scene
-    this.config = config
     this.context = context
-    this.setSwordWeapon(this.config.swordWeapon ?? null)
-    this.setBombWeapon(this.config.bombWeapon ?? null)
-    this.setAuraWeapon(this.config.auraWeapon ?? null)
-    this.setPistolWeapon(this.config.pistolWeapon ?? null)
   }
 
   reset() {
@@ -48,10 +36,10 @@ export class CombatSystem {
   }
 
   refreshWeapons() {
-    this.setPistolWeapon(this.config.pistolWeapon ?? null)
-    this.setBombWeapon(this.config.bombWeapon ?? null)
-    this.setSwordWeapon(this.config.swordWeapon ?? null)
-    this.setAuraWeapon(this.config.auraWeapon ?? null)
+    this.setPistolWeapon(this.originalStats['pistol'] ?? null)
+    this.setBombWeapon(this.originalStats['bomb'] ?? null)
+    this.setSwordWeapon(this.originalStats['sword'] ?? null)
+    this.setAuraWeapon(this.originalStats['aura'] ?? null)
   }
 
   private damageEnemy(enemy: EnemySprite, amount: number, mob: MobStats) {
@@ -81,6 +69,7 @@ export class CombatSystem {
       this.unsetWeapon('pistol')
       return
     }
+    this.originalStats['pistol'] = weapon
     const configured = this.withModifiers(weapon)
     this.setWeapon(new Pistol(this.scene, this.context, configured, this.damageEnemy))
   }
@@ -90,6 +79,7 @@ export class CombatSystem {
       this.unsetWeapon('aura')
       return
     }
+    this.originalStats['aura'] = weapon
     const configured = this.withModifiers(weapon)
     this.setWeapon(new Aura(this.scene, this.context, configured, this.damageEnemy))
   }
@@ -99,6 +89,7 @@ export class CombatSystem {
       this.unsetWeapon('bomb')
       return
     }
+    this.originalStats['bomb'] = weapon
     const configured = this.withModifiers(weapon)
     this.setWeapon(new Bomb(this.scene, this.context, configured, this.damageEnemy))
   }
@@ -108,6 +99,7 @@ export class CombatSystem {
       this.unsetWeapon('sword')
       return
     }
+    this.originalStats['sword'] = weapon
     const configured = this.withModifiers(weapon)
     this.setWeapon(new Sword(this.scene, this.context, configured, this.damageEnemy))
   }
@@ -130,6 +122,7 @@ export class CombatSystem {
       const weapon1 = this.weapons[index]
       weapon1.reset()
       this.weapons.splice(index, 1)
+      this.originalStats[id] = undefined
     }
   }
 
@@ -138,10 +131,10 @@ export class CombatSystem {
     const areaMultiplier = hero.areaMultiplier
     const damageMultiplier = hero.damageMultiplier
 
-    return {
+    return normalizeWeapon({
       ...base,
       area: base.area * areaMultiplier,
       damage: base.damage * damageMultiplier
-    }
+    })
   }
 }

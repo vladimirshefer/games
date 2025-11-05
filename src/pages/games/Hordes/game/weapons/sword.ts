@@ -33,7 +33,6 @@ export class Sword implements Weapon {
 
     const hero = this.context.hero
     if (hero.hp <= 0) return
-    if (!hero.weaponIds.includes('sword')) return
 
     this.swordElapsed += _dt
     if (this.activeSwordSwing) return

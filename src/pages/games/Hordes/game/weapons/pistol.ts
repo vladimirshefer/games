@@ -75,7 +75,6 @@ export class Pistol implements Weapon {
   tickAutoFire(dt: number) {
     const enemies = this.context.getEnemies()
     if (!enemies.some((enemy) => enemy.active)) return
-    if (!this.context.hero.weaponIds.includes('pistol')) return
 
     this.shootElapsed += dt
     if (this.shootElapsed < this.stats.cooldown) return
