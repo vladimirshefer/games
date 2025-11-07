@@ -273,7 +273,7 @@ export const WAVES: Wave[] = [
       }
     ]
   },
-  {
+  ...repeat(13, {
     mobs: [
       {
         stats: KNOWN_MOB_STATS['strong'],
@@ -286,7 +286,7 @@ export const WAVES: Wave[] = [
         amount: WAVE_BASE_AMOUNT / 2
       }
     ]
-  },
+  }),
   ...repeat(3, {
     mobs: [
       {
