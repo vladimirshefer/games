@@ -12,6 +12,7 @@ import { PickupManager } from './pickups.ts'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
 import { HERO_BASE_SPEED, LEVEL_BASE_PROGRESSION, LEVEL_BASE_XP, WORLD_BOUNDS } from './game/constants.ts'
 import { WeaponHud } from './game/view/hud/WeaponHud.ts'
+import { GameOverHud } from './game/view/hud/GameOverHud.ts'
 
 interface ExitStats {
   kills: number
@@ -180,8 +181,7 @@ export class HordesScene extends Phaser.Scene {
   private wavesOver: boolean = false
   private isGameOver: boolean = false
   private exitHandled: boolean = false
-  private gameOverTitle?: Phaser.GameObjects.Text
-  private gameOverStatsText?: Phaser.GameObjects.Text
+  private gameOverHud?: GameOverHud
   private exitButtonDefaultPosition = { x: 0, y: 0 }
   private exitButtonDefaultOrigin = { x: 1, y: 0 }
 
@@ -206,10 +206,10 @@ export class HordesScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.isGameOver = false
     this.exitHandled = false
-    this.gameOverTitle?.destroy()
-    this.gameOverStatsText?.destroy()
-    this.gameOverTitle = undefined
-    this.gameOverStatsText = undefined
+    if (!this.gameOverHud) {
+      this.gameOverHud = new GameOverHud(this)
+    }
+    this.gameOverHud.clear()
     this.cameras.main.setBackgroundColor('#101014')
     this.time.timeScale = 1
     this.isPaused = false
@@ -486,10 +486,7 @@ export class HordesScene extends Phaser.Scene {
     if (this.exitButton) {
       this.exitButton.disableInteractive()
     }
-    this.gameOverTitle?.destroy()
-    this.gameOverStatsText?.destroy()
-    this.gameOverTitle = undefined
-    this.gameOverStatsText = undefined
+    this.gameOverHud?.clear()
     const handler = HordesScene.exitHandler
     if (handler) {
       handler({
@@ -609,35 +606,10 @@ export class HordesScene extends Phaser.Scene {
       this.pauseButton.setVisible(false)
     }
 
-    const title = result === 'killed' ? 'Game Over' : 'Complete'
-    const titleColor = result === 'killed' ? '#ff5252' : '#69f0ae'
-
-    this.gameOverTitle?.destroy()
-    this.gameOverStatsText?.destroy()
-
-    this.gameOverTitle = this.add
-      .text(this.scale.width / 2, this.scale.height / 2 - 48, title, {
-        color: titleColor,
-        fontFamily: 'monospace',
-        fontSize: '36px',
-        backgroundColor: '#1a1a25ee',
-        padding: { x: 18, y: 10 }
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(6)
-
-    this.gameOverStatsText = this.add
-      .text(this.scale.width / 2, this.scale.height / 2 + 4, `Wave ${this.wave + 1} | Kills ${this.kills}`, {
-        color: '#f5f5f5',
-        fontFamily: 'monospace',
-        fontSize: '20px',
-        backgroundColor: '#1a1a25cc',
-        padding: { x: 14, y: 6 }
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(6)
+    if (!this.gameOverHud) {
+      this.gameOverHud = new GameOverHud(this)
+    }
+    this.gameOverHud.show(result, this.wave + 1, this.kills)
 
     this.showPauseHud()
     if (this.exitButton) {
