@@ -227,41 +227,55 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
   }
 
   private fireScatterTower(tower: Tower, overlay?: Phaser.GameObjects.Graphics) {
-    const maxProjectiles = tower.stats.projectileCount ?? 8
-    if (maxProjectiles <= 0) return false
     const towerX = tower.sprite.x
     const towerY = tower.sprite.y
-    const enemiesInRange = this.enemiesWithinCircle(towerX, towerY, tower.stats.range)
+    const tileSize = Math.max(tower.sprite.displayWidth, tower.sprite.displayHeight, 32)
+    const projectileRange = tileSize * 3
+    if (projectileRange <= 0) return false
+    const enemiesInRange = this.enemiesWithinCircle(towerX, towerY, projectileRange)
     if (enemiesInRange.length === 0) return false
-    const slotByDirection = new Map<number, TEnemy>()
-    const segmentSize = Math.PI / 4
-    for (const enemy of enemiesInRange) {
-      const angle = Phaser.Math.Angle.Between(towerX, towerY, enemy.sprite.x, enemy.sprite.y)
-      const normalized = Phaser.Math.Wrap(angle, -Math.PI, Math.PI)
-      const segmentIndex = ((Math.round(normalized / segmentSize) % 8) + 8) % 8
-      const incumbent = slotByDirection.get(segmentIndex)
-      if (!incumbent) {
-        slotByDirection.set(segmentIndex, enemy)
-        continue
-      }
-      const incumbentDist = Phaser.Math.Distance.Squared(towerX, towerY, incumbent.sprite.x, incumbent.sprite.y)
-      const candidateDist = Phaser.Math.Distance.Squared(towerX, towerY, enemy.sprite.x, enemy.sprite.y)
-      if (candidateDist < incumbentDist) {
-        slotByDirection.set(segmentIndex, enemy)
-      }
-    }
-    const targets = Array.from(slotByDirection.values()).slice(0, maxProjectiles)
-    if (targets.length === 0) return false
-    for (const target of targets) {
+    const directions = [
+      0,
+      Math.PI / 4,
+      Math.PI / 2,
+      (3 * Math.PI) / 4,
+      Math.PI,
+      (-3 * Math.PI) / 4,
+      -Math.PI / 2,
+      -Math.PI / 4
+    ]
+    const hitEnemies = new Set<TEnemy>()
+    for (const angle of directions) {
+      const dirX = Math.cos(angle)
+      const dirY = Math.sin(angle)
       overlay
         ?.lineStyle(2, 0xfcd34d, 0.55)
         .beginPath()
         .moveTo(towerX, towerY)
-        .lineTo(target.sprite.x, target.sprite.y)
+        .lineTo(towerX + dirX * projectileRange, towerY + dirY * projectileRange)
         .strokePath()
+      let closestEnemy: TEnemy | undefined
+      let closestProjection = Infinity
+      for (const enemy of enemiesInRange) {
+        const vecX = enemy.sprite.x - towerX
+        const vecY = enemy.sprite.y - towerY
+        const projection = vecX * dirX + vecY * dirY
+        if (projection <= 0 || projection > projectileRange) continue
+        const perpendicular = Math.abs(dirX * vecY - dirY * vecX)
+        const enemySize = Math.max(enemy.sprite.displayWidth || 0, enemy.sprite.displayHeight || 0, tileSize * 0.5, 12)
+        const hitWidth = Math.max(6, enemySize * 0.3)
+        if (perpendicular > hitWidth) continue
+        if (projection < closestProjection) {
+          closestProjection = projection
+          closestEnemy = enemy
+        }
+      }
+      if (closestEnemy && !hitEnemies.has(closestEnemy)) {
+        hitEnemies.add(closestEnemy)
+      }
     }
-    for (const target of targets) {
-      this.applyDamage(target, tower.stats.damage)
+    for (const enemy of hitEnemies) {
+      this.applyDamage(enemy, tower.stats.damage)
     }
     return true
   }
