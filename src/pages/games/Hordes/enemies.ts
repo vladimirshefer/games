@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import type { EnemySprite, HeroState } from './types'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
 import { CLEANUP_PADDING, MOB_BASE_RADIUS } from './game/constants.ts'
+import type { MobAppearance } from './waves.ts'
 
 export interface SpawnContext {
   heroX: number
@@ -16,7 +17,6 @@ export interface MobStats {
   speed: number
   xp: number
   size: number
-  frame?: number
 }
 
 export interface IEnemyManager {
@@ -24,11 +24,9 @@ export interface IEnemyManager {
    * Spawns a new enemy at the specified edge of the screen
    * @param edge Screen edge index (0: top, 1: right, 2: bottom, 3: left)
    * @param mob Enemy stats and properties
-   * @param color Tint color to apply to the enemy sprite
-   * @param context Spawn position calculation context
    * @returns The newly created enemy sprite
    */
-  spawn(edge: number, mob: MobStats, color: number, context: SpawnContext): EnemySprite
+  spawn(edge: number, mob: MobStats, appearance: MobAppearance): EnemySprite
 
   /**
    * Creates and tracks the floating HP label for an enemy.
@@ -61,15 +59,15 @@ export class EnemyManager implements IEnemyManager {
     this.enemies = enemies
   }
 
-  spawn(edge: number, mob: MobStats, color: number) {
+  spawn(edge: number, mob: MobStats, appearance: MobAppearance) {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius)
 
-    const frame = mob.frame ?? ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
+    const frame = appearance.frame ?? ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
     const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, frame)
     enemy.setOrigin(0.5)
     enemy.setDisplaySize(mob.size, mob.size)
-    enemy.setTint(color)
+    enemy.setTint(appearance.color)
     enemy.setDepth(0.1)
     enemy.setActive(true)
     enemy.setData('mob', mob)
@@ -78,7 +76,7 @@ export class EnemyManager implements IEnemyManager {
     enemy.setData('lastAuraTick', 0)
     enemy.setData('auraKnockback', 40)
     enemy.setData('radius', radius)
-    if (!mob.frame && this.scene.anims.exists('enemy-walk')) {
+    if (!appearance.frame && this.scene.anims.exists('enemy-walk')) {
       enemy.play('enemy-walk')
       enemy.anims.setProgress(Math.random())
     }

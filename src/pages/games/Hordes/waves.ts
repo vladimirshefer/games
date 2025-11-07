@@ -2,6 +2,8 @@ import Phaser from 'phaser'
 import type { HeroState } from './types'
 import { EnemyManager, type MobStats } from './enemies.ts'
 import {
+  HERO_BASE_HP,
+  HERO_BASE_SPEED,
   MOB_BASE_DAMAGE,
   MOB_BASE_HP,
   MOB_BASE_RADIUS,
@@ -78,30 +80,28 @@ export class WaveManager {
     for (const mobPack of wave.mobs) {
       const count = mobPack.amount
       const stats = mobPack.stats
+      const appearance = mobPack.appearance
       for (let i = 0; i < count; i += 1) {
         if (i < count * 0.1) {
-          this.spawnEnemy(edge + 1, stats)
+          this.spawnEnemy(edge + 1, stats, appearance)
           continue
         }
         if (i < count * 0.2) {
-          this.spawnEnemy(edge + 2, stats)
+          this.spawnEnemy(edge + 2, stats, appearance)
           continue
         }
         if (i < count * 0.5) {
-          this.spawnEnemy(edge + 3, stats)
+          this.spawnEnemy(edge + 3, stats, appearance)
           continue
         }
-        this.spawnEnemy(edge, stats)
+        this.spawnEnemy(edge, stats, appearance)
       }
     }
   }
 
-  private spawnEnemy(edge: number, stats: MobStats) {
+  private spawnEnemy(edge: number, stats: MobStats, appearance: MobAppearance) {
     edge = edge % 4
-    const powerMultiplier = 1 + this.wave / 20
-    const mobDamageRelative = (stats.damage / MOB_BASE_DAMAGE) * powerMultiplier
-    const color = grbToHex(0.5 + mobDamageRelative / 2, 0.4, 0.5 + (1 - mobDamageRelative) / 2)
-    this.enemyManager.spawn(edge, stats, color)
+    this.enemyManager.spawn(edge, stats, appearance)
   }
 
   private gameover() {
@@ -110,48 +110,76 @@ export class WaveManager {
   }
 }
 
-function grbToHex(r1: number, g1: number, b1: number) {
-  const r = 0xff * Math.min(Math.max(r1, 0.0), 1.0)
-  const g = 0xff * Math.min(Math.max(g1, 0.0), 1.0)
-  const b = 0xff * Math.min(Math.max(b1, 0.0), 1.0)
-  return ((r * 0x10000) & 0xff0000) | ((g * 0x100) & 0xff00) | b
-}
-
 interface Wave {
-  mobs: { stats: MobStats; amount: number }[]
+  mobs: {
+    stats: MobStats
+    appearance: MobAppearance
+    amount: number
+  }[]
 }
 
-const DEFAULT_MOB_STATS = {
-  size: MOB_BASE_RADIUS * 2,
-  speed: MOB_BASE_SPEED,
-  health: MOB_BASE_HP,
-  xp: MOB_BASE_XP,
-  damage: MOB_BASE_DAMAGE
+export interface MobAppearance {
+  /** The index of the frame in sprite list of 1-bit pack */
+  frame: number
+  color: number
 }
 
-const STRONG_MOB_STATS = {
-  size: MOB_BASE_RADIUS * 2.5,
-  speed: MOB_BASE_SPEED,
-  health: MOB_BASE_HP * 3,
-  xp: MOB_BASE_XP * 2,
-  damage: MOB_BASE_DAMAGE * 1.5,
-  frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy1
+export const KNOWN_MOB_APPEARANCE: { [key: string]: MobAppearance } = {
+  default: {
+    frame: ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1,
+    color: 0x50c040
+  },
+  strong: {
+    frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy1,
+    color: 0xc05040
+  },
+  elite: {
+    frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy2,
+    color: 0x70c010
+  },
+  reaper: {
+    frame: ONE_BIT_PACK_KNOWN_FRAMES.scull,
+    color: 0xd03040
+  }
 }
 
-const ELITE_MOB_STATS = {
-  size: MOB_BASE_RADIUS * 3,
-  speed: MOB_BASE_SPEED,
-  health: MOB_BASE_HP * 5,
-  xp: MOB_BASE_XP * 4,
-  damage: MOB_BASE_DAMAGE * 2.5,
-  frame: ONE_BIT_PACK_KNOWN_FRAMES.enemy2
+const KNOWN_MOB_STATS: { [key: string]: MobStats } = {
+  default: {
+    size: MOB_BASE_RADIUS * 2,
+    speed: MOB_BASE_SPEED,
+    health: MOB_BASE_HP,
+    xp: MOB_BASE_XP,
+    damage: MOB_BASE_DAMAGE
+  },
+  strong: {
+    size: MOB_BASE_RADIUS * 2.5,
+    speed: MOB_BASE_SPEED,
+    health: MOB_BASE_HP * 3,
+    xp: MOB_BASE_XP * 2,
+    damage: MOB_BASE_DAMAGE * 1.5
+  },
+  elite: {
+    size: MOB_BASE_RADIUS * 3,
+    speed: MOB_BASE_SPEED,
+    health: MOB_BASE_HP * 5,
+    xp: MOB_BASE_XP * 4,
+    damage: MOB_BASE_DAMAGE * 2.5
+  },
+  reaper: {
+    size: MOB_BASE_RADIUS * 3,
+    speed: HERO_BASE_SPEED * 2,
+    health: 10000,
+    xp: 0,
+    damage: HERO_BASE_HP / 2
+  }
 }
 
 export const WAVES: Wave[] = [
   ...repeat(3, {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       }
     ]
@@ -159,11 +187,13 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT / 5
       }
     ]
@@ -171,11 +201,13 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT / 4
       }
     ]
@@ -183,11 +215,13 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT / 3
       }
     ]
@@ -195,11 +229,13 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT / 2
       }
     ]
@@ -207,11 +243,13 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT
       }
     ]
@@ -219,15 +257,18 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: DEFAULT_MOB_STATS,
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: ELITE_MOB_STATS,
+        stats: KNOWN_MOB_STATS['elite'],
+        appearance: KNOWN_MOB_APPEARANCE['elite'],
         amount: WAVE_BASE_AMOUNT / 4
       }
     ]
@@ -235,12 +276,32 @@ export const WAVES: Wave[] = [
   {
     mobs: [
       {
-        stats: STRONG_MOB_STATS,
+        stats: KNOWN_MOB_STATS['strong'],
+        appearance: KNOWN_MOB_APPEARANCE['strong'],
         amount: WAVE_BASE_AMOUNT
       },
       {
-        stats: ELITE_MOB_STATS,
+        stats: KNOWN_MOB_STATS['elite'],
+        appearance: KNOWN_MOB_APPEARANCE['elite'],
         amount: WAVE_BASE_AMOUNT / 2
+      }
+    ]
+  },
+  ...repeat(3, {
+    mobs: [
+      {
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
+        amount: 1
+      }
+    ]
+  }),
+  {
+    mobs: [
+      {
+        stats: KNOWN_MOB_STATS['reaper'],
+        appearance: KNOWN_MOB_APPEARANCE['reaper'],
+        amount: 3
       }
     ]
   }
