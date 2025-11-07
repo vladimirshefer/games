@@ -9,7 +9,7 @@ import type { MobStats } from '../../enemies.ts'
 
 export class Bomb implements Weapon {
   id = () => 'bomb'
-  private bombElapsed = 0
+  private bombElapsed
 
   private bombs: {
     sprite: Phaser.GameObjects.Image
@@ -31,6 +31,8 @@ export class Bomb implements Weapon {
     this.context = context
     this.stats = stats
     this.damageEnemy = damageEnemy
+    // set the bomb right after equip
+    this.bombElapsed = this.stats.cooldown
   }
 
   update(_dt: number, enemies: EnemySprite[], _worldView: Phaser.Geom.Rectangle): void {
