@@ -50,7 +50,7 @@ export class GameOverHud {
 
     if (damageTable) {
       container.add(damageTable)
-      exitButtonY = damageTable.y + (damageTable.height ?? 0)
+      exitButtonY = damageTable.y + (damageTable.height ?? 0) / 2 + 32
     }
 
     const exitButton = this.scene.add
@@ -62,6 +62,7 @@ export class GameOverHud {
         padding: { x: 10, y: 6 }
       })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
     exitButton.on('pointerdown', () => onExit())
 
