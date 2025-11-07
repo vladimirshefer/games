@@ -7,6 +7,7 @@ import { Aura } from './game/weapons/aura.ts'
 import { Pistol } from './game/weapons/pistol.ts'
 import type { Weapon } from './game/weapons/weapon.ts'
 import type { MobStats } from './enemies.ts'
+import { STATS_FOR_RUN } from './game/profile.ts'
 
 export interface CombatContext {
   hero: HeroState
@@ -71,7 +72,12 @@ export class CombatSystem {
     }
     this.originalStats['pistol'] = weapon
     const configured = this.withModifiers(weapon)
-    this.setWeapon(new Pistol(this.scene, this.context, configured, this.damageEnemy))
+    this.setWeapon(new Pistol(this.scene, this.context, configured, this.damageEnemyWithStats('pistol')))
+  }
+
+  private damageEnemyWithStats = (weapon: string) => (e: EnemySprite, a: number, s: MobStats) => {
+    STATS_FOR_RUN.weapon_damage[weapon] = (STATS_FOR_RUN.weapon_damage[weapon] ?? 0) + a
+    this.damageEnemy(e, a, s)
   }
 
   setAuraWeapon(weapon: WeaponStats | null) {
@@ -81,7 +87,7 @@ export class CombatSystem {
     }
     this.originalStats['aura'] = weapon
     const configured = this.withModifiers(weapon)
-    this.setWeapon(new Aura(this.scene, this.context, configured, this.damageEnemy))
+    this.setWeapon(new Aura(this.scene, this.context, configured, this.damageEnemyWithStats('aura')))
   }
 
   setBombWeapon(weapon: WeaponStats | null) {
@@ -91,7 +97,7 @@ export class CombatSystem {
     }
     this.originalStats['bomb'] = weapon
     const configured = this.withModifiers(weapon)
-    this.setWeapon(new Bomb(this.scene, this.context, configured, this.damageEnemy))
+    this.setWeapon(new Bomb(this.scene, this.context, configured, this.damageEnemyWithStats('bomb')))
   }
 
   setSwordWeapon(weapon: WeaponStats | null) {
@@ -101,7 +107,7 @@ export class CombatSystem {
     }
     this.originalStats['sword'] = weapon
     const configured = this.withModifiers(weapon)
-    this.setWeapon(new Sword(this.scene, this.context, configured, this.damageEnemy))
+    this.setWeapon(new Sword(this.scene, this.context, configured, this.damageEnemyWithStats('sword')))
   }
 
   setWeapon(weapon: Weapon) {

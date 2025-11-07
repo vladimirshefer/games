@@ -30,7 +30,8 @@ export default defineConfig([
           caughtErrorsIgnorePattern: '^_',
           ignoreRestSiblings: true
         }
-      ]
+      ],
+      '@typescript-eslint/no-explicit-any': 'off'
     }
   }
 ])
