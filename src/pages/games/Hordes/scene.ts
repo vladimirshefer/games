@@ -169,7 +169,8 @@ export class HordesScene extends Phaser.Scene {
   private pickupManager!: PickupManager
   private upgradeManager!: UpgradeManager
   private pauseButton!: Phaser.GameObjects.Text
-  private exitButton!: Phaser.GameObjects.Text
+  private pauseExitButton!: Phaser.GameObjects.Text
+  private gameOverExitButton?: Phaser.GameObjects.Text
   private isPaused: boolean = false
   private totalXp: number = 0
   private level: number = 1
@@ -182,8 +183,6 @@ export class HordesScene extends Phaser.Scene {
   private isGameOver: boolean = false
   private exitHandled: boolean = false
   private gameOverHud?: GameOverHud
-  private exitButtonDefaultPosition = { x: 0, y: 0 }
-  private exitButtonDefaultOrigin = { x: 1, y: 0 }
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
@@ -206,6 +205,8 @@ export class HordesScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.isGameOver = false
     this.exitHandled = false
+    this.gameOverExitButton?.destroy()
+    this.gameOverExitButton = undefined
     if (!this.gameOverHud) {
       this.gameOverHud = new GameOverHud(this)
     }
@@ -330,7 +331,7 @@ export class HordesScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
     this.pauseButton.on('pointerdown', () => this.togglePause())
 
-    this.exitButton = this.add
+    this.pauseExitButton = this.add
       .text(width - 16, this.pauseButton.y + this.pauseButton.displayHeight + 12, 'Exit', {
         color: '#ff8a80',
         fontFamily: 'monospace',
@@ -342,9 +343,7 @@ export class HordesScene extends Phaser.Scene {
       .setDepth(2)
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
-    this.exitButton.on('pointerdown', () => this.handleExit())
-    this.exitButtonDefaultPosition = { x: this.exitButton.x, y: this.exitButton.y }
-    this.exitButtonDefaultOrigin = { x: this.exitButton.originX, y: this.exitButton.originY }
+    this.pauseExitButton.on('pointerdown', () => this.handleExit())
     this.hidePauseHud()
 
     if (this.hero.weaponIds.length === 0) {
@@ -483,9 +482,8 @@ export class HordesScene extends Phaser.Scene {
   private handleExit() {
     if (this.exitHandled) return
     this.exitHandled = true
-    if (this.exitButton) {
-      this.exitButton.disableInteractive()
-    }
+    this.pauseExitButton?.disableInteractive()
+    this.gameOverExitButton?.disableInteractive()
     this.gameOverHud?.clear()
     const handler = HordesScene.exitHandler
     if (handler) {
@@ -605,37 +603,42 @@ export class HordesScene extends Phaser.Scene {
       this.pauseButton.disableInteractive()
       this.pauseButton.setVisible(false)
     }
+    if (this.pauseExitButton) {
+      this.pauseExitButton.setVisible(false)
+      this.pauseExitButton.disableInteractive()
+    }
 
     if (!this.gameOverHud) {
       this.gameOverHud = new GameOverHud(this)
     }
     this.gameOverHud.show(result, this.wave + 1, this.kills)
 
-    this.showPauseHud()
-    if (this.exitButton) {
-      this.exitButton.setPosition(this.scale.width / 2, this.scale.height / 2 + 64)
-      this.exitButton.setOrigin(0.5, 0)
-      this.exitButton.setDepth(6)
-      this.exitButton.setVisible(true)
-      this.exitButton.setInteractive({ useHandCursor: true })
-    }
+    this.gameOverExitButton?.destroy()
+    this.gameOverExitButton = this.add
+      .text(this.scale.width / 2, this.scale.height / 2 + 64, 'Exit', {
+        color: '#ff8a80',
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        backgroundColor: '#303048dd',
+        padding: { x: 10, y: 6 }
+      })
+      .setOrigin(0.5, 0)
+      .setScrollFactor(0)
+      .setDepth(6)
+      .setInteractive({ useHandCursor: true })
+    this.gameOverExitButton.on('pointerdown', () => this.handleExit())
   }
 
   private showPauseHud() {
-    if (!this.exitButton) return
-    if (!this.isGameOver) {
-      this.exitButton.setOrigin(this.exitButtonDefaultOrigin.x, this.exitButtonDefaultOrigin.y)
-      this.exitButton.setPosition(this.exitButtonDefaultPosition.x, this.exitButtonDefaultPosition.y)
-      this.exitButton.setDepth(2)
-    }
-    this.exitButton.setVisible(true)
-    this.exitButton.setInteractive({ useHandCursor: true })
+    if (!this.pauseExitButton || this.isGameOver) return
+    this.pauseExitButton.setVisible(true)
+    this.pauseExitButton.setInteractive({ useHandCursor: true })
   }
 
   private hidePauseHud() {
-    if (!this.exitButton || this.isGameOver) return
-    this.exitButton.setVisible(false)
-    this.exitButton.disableInteractive()
+    if (!this.pauseExitButton || this.isGameOver) return
+    this.pauseExitButton.setVisible(false)
+    this.pauseExitButton.disableInteractive()
   }
 
   private getNextLevelXp(level: number) {
