@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
-import { type GameMap, printGameMap, TowerDefenseMapGenerator } from './game/map.ts'
+import { type GameMap, printGameMap, type TileType, TowerDefenseMapGenerator } from './game/map.ts'
 import { MapRenderer } from './game/mapRenderer.ts'
 import {
   BASE_HP,
@@ -91,6 +91,7 @@ export class TowerDefenseScene extends Phaser.Scene {
   private exitButton!: Phaser.GameObjects.Text
   private baseMarker!: Phaser.GameObjects.Rectangle
   private runEnded = false
+  private mapRotatedForVerticalMode = false
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     TowerDefenseScene.exitHandler = handler
@@ -110,6 +111,7 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Scene setup entry point.
   create() {
+    this.rotateMapForVerticalStartIfNeeded()
     printGameMap(this.gameMap)
     // const {width, height} = this.scale
     this.cameras.main.setBackgroundColor('#0b0f19')
@@ -564,6 +566,37 @@ export class TowerDefenseScene extends Phaser.Scene {
     const tintPalette = tower.definition.levelTints ?? DEFAULT_TOWER_LEVEL_TINTS
     const tint = tintPalette[Math.min(tower.level, tintPalette.length - 1)]
     this.mapRenderer.applyBuildSpotAppearance(spot.marker, true, tower.definition.spriteFrame, tint)
+  }
+
+  private rotateMapForVerticalStartIfNeeded() {
+    if (this.mapRotatedForVerticalMode) return
+    const isPortrait =
+      this.scale.orientation === Phaser.Scale.Orientation.PORTRAIT || this.scale.height > this.scale.width
+    if (!isPortrait) {
+      return
+    }
+    this.rotateGameMapClockwise()
+    this.mapRotatedForVerticalMode = true
+  }
+
+  private rotateGameMapClockwise() {
+    const originalRows = this.gameMap.rows
+    const originalCols = this.gameMap.cols
+    const rotatedTiles: TileType[][] = Array.from({ length: originalCols }, () => new Array<TileType>(originalRows))
+    for (let row = 0; row < originalRows; row += 1) {
+      for (let col = 0; col < originalCols; col += 1) {
+        const newRow = col
+        const newCol = originalRows - 1 - row
+        rotatedTiles[newRow][newCol] = this.gameMap.tiles[row][col]
+      }
+    }
+    this.gameMap.tiles = rotatedTiles
+    this.gameMap.rows = originalCols
+    this.gameMap.cols = originalRows
+    this.gameMap.path = this.gameMap.path.map(({ col, row }) => ({
+      col: originalRows - 1 - row,
+      row: col
+    }))
   }
 
   // Registers the shared mob walk animation.
