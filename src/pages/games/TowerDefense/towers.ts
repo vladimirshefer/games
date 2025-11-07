@@ -180,8 +180,26 @@ export interface TowerControllerDeps<TEnemy extends TowerEnemy = TowerEnemy> {
   onKill: (enemy: TEnemy) => void
 }
 
+interface BombProjectile {
+  startX: number
+  startY: number
+  targetX: number
+  targetY: number
+  aoeRadius: number
+  damage: number
+  travelTime: number
+  elapsed: number
+  explosionDuration: number
+  explosionElapsed: number
+  state: 'flying' | 'exploding'
+}
+
 export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
+  private static readonly BOMB_SPEED_PX_PER_MS = 0.45
+  private static readonly BOMB_EXPLOSION_DURATION_MS = 350
+
   private readonly deps: TowerControllerDeps<TEnemy>
+  private activeBombs: BombProjectile[] = []
 
   constructor(deps: TowerControllerDeps<TEnemy>) {
     this.deps = deps
@@ -190,6 +208,7 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
   update(towers: Tower[], deltaMs: number) {
     const overlay = this.deps.getOverlay?.()
     overlay?.clear()
+    this.updateBombProjectiles(deltaMs, overlay)
     for (const tower of towers) {
       tower.cooldown = Math.max(0, tower.cooldown - deltaMs)
       if (tower.cooldown > 0) continue
@@ -285,14 +304,10 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
     if (!aoeRadius) return false
     const target = this.findTargetForTower(tower)
     if (!target) return false
-    const centerX = target.sprite.x
-    const centerY = target.sprite.y
-    const affected = this.enemiesWithinCircle(centerX, centerY, aoeRadius)
-    if (affected.length === 0) return false
-    overlay?.lineStyle(3, 0xf97316, 0.8).strokeCircle(centerX, centerY, aoeRadius)
-    for (const enemy of affected) {
-      this.applyDamage(enemy, tower.stats.damage)
-    }
+    overlay
+      ?.lineStyle(2, 0xfbbf24, 0.4)
+      .lineBetween(tower.sprite.x, tower.sprite.y, target.sprite.x, target.sprite.y)
+    this.spawnBombProjectile(tower, target, aoeRadius)
     return true
   }
 
@@ -353,6 +368,65 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
       enemy.slowFactor = Math.min(enemy.slowFactor, clampedFactor)
       enemy.slowUntil = Math.max(enemy.slowUntil, now + durationMs)
       enemy.sprite.setTint(0x60a5fa)
+    }
+  }
+
+  private spawnBombProjectile(tower: Tower, target: TEnemy, aoeRadius: number) {
+    const startX = tower.sprite.x
+    const startY = tower.sprite.y
+    const targetX = target.sprite.x
+    const targetY = target.sprite.y
+    const distance = Phaser.Math.Distance.Between(startX, startY, targetX, targetY)
+    const travelTime = Math.max(180, distance / TowerController.BOMB_SPEED_PX_PER_MS)
+    this.activeBombs.push({
+      startX,
+      startY,
+      targetX,
+      targetY,
+      aoeRadius,
+      damage: tower.stats.damage,
+      travelTime,
+      elapsed: 0,
+      explosionDuration: TowerController.BOMB_EXPLOSION_DURATION_MS,
+      explosionElapsed: 0,
+      state: 'flying'
+    })
+  }
+
+  private updateBombProjectiles(deltaMs: number, overlay?: Phaser.GameObjects.Graphics) {
+    if (this.activeBombs.length === 0) return
+    const remaining: BombProjectile[] = []
+    for (const bomb of this.activeBombs) {
+      if (bomb.state === 'flying') {
+        bomb.elapsed += deltaMs
+        const progress = Phaser.Math.Clamp(bomb.elapsed / bomb.travelTime, 0, 1)
+        const currentX = Phaser.Math.Linear(bomb.startX, bomb.targetX, progress)
+        const currentY = Phaser.Math.Linear(bomb.startY, bomb.targetY, progress)
+        overlay?.fillStyle(0xf97316, 0.7).fillCircle(currentX, currentY, 6)
+        overlay?.lineStyle(2, 0x78350f, 0.4).strokeCircle(currentX, currentY, 8)
+        if (progress >= 1) {
+          bomb.state = 'exploding'
+          bomb.explosionElapsed = 0
+          this.resolveBombExplosion(bomb)
+        }
+      }
+      if (bomb.state === 'exploding') {
+        bomb.explosionElapsed += deltaMs
+        const fade = Phaser.Math.Clamp(1 - bomb.explosionElapsed / bomb.explosionDuration, 0, 1)
+        overlay?.fillStyle(0xf97316, 0.12 * fade).fillCircle(bomb.targetX, bomb.targetY, bomb.aoeRadius)
+        overlay?.lineStyle(4, 0xf97316, 0.7 * fade).strokeCircle(bomb.targetX, bomb.targetY, bomb.aoeRadius)
+      }
+      if (bomb.state === 'flying' || bomb.explosionElapsed < bomb.explosionDuration) {
+        remaining.push(bomb)
+      }
+    }
+    this.activeBombs = remaining
+  }
+
+  private resolveBombExplosion(bomb: BombProjectile) {
+    const affected = this.enemiesWithinCircle(bomb.targetX, bomb.targetY, bomb.aoeRadius)
+    for (const enemy of affected) {
+      this.applyDamage(enemy, bomb.damage)
     }
   }
 }
