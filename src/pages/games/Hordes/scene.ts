@@ -349,9 +349,9 @@ export class HordesScene extends Phaser.Scene {
     if (this.hero.weaponIds.length === 0) {
       this.pendingLevelUps = Math.max(this.pendingLevelUps, 1)
       this.tryOpenUpgradeMenu()
-    } else {
-      this.maybeStartWaves()
     }
+
+    this.maybeStartWaves()
 
     this.game.events.on('wavesOver', () => (this.wavesOver = true))
 
@@ -395,8 +395,6 @@ export class HordesScene extends Phaser.Scene {
   }
 
   private maybeStartWaves() {
-    if (this.hero.weaponIds.length === 0) return
-    if (this.waveManager.isRunning()) return
     this.waveManager.start()
     this.startSupportTimers()
   }
@@ -524,9 +522,6 @@ export class HordesScene extends Phaser.Scene {
     this.resumeFromUpgrade()
     if (this.pendingLevelUps > 0) {
       this.tryOpenUpgradeMenu()
-    }
-    if (!this.upgradeManager.isActive()) {
-      this.maybeStartWaves()
     }
   }
 
