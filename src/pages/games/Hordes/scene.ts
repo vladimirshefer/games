@@ -170,7 +170,6 @@ export class HordesScene extends Phaser.Scene {
   private upgradeManager!: UpgradeManager
   private pauseButton!: Phaser.GameObjects.Text
   private pauseExitButton!: Phaser.GameObjects.Text
-  private gameOverExitButton?: Phaser.GameObjects.Text
   private isPaused: boolean = false
   private totalXp: number = 0
   private level: number = 1
@@ -205,8 +204,6 @@ export class HordesScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.isGameOver = false
     this.exitHandled = false
-    this.gameOverExitButton?.destroy()
-    this.gameOverExitButton = undefined
     if (!this.gameOverHud) {
       this.gameOverHud = new GameOverHud(this)
     }
@@ -483,7 +480,6 @@ export class HordesScene extends Phaser.Scene {
     if (this.exitHandled) return
     this.exitHandled = true
     this.pauseExitButton?.disableInteractive()
-    this.gameOverExitButton?.disableInteractive()
     this.gameOverHud?.clear()
     const handler = HordesScene.exitHandler
     if (handler) {
@@ -611,22 +607,7 @@ export class HordesScene extends Phaser.Scene {
     if (!this.gameOverHud) {
       this.gameOverHud = new GameOverHud(this)
     }
-    this.gameOverHud.show(result, this.wave + 1, this.kills)
-
-    this.gameOverExitButton?.destroy()
-    this.gameOverExitButton = this.add
-      .text(this.scale.width / 2, this.scale.height / 2 + 64, 'Exit', {
-        color: '#ff8a80',
-        fontFamily: 'monospace',
-        fontSize: '18px',
-        backgroundColor: '#303048dd',
-        padding: { x: 10, y: 6 }
-      })
-      .setOrigin(0.5, 0)
-      .setScrollFactor(0)
-      .setDepth(6)
-      .setInteractive({ useHandCursor: true })
-    this.gameOverExitButton.on('pointerdown', () => this.handleExit())
+    this.gameOverHud.show(result, this.wave + 1, this.kills, () => this.handleExit())
   }
 
   private showPauseHud() {

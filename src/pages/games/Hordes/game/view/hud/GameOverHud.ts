@@ -11,7 +11,7 @@ export class GameOverHud {
     this.scene = scene
   }
 
-  show(result: 'killed' | 'complete', wave: number, kills: number) {
+  show(result: 'killed' | 'complete', wave: number, kills: number, onExit: () => void) {
     const title = result === 'killed' ? 'Game Over' : 'Complete'
     const titleColor = result === 'killed' ? '#ff5252' : '#69f0ae'
     const { width, height } = this.scene.scale
@@ -46,9 +46,26 @@ export class GameOverHud {
     container.add([titleText, statsText])
 
     const damageTable = this.createDamageTable(statsText.y + statsText.height / 2 + 32)
+    let exitButtonY = statsText.y + statsText.height / 2 + 72
+
     if (damageTable) {
       container.add(damageTable)
+      exitButtonY = damageTable.y + (damageTable.height ?? 0)
     }
+
+    const exitButton = this.scene.add
+      .text(0, exitButtonY, 'Exit', {
+        color: '#ff8a80',
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        backgroundColor: '#303048dd',
+        padding: { x: 10, y: 6 }
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+    exitButton.on('pointerdown', () => onExit())
+
+    container.add(exitButton)
 
     this.container = container
   }
