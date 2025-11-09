@@ -1,4 +1,4 @@
-import Phaser, { type Scene } from 'phaser'
+import Phaser from 'phaser'
 import { CombatSystem } from './combat'
 import { createHero, damageHero, moveHero } from './hero'
 import type { InputController } from './input'
@@ -15,136 +15,12 @@ import { WeaponHud } from './game/view/hud/WeaponHud.ts'
 import { GameOverHud } from './game/view/hud/GameOverHud.ts'
 import { DEFAULT_HERO, getHeroById, type HeroDefinition } from './heroes.ts'
 import { HORDES_SCENE_KEY } from './sceneKeys.ts'
+import { HeroHpBar } from './heroHpBar.ts'
+import { HeroXpBar } from './heroXpBar.ts'
 
 interface ExitStats {
   kills: number
   waves: number
-}
-
-const HERO_HP_BAR_HEIGHT = 6
-
-class HeroHpBar {
-  private readonly width
-  private readonly height = HERO_HP_BAR_HEIGHT
-  private readonly padding = 1
-  private bg: Phaser.GameObjects.Rectangle
-  private fill: Phaser.GameObjects.Rectangle
-
-  private hero: HeroState
-
-  constructor(scene: Scene, hero: HeroState) {
-    this.hero = hero
-    const offsetY = this.getOffsetY()
-    this.width = hero.sprite.displayWidth
-
-    this.bg = scene.add
-      .rectangle(hero.sprite.x, hero.sprite.y - offsetY, this.width, this.height, 0x000000, 0.7)
-      .setOrigin(0.5)
-      .setDepth(1)
-
-    this.fill = scene.add
-      .rectangle(
-        hero.sprite.x - this.width / 2 + this.padding,
-        this.bg.y,
-        this.width - this.padding * 2,
-        this.height - this.padding * 2,
-        0x4caf50
-      )
-      .setOrigin(0, 0.5)
-      .setDepth(1.1)
-
-    this.updateValue(hero.hp, hero.maxHp)
-  }
-
-  syncPosition() {
-    const x = this.hero.sprite.x
-    const y = this.hero.sprite.y + this.getOffsetY()
-    const leftEdge = x - this.width / 2 + this.padding
-
-    this.bg.setPosition(x, y)
-    this.fill.setPosition(leftEdge, y)
-  }
-
-  updateValue(currentHp: number, maxHp: number) {
-    const ratio = Phaser.Math.Clamp(maxHp === 0 ? 0 : currentHp / maxHp, 0, 1)
-    const innerWidth = Math.max(0, this.width - this.padding * 2)
-    this.fill.displayWidth = innerWidth * ratio
-
-    if (ratio > 0.6) {
-      this.fill.setFillStyle(0x4caf50)
-    } else if (ratio > 0.3) {
-      this.fill.setFillStyle(0xffc107)
-    } else {
-      this.fill.setFillStyle(0xff5252)
-    }
-  }
-
-  destroy() {
-    this.bg.destroy()
-    this.fill.destroy()
-  }
-
-  private getOffsetY() {
-    return this.hero.sprite.displayHeight / 2 + 4
-  }
-}
-
-class HeroXpBar {
-  private width
-  private readonly height = 5
-  private readonly padding = 1
-  private bg: Phaser.GameObjects.Rectangle
-  private fill: Phaser.GameObjects.Rectangle
-
-  private hero: HeroState
-
-  constructor(scene: Scene, hero: HeroState) {
-    this.hero = hero
-    const offsetY = this.getOffsetY()
-    this.width = hero.sprite.displayWidth
-
-    this.bg = scene.add
-      .rectangle(hero.sprite.x, hero.sprite.y - offsetY, this.width, this.height, 0x000000, 0.7)
-      .setOrigin(0.5)
-      .setDepth(1)
-
-    this.fill = scene.add
-      .rectangle(
-        hero.sprite.x - this.width / 2 + this.padding,
-        this.bg.y,
-        this.width - this.padding * 2,
-        this.height - this.padding * 2,
-        0x2090f0
-      )
-      .setOrigin(0, 0.5)
-      .setDepth(1.1)
-
-    this.updateValue(0)
-  }
-
-  syncPosition() {
-    const x = this.hero.sprite.x
-    const y = this.hero.sprite.y + this.getOffsetY()
-    const leftEdge = x - this.width / 2 + this.padding
-
-    this.bg.setPosition(x, y)
-    this.fill.setPosition(leftEdge, y)
-  }
-
-  updateValue(ratio: number) {
-    const clamped = Phaser.Math.Clamp(ratio, 0, 1)
-    const innerWidth = Math.max(0, this.width - this.padding * 2)
-    this.fill.displayWidth = innerWidth * clamped
-  }
-
-  destroy() {
-    this.bg.destroy()
-    this.fill.destroy()
-  }
-
-  private getOffsetY() {
-    return this.hero.sprite.displayHeight / 2 + HERO_HP_BAR_HEIGHT
-  }
 }
 
 /**
@@ -289,14 +165,6 @@ export class HordesScene extends Phaser.Scene {
         this.xpManager.spawn(enemy.x, enemy.y, mob.xp)
       }
     })
-    this.upgradeManager = new UpgradeManager(this, this.hero, this.combat, {
-      onMenuOpened: () => this.pauseForUpgrade(),
-      onMenuClosed: () => this.onUpgradeMenuClosed(),
-      onUpgradeApplied: () => this.updateHud(),
-      onShowMessage: (message) => this.showWeaponUpgrade(message)
-    })
-
-    this.upgradeManager.applyUpgrade(heroDefinition.startingUpgradeId)
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.combat.reset()
@@ -328,6 +196,15 @@ export class HordesScene extends Phaser.Scene {
     this.weaponHud = new WeaponHud(this, this.infoText, this.hero)
 
     this.updateHud()
+
+    this.upgradeManager = new UpgradeManager(this, this.hero, this.combat, {
+      onMenuOpened: () => this.pauseForUpgrade(),
+      onMenuClosed: () => this.onUpgradeMenuClosed(),
+      onUpgradeApplied: () => this.updateHud(),
+      onShowMessage: (message) => this.showWeaponUpgrade(message)
+    })
+
+    this.upgradeManager.applyUpgrade(heroDefinition.startingUpgradeId)
 
     this.pauseButton = this.add
       .text(width - 16, 16, 'Pause', {
