@@ -1,9 +1,9 @@
-import type { EnemySprite } from '../../types.ts'
+import type { EnemySprite } from '../types.ts'
 import Phaser from 'phaser'
-import type { CombatContext } from '../../combat.ts'
-import type { WeaponStats } from '../../weapons.ts'
+import type { CombatContext } from '../combat.ts'
+import type { WeaponStats } from '../weapons.ts'
 import type { Weapon } from './weapon.ts'
-import type { MobStats } from '../../enemies.ts'
+import type { MobStats } from '../enemies.ts'
 
 const STRIKE_DURATION = 0.8
 const PREP_DURATION = 0.3

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import Phaser from 'phaser'
-import { HordesScene } from './scene'
-import { HeroSelectScene } from './heroSelectScene'
+import { HordesScene } from './game/scene.ts'
+import { HeroSelectScene } from './game/heroSelectScene.ts'
 
 const DEFAULT_GAME_WIDTH = 600
 const DEFAULT_GAME_HEIGHT = 800

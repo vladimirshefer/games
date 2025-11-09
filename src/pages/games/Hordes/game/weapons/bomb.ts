@@ -1,11 +1,11 @@
-import type { WeaponStats } from '../../weapons.ts'
+import type { WeaponStats } from '../weapons.ts'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../sprite.ts'
 import { PICKUP_DEFAULT_SIZE } from '../constants.ts'
 import Phaser from 'phaser'
-import type { EnemySprite } from '../../types.ts'
-import type { CombatContext } from '../../combat.ts'
+import type { EnemySprite } from '../types.ts'
+import type { CombatContext } from '../combat.ts'
 import type { Weapon } from './weapon.ts'
-import type { MobStats } from '../../enemies.ts'
+import type { MobStats } from '../enemies.ts'
 
 export class Bomb implements Weapon {
   id = () => 'bomb'

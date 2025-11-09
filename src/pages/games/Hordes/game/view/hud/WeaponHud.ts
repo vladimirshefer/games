@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../../sprite.ts'
-import type { HeroState } from '../../../types.ts'
+import type { HeroState } from '../../types.ts'
 
 export class WeaponHud extends Phaser.GameObjects.Container {
   private static readonly frames: Record<string, number | undefined> = {

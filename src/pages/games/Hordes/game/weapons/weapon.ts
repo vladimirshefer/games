@@ -1,4 +1,4 @@
-import type { EnemySprite } from '../../types.ts'
+import type { EnemySprite } from '../types.ts'
 
 export interface Weapon {
   id(): string

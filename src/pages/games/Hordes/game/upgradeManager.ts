@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import type { HeroState } from './types'
-import type { CombatSystem } from './combat'
+import type { HeroState } from './types.ts'
+import type { CombatSystem } from './combat.ts'
 import {
   AURA_MK2_WEAPON,
   AURA_MK3_WEAPON,

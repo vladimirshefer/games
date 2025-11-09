@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { HERO_ROSTER, type HeroDefinition, type HeroId } from './heroes.ts'
 import { HERO_SELECT_SCENE_KEY, HORDES_SCENE_KEY } from './sceneKeys.ts'
-import { ONE_BIT_PACK } from './game/sprite.ts'
+import { ONE_BIT_PACK } from './sprite.ts'
 
 const HERO_CARD_WIDTH = 200
 const HERO_CARD_HEIGHT = 260

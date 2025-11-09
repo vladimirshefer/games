@@ -1,4 +1,4 @@
-import { ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
+import { ONE_BIT_PACK_KNOWN_FRAMES } from './sprite.ts'
 
 export type HeroWeaponId = 'bomb' | 'aura' | 'pistol' | 'sword'
 

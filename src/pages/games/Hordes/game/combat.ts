@@ -1,13 +1,13 @@
 import Phaser from 'phaser'
-import type { EnemySprite, HeroState } from './types'
+import type { EnemySprite, HeroState } from './types.ts'
 import { normalizeWeapon, type WeaponStats } from './weapons.ts'
-import { Sword } from './game/weapons/sword.ts'
-import { Bomb } from './game/weapons/bomb.ts'
-import { Aura } from './game/weapons/aura.ts'
-import { Pistol } from './game/weapons/pistol.ts'
-import type { Weapon } from './game/weapons/weapon.ts'
+import { Sword } from './weapons/sword.ts'
+import { Bomb } from './weapons/bomb.ts'
+import { Aura } from './weapons/aura.ts'
+import { Pistol } from './weapons/pistol.ts'
+import type { Weapon } from './weapons/weapon.ts'
 import type { MobStats } from './enemies.ts'
-import { STATS_FOR_RUN } from './game/profile.ts'
+import { STATS_FOR_RUN } from './profile.ts'
 
 export interface CombatContext {
   hero: HeroState

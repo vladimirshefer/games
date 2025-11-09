@@ -1,10 +1,10 @@
 import Phaser from 'phaser'
-import type { CombatContext } from '../../combat.ts'
-import type { WeaponStats } from '../../weapons.ts'
-import type { EnemySprite } from '../../types.ts'
+import type { CombatContext } from '../combat.ts'
+import type { WeaponStats } from '../weapons.ts'
+import type { EnemySprite } from '../types.ts'
 import { CLEANUP_PADDING, HERO_BASE_SPEED } from '../constants.ts'
 import type { Weapon } from './weapon.ts'
-import type { MobStats } from '../../enemies.ts'
+import type { MobStats } from '../enemies.ts'
 
 export class Pistol implements Weapon {
   id = () => 'pistol'

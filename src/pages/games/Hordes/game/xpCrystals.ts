@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { CLEANUP_PADDING, HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE } from './game/constants.ts'
+import { CLEANUP_PADDING, HERO_BASE_SPEED, PICKUP_DEFAULT_SIZE } from './constants.ts'
 
 const MAGNET_TRIGGER_RADIUS = PICKUP_DEFAULT_SIZE * 4
 const MAGNET_COLLECT_RADIUS = PICKUP_DEFAULT_SIZE

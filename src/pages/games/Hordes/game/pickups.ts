@@ -1,9 +1,9 @@
 import Phaser from 'phaser'
 import { healHero } from './hero.ts'
-import type { HeroState } from './types'
+import type { HeroState } from './types.ts'
 import { XpCrystalManager } from './xpCrystals.ts'
-import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
-import { CLEANUP_PADDING, HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE } from './game/constants.ts'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './sprite.ts'
+import { CLEANUP_PADDING, HERO_BASE_HP, MOB_BASE_RADIUS, PICKUP_DEFAULT_SIZE } from './constants.ts'
 
 interface PickupHooks {
   getHero(): HeroState

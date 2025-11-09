@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type { HeroState } from './types'
+import type { HeroState } from './types.ts'
 import { EnemyManager, type MobStats } from './enemies.ts'
 import {
   HERO_BASE_HP,
@@ -10,8 +10,8 @@ import {
   MOB_BASE_SPEED,
   MOB_BASE_XP,
   WAVE_BASE_AMOUNT
-} from './game/constants.ts'
-import { ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
+} from './constants.ts'
+import { ONE_BIT_PACK_KNOWN_FRAMES } from './sprite.ts'
 
 interface WaveHooks {
   getHero(): HeroState

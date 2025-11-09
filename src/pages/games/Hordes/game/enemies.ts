@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
-import type { EnemySprite, HeroState } from './types'
-import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
-import { CLEANUP_PADDING, MOB_BASE_RADIUS } from './game/constants.ts'
+import type { EnemySprite, HeroState } from './types.ts'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './sprite.ts'
+import { CLEANUP_PADDING, MOB_BASE_RADIUS } from './constants.ts'
 import type { MobAppearance } from './waves.ts'
 
 export interface SpawnContext {

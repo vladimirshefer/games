@@ -1,5 +1,5 @@
 import { AURA_RADIUS } from './hero.ts'
-import { HERO_BASE_DAMAGE } from './game/constants.ts'
+import { HERO_BASE_DAMAGE } from './constants.ts'
 
 export interface WeaponStats {
   damage: number

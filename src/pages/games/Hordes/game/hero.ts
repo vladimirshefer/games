@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
-import type { HeroState } from './types'
-import { HERO_BASE_HP, HERO_BASE_RADIUS, MOB_BASE_RADIUS } from './game/constants.ts'
-import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
+import type { HeroState } from './types.ts'
+import { HERO_BASE_HP, HERO_BASE_RADIUS, MOB_BASE_RADIUS } from './constants.ts'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './sprite.ts'
 
 export const AURA_RADIUS = MOB_BASE_RADIUS * 2
 
