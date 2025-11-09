@@ -56,7 +56,7 @@ export const BOMB_MK2_WEAPON: WeaponStats = bombUpgrade(BOMB_WEAPON)
 export const BOMB_MK3_WEAPON: WeaponStats = bombUpgrade(BOMB_MK2_WEAPON)
 
 export const SWORD_WEAPON: WeaponStats = normalizeWeapon({
-  cooldown: 2,
+  cooldown: 1.2,
   damage: HERO_BASE_DAMAGE * 2.0,
   area: 50,
   sectorAngle: 120
