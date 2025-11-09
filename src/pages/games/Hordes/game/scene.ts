@@ -17,6 +17,7 @@ import { DEFAULT_HERO, getHeroById, type HeroDefinition } from './heroes.ts'
 import { HORDES_SCENE_KEY } from './sceneKeys.ts'
 import { HeroHpBar } from './heroHpBar.ts'
 import { HeroXpBar } from './heroXpBar.ts'
+import { STATS_FOR_RUN } from './profile.ts'
 
 interface ExitStats {
   kills: number
@@ -98,6 +99,9 @@ export class HordesScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#101014')
     this.time.timeScale = 1
     this.isPaused = false
+
+    // reset run stats
+    STATS_FOR_RUN.weapon_damage = {}
 
     if (!this.textures.exists('hordes-grid')) {
       const graphics = this.add.graphics()
