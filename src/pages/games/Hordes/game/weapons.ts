@@ -96,6 +96,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'aura',
     label: 'Unlock Aura',
     description: 'Activate a damaging circle around you.',
+    requires: ['aura:unlocked'],
     category: 'WEAPON_NEW',
     weaponId: 'aura',
     level: 1
@@ -104,7 +105,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'auraMk2',
     label: 'Aura Mk II',
     description: statsDiffMessage(AURA_WEAPON, AURA_MK2_WEAPON),
-    requires: ['aura'],
+    requires: ['aura', 'auraMk2:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'aura',
     level: 2
@@ -113,7 +114,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'auraMk3',
     label: 'Aura Mk III',
     description: statsDiffMessage(AURA_MK2_WEAPON, AURA_MK3_WEAPON),
-    requires: ['auraMk2'],
+    requires: ['auraMk2', 'auraMk3:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'aura',
     level: 3
@@ -122,7 +123,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'auraMk4',
     label: 'Aura Mk IV',
     description: statsDiffMessage(AURA_MK3_WEAPON, AURA_MK4_WEAPON),
-    requires: ['auraMk3'],
+    requires: ['auraMk3', 'auraMk4:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'aura',
     level: 4
@@ -131,7 +132,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'auraMk5',
     label: 'Aura Mk V',
     description: statsDiffMessage(AURA_MK4_WEAPON, AURA_MK5_WEAPON),
-    requires: ['auraMk4'],
+    requires: ['auraMk4', 'auraMk5:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'aura',
     level: 5
@@ -140,6 +141,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'pistol',
     label: 'Equip Pistol',
     description: 'Basic ranged damage with moderate fire rate.',
+    requires: ['pistol:unlocked'], // requires the pistol weapon to be unlocked via achievement
     category: 'WEAPON_NEW',
     weaponId: 'pistol',
     level: 1
@@ -148,7 +150,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'pistolMk2',
     label: 'Pistol Mk II',
     description: statsDiffMessage(PISTOL_WEAPON, PISTOL_MK2_WEAPON),
-    requires: ['pistol'],
+    requires: ['pistol', 'pistolMk2:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'pistol',
     level: 2
@@ -157,7 +159,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'pistolMk3',
     label: 'Pistol Mk III',
     description: statsDiffMessage(PISTOL_MK2_WEAPON, PISTOL_MK3_WEAPON),
-    requires: ['pistolMk2'],
+    requires: ['pistolMk2', 'pistolMk3:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'pistol',
     level: 3
@@ -166,7 +168,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'pistolMk4',
     label: 'Pistol Mk IV',
     description: statsDiffMessage(PISTOL_MK3_WEAPON, PISTOL_MK4_WEAPON),
-    requires: ['pistolMk3'],
+    requires: ['pistolMk3', 'pistolMk4:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'pistol',
     level: 4
@@ -175,7 +177,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'pistolMk5',
     label: 'Pistol Mk V',
     description: statsDiffMessage(PISTOL_MK4_WEAPON, PISTOL_MK5_WEAPON),
-    requires: ['pistolMk4'],
+    requires: ['pistolMk4', 'pistolMk5:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'pistol',
     level: 5
@@ -184,6 +186,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'bomb',
     label: 'Deploy Bombs',
     description: 'Drop timed explosives dealing area damage.',
+    requires: ['bomb:unlocked'],
     category: 'WEAPON_NEW',
     weaponId: 'bomb',
     level: 1
@@ -192,7 +195,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'bombMk2',
     label: 'Bombs Mk II',
     description: statsDiffMessage(BOMB_WEAPON, BOMB_MK2_WEAPON),
-    requires: ['bomb'],
+    requires: ['bomb', 'bombMk2:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'bomb',
     level: 2
@@ -201,7 +204,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'bombMk3',
     label: 'Bombs Mk III',
     description: statsDiffMessage(BOMB_MK2_WEAPON, BOMB_MK3_WEAPON),
-    requires: ['bombMk2'],
+    requires: ['bombMk2', 'bombMk3:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'bomb',
     level: 3
@@ -210,6 +213,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'sword',
     label: 'Equip Sword',
     description: 'Unlock a melee sword slash in your movement direction.',
+    requires: ['sword:unlocked'],
     category: 'WEAPON_NEW',
     weaponId: 'sword',
     level: 1
@@ -218,7 +222,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'swordMk2',
     label: 'Sword Mk II',
     description: statsDiffMessage(SWORD_WEAPON, SWORD_MK2_WEAPON),
-    requires: ['sword'],
+    requires: ['sword', 'swordMk2:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'sword',
     level: 2
@@ -227,7 +231,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'swordMk3',
     label: 'Sword Mk III',
     description: statsDiffMessage(SWORD_MK2_WEAPON, SWORD_MK3_WEAPON),
-    requires: ['swordMk2'],
+    requires: ['swordMk2', 'swordMk3:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'sword',
     level: 3
@@ -236,7 +240,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'swordMk4',
     label: 'Sword Mk IV',
     description: statsDiffMessage(SWORD_MK3_WEAPON, SWORD_MK4_WEAPON),
-    requires: ['swordMk3'],
+    requires: ['swordMk3', 'swordMk4:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'sword',
     level: 4
@@ -245,7 +249,7 @@ export const upgrades: UpgradeOption[] = [
     id: 'swordMk5',
     label: 'Sword Mk V',
     description: statsDiffMessage(SWORD_MK4_WEAPON, SWORD_MK5_WEAPON),
-    requires: ['swordMk4'],
+    requires: ['swordMk4', 'swordMk5:unlocked'],
     category: 'WEAPON_UPGRADE',
     weaponId: 'sword',
     level: 5

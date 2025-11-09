@@ -18,6 +18,7 @@ import { HORDES_SCENE_KEY } from './sceneKeys.ts'
 import { HeroHpBar } from './heroHpBar.ts'
 import { HeroXpBar } from './heroXpBar.ts'
 import { STATS_FOR_RUN } from './profile.ts'
+import { saveAllAfterRun } from './save.ts'
 
 interface ExitStats {
   kills: number
@@ -484,6 +485,7 @@ export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.Cre
   }
 
   private showGameOverHud(result: 'killed' | 'complete') {
+    saveAllAfterRun()
     if (this.isGameOver) return
 
     this.isGameOver = true

@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import type { HeroState } from './types.ts'
 import { HERO_BASE_HP, HERO_BASE_RADIUS, MOB_BASE_RADIUS } from './constants.ts'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './sprite.ts'
+import { getUnlockedPerks } from './save.ts'
 
 export const AURA_RADIUS = MOB_BASE_RADIUS * 2
 
@@ -24,7 +25,7 @@ export function createHero(scene: Phaser.Scene, appearance?: HeroAppearanceOptio
     radius: HERO_BASE_RADIUS,
     maxHp: HERO_BASE_HP,
     hp: HERO_BASE_HP,
-    upgrades: [],
+    upgrades: [...getUnlockedPerks()],
     weaponIds: [],
     direction: new Phaser.Math.Vector2(0, 0),
     areaMultiplier: 1,
