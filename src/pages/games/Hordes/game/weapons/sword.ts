@@ -81,7 +81,7 @@ export class Sword implements Weapon {
     this.spawnPrepGraphics(swing)
   }
 
-  reset() {
+  destroy() {
     this.swordElapsed = 0
     if (this.activeSwordSwing) {
       this.activeSwordSwing.cleanup()

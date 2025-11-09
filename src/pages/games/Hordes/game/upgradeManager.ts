@@ -1,29 +1,7 @@
 import Phaser from 'phaser'
 import type { HeroState } from './types.ts'
 import type { CombatSystem } from './combat.ts'
-import {
-  AURA_MK2_WEAPON,
-  AURA_MK3_WEAPON,
-  AURA_MK4_WEAPON,
-  AURA_MK5_WEAPON,
-  AURA_WEAPON,
-  BOMB_MK2_WEAPON,
-  BOMB_MK3_WEAPON,
-  BOMB_WEAPON,
-  PISTOL_MK2_WEAPON,
-  PISTOL_MK3_WEAPON,
-  PISTOL_MK4_WEAPON,
-  PISTOL_MK5_WEAPON,
-  PISTOL_WEAPON,
-  SWORD_MK2_WEAPON,
-  SWORD_MK3_WEAPON,
-  SWORD_MK4_WEAPON,
-  SWORD_MK5_WEAPON,
-  SWORD_WEAPON,
-  type UpgradeOption,
-  upgrades,
-  type WeaponStats
-} from './weapons.ts'
+import { type UpgradeOption, upgrades, WEAPON_UPGRADE_STATS, type WeaponStats } from './weapons.ts'
 
 interface UpgradeHooks {
   onMenuOpened(): void
@@ -140,61 +118,17 @@ export class UpgradeManager {
       this.hero.upgrades.push(id)
     }
 
+    const upgradeOption: UpgradeOption | undefined = upgrades.find((it) => it.id === id)
+
+    if (upgradeOption?.weaponId && upgradeOption.level) {
+      this.applyWeaponUpgrade(
+        upgradeOption,
+        WEAPON_UPGRADE_STATS[upgradeOption.weaponId][upgradeOption.level - 1],
+        upgradeOption.description
+      )
+    }
+
     switch (id) {
-      case 'aura':
-        this.handleAuraUpgrade(AURA_WEAPON, 'Aura weapon activated!')
-        break
-      case 'auraMk2':
-        this.handleAuraUpgrade(AURA_MK2_WEAPON, 'Aura Mk II empowered!')
-        break
-      case 'auraMk3':
-        this.handleAuraUpgrade(AURA_MK3_WEAPON, 'Aura Mk III intensified!')
-        break
-      case 'auraMk4':
-        this.handleAuraUpgrade(AURA_MK4_WEAPON, 'Aura Mk IV radiates farther!')
-        break
-      case 'auraMk5':
-        this.handleAuraUpgrade(AURA_MK5_WEAPON, 'Aura Mk V unleashed!')
-        break
-      case 'pistol':
-        this.handlePistolUpgrade(PISTOL_WEAPON, 'Pistol ready!')
-        break
-      case 'pistolMk2':
-        this.handlePistolUpgrade(PISTOL_MK2_WEAPON, 'Pistol Mk II ready!')
-        break
-      case 'pistolMk3':
-        this.handlePistolUpgrade(PISTOL_MK3_WEAPON, 'Pistol Mk III ready!')
-        break
-      case 'pistolMk4':
-        this.handlePistolUpgrade(PISTOL_MK4_WEAPON, 'Pistol Mk IV ready!')
-        break
-      case 'pistolMk5':
-        this.handlePistolUpgrade(PISTOL_MK5_WEAPON, 'Pistol Mk V ready!')
-        break
-      case 'bomb':
-        this.handleBombUpgrade(BOMB_WEAPON, 'Bomb launcher deployed!')
-        break
-      case 'bombMk2':
-        this.handleBombUpgrade(BOMB_MK2_WEAPON, 'Bombs Mk II primed!')
-        break
-      case 'bombMk3':
-        this.handleBombUpgrade(BOMB_MK3_WEAPON, 'Bombs Mk III unleashed!')
-        break
-      case 'sword':
-        this.handleSwordUpgrade(SWORD_WEAPON, 'Sword technique mastered!')
-        break
-      case 'swordMk2':
-        this.handleSwordUpgrade(SWORD_MK2_WEAPON, 'Sword Mk II swings wider!')
-        break
-      case 'swordMk3':
-        this.handleSwordUpgrade(SWORD_MK3_WEAPON, 'Sword Mk III hits harder!')
-        break
-      case 'swordMk4':
-        this.handleSwordUpgrade(SWORD_MK4_WEAPON, 'Sword Mk IV extends reach!')
-        break
-      case 'swordMk5':
-        this.handleSwordUpgrade(SWORD_MK5_WEAPON, 'Sword Mk V slices everything!')
-        break
       case 'area1':
         this.applyAreaUpgrade()
         break
@@ -266,38 +200,12 @@ export class UpgradeManager {
     return [weaponUpgradeOption, passiveUpgradeOption, otherUpgradeOption].filter((it) => it) as UpgradeOption[]
   }
 
-  private handleAuraUpgrade(weapon: WeaponStats, message: string) {
-    this.hero.hasAura = true
-    if (!this.hero.weaponIds.includes('aura')) {
-      this.hero.weaponIds.push('aura')
+  private applyWeaponUpgrade(weaponUpgrade: UpgradeOption, weaponStats: WeaponStats, message: string) {
+    if (!weaponUpgrade.weaponId) return
+    if (!this.hero.weaponIds.includes(weaponUpgrade.weaponId)) {
+      this.hero.weaponIds.push(weaponUpgrade.weaponId)
     }
-    this.hero.aura.setVisible(true)
-    this.hero.aura.setRadius(weapon.area * this.hero.areaMultiplier)
-    this.combat.setAuraWeapon(weapon)
-    this.hooks.onShowMessage(message)
-  }
-
-  private handlePistolUpgrade(weapon: WeaponStats, message: string) {
-    if (!this.hero.weaponIds.includes('pistol')) {
-      this.hero.weaponIds.push('pistol')
-    }
-    this.combat.setPistolWeapon(weapon)
-    this.hooks.onShowMessage(message)
-  }
-
-  private handleBombUpgrade(weapon: WeaponStats, message: string) {
-    if (!this.hero.weaponIds.includes('bomb')) {
-      this.hero.weaponIds.push('bomb')
-    }
-    this.combat.setBombWeapon(weapon)
-    this.hooks.onShowMessage(message)
-  }
-
-  private handleSwordUpgrade(weapon: WeaponStats, message: string) {
-    if (!this.hero.weaponIds.includes('sword')) {
-      this.hero.weaponIds.push('sword')
-    }
-    this.combat.setSwordWeapon(weapon)
+    this.combat.setWeaponStats(weaponUpgrade.weaponId, weaponStats)
     this.hooks.onShowMessage(message)
   }
 

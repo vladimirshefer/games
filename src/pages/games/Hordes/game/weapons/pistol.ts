@@ -122,7 +122,7 @@ export class Pistol implements Weapon {
     return nearest
   }
 
-  reset() {
+  destroy() {
     this.bullets.forEach((bullet) => bullet.sprite.destroy())
     this.bullets = []
     this.shootElapsed = 0

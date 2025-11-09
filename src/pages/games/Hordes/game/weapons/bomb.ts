@@ -105,7 +105,7 @@ export class Bomb implements Weapon {
     sprite.destroy()
   }
 
-  reset() {
+  destroy() {
     this.bombElapsed = 0
     this.bombs.forEach((bomb) => bomb.sprite.destroy())
     this.bombs = []

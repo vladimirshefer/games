@@ -19,17 +19,11 @@ export function createHero(scene: Phaser.Scene, appearance?: HeroAppearanceOptio
   sprite.setDepth(0.2)
   sprite.setData('radius', HERO_BASE_RADIUS)
 
-  const aura = scene.add.circle(sprite.x, sprite.y, AURA_RADIUS, 0xffeb3b, 0.1)
-  aura.setDepth(-1)
-  aura.setVisible(false)
-
   return {
     sprite,
-    aura,
     radius: HERO_BASE_RADIUS,
     maxHp: HERO_BASE_HP,
     hp: HERO_BASE_HP,
-    hasAura: false,
     upgrades: [],
     weaponIds: [],
     direction: new Phaser.Math.Vector2(0, 0),
@@ -41,7 +35,6 @@ export function createHero(scene: Phaser.Scene, appearance?: HeroAppearanceOptio
 export function moveHero(hero: HeroState, direction: Phaser.Math.Vector2, speed: number, dt: number) {
   hero.sprite.x += direction.x * speed * dt
   hero.sprite.y += direction.y * speed * dt
-  hero.aura.setPosition(hero.sprite.x, hero.sprite.y)
   if (direction.lengthSq() > 0.0001) {
     hero.direction.copy(direction)
   }

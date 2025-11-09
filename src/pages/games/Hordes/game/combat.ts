@@ -27,8 +27,8 @@ export class CombatSystem {
     this.context = context
   }
 
-  reset() {
-    this.weapons.forEach((it) => it.reset())
+  destroy() {
+    this.weapons.forEach((it) => it.destroy())
   }
 
   update(dt: number, worldView: Phaser.Geom.Rectangle) {
@@ -112,23 +112,41 @@ export class CombatSystem {
     this.setWeapon(new Sword(this.scene, this.context, configured, this.damageEnemyWithStats('sword')))
   }
 
-  setWeapon(weapon: Weapon) {
+  setWeaponStats(weaponId: string, weaponStats: WeaponStats | null) {
+    if (!weaponStats) {
+      this.unsetWeapon(weaponId)
+      return
+    }
+    this.originalStats[weaponId] = weaponStats
+    const configured = this.withModifiers(weaponStats)
+    this.setWeapon(this.createWeapon(weaponId, configured))
+  }
+
+  private createWeapon(weaponId: string, weaponStats: WeaponStats): Weapon {
+    const damageEnemy = this.damageEnemyWithStats(weaponId)
+    if (weaponId == 'sword') return new Sword(this.scene, this.context, weaponStats, damageEnemy)
+    if (weaponId == 'aura') return new Aura(this.scene, this.context, weaponStats, damageEnemy)
+    if (weaponId == 'bomb') return new Bomb(this.scene, this.context, weaponStats, damageEnemy)
+    if (weaponId == 'pistol') return new Pistol(this.scene, this.context, weaponStats, damageEnemy)
+    throw new Error(`Unknown weapon id ${weaponId}`)
+  }
+
+  private setWeapon(weapon: Weapon) {
     const index = this.weapons.findIndex((it) => it.id() === weapon.id())
     if (index >= 0) {
       const weapon1 = this.weapons[index]
-      weapon1.reset()
+      weapon1.destroy()
       this.weapons[index] = weapon
     } else {
       this.weapons.push(weapon)
     }
-    weapon.reset()
   }
 
   unsetWeapon(id: string) {
     const index = this.weapons.findIndex((it) => it.id() === id)
     if (index >= 0) {
       const weapon1 = this.weapons[index]
-      weapon1.reset()
+      weapon1.destroy()
       this.weapons.splice(index, 1)
       this.originalStats[id] = undefined
     }

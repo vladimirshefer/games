@@ -28,7 +28,7 @@ interface ExitStats {
  * Core Phaser scene for the Hordes mode: handles hero state, enemy waves,
  * auto-shooting, and camera-following infinite background.
  */
-export class HordesScene extends Phaser.Scene {
+export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.CreateSceneFromObjectConfig {
   private static exitHandler?: (stats: ExitStats) => void
   private hero!: HeroState
   private inputController!: InputController
@@ -92,13 +92,9 @@ export class HordesScene extends Phaser.Scene {
     const { width, height } = this.scale
     this.isGameOver = false
     this.exitHandled = false
-    if (!this.gameOverHud) {
-      this.gameOverHud = new GameOverHud(this)
-    }
-    this.gameOverHud.clear()
     this.cameras.main.setBackgroundColor('#101014')
-    this.time.timeScale = 1
-    this.isPaused = false
+    this.time.timeScale = 0
+    this.isPaused = true
 
     // reset run stats
     STATS_FOR_RUN.weapon_damage = {}
@@ -147,6 +143,7 @@ export class HordesScene extends Phaser.Scene {
       getHero: () => this.hero,
       onWaveAdvanced: (newWave) => {
         this.wave = newWave
+        this.updateHud()
       }
     })
     this.ensureEnemyWalkAnimation()
@@ -157,8 +154,6 @@ export class HordesScene extends Phaser.Scene {
     this.nextLevelXp = this.getNextLevelXp(this.level)
     this.pendingLevelUps = 0
     this.currentLevelXpBase = 0
-    this.hero.hasAura = false
-    this.hero.aura.setVisible(false)
 
     this.inputController = createInputController(this)
     this.combat = new CombatSystem(this, {
@@ -171,7 +166,7 @@ export class HordesScene extends Phaser.Scene {
     })
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.combat.reset()
+      this.combat.destroy()
       this.inputController.destroy()
       this.xpManager.destroyAll()
       this.upgradeManager.destroy()
@@ -248,6 +243,10 @@ export class HordesScene extends Phaser.Scene {
 
     this.game.events.on('wavesOver', () => (this.wavesOver = true))
 
+    if (!this.gameOverHud) {
+      this.gameOverHud = new GameOverHud(this)
+      this.gameOverHud.clear()
+    }
     // Wave timers start after the player picks a starting weapon.
   }
 
@@ -538,13 +537,17 @@ export class HordesScene extends Phaser.Scene {
    * Writes the latest wave, level, and weapon values to the HUD text element.
    */
   private updateHud() {
-    this.infoText.setText(`Wave ${this.wave + 1} | LVL ${this.level}\nKills ${this.kills}`)
+    this.updateInfoText()
     this.weaponHud.refresh()
     this.heroHpBar.updateValue(this.hero.hp, this.hero.maxHp)
     const xpForLevel = this.nextLevelXp - this.currentLevelXpBase
     const xpIntoLevel = this.totalXp - this.currentLevelXpBase
     const ratio = xpForLevel > 0 ? xpIntoLevel / xpForLevel : 0
     this.heroXpBar.updateValue(ratio)
+  }
+
+  updateInfoText() {
+    this.infoText.setText(`Wave ${this.wave + 1} | LVL ${this.level}\nKills ${this.kills}`)
   }
 
   private ensureEnemyWalkAnimation() {

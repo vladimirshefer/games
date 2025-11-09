@@ -74,6 +74,13 @@ export const SWORD_MK3_WEAPON: WeaponStats = swordUpgrade(SWORD_MK2_WEAPON)
 export const SWORD_MK4_WEAPON: WeaponStats = swordUpgrade(SWORD_MK3_WEAPON)
 export const SWORD_MK5_WEAPON: WeaponStats = swordUpgrade(SWORD_MK4_WEAPON)
 
+export const WEAPON_UPGRADE_STATS: { [key: string]: WeaponStats[] } = {
+  sword: [SWORD_WEAPON, SWORD_MK2_WEAPON, SWORD_MK3_WEAPON, SWORD_MK4_WEAPON, SWORD_MK5_WEAPON],
+  aura: [AURA_WEAPON, AURA_MK2_WEAPON, AURA_MK3_WEAPON, AURA_MK4_WEAPON, AURA_MK5_WEAPON],
+  bomb: [BOMB_WEAPON, BOMB_MK2_WEAPON, BOMB_MK3_WEAPON],
+  pistol: [PISTOL_WEAPON, PISTOL_MK2_WEAPON, PISTOL_MK3_WEAPON, PISTOL_MK4_WEAPON, PISTOL_MK5_WEAPON]
+}
+
 export interface UpgradeOption {
   id: string
   label: string

@@ -11,6 +11,7 @@ export class Aura implements Weapon {
   private readonly context: CombatContext
   private readonly stats: WeaponStats
   private readonly damageEnemy: (enemy: EnemySprite, amount: number, mob: MobStats) => void
+  private aura!: Phaser.GameObjects.Shape
 
   constructor(
     scene: Phaser.Scene,
@@ -22,9 +23,26 @@ export class Aura implements Weapon {
     this.context = context
     this.stats = stats
     this.damageEnemy = damageEnemy
+
+    this.init()
+  }
+
+  init() {
+    this.aura?.destroy()
+    const aura = this.scene.add.circle(
+      this.context.hero.sprite.x,
+      this.context.hero.sprite.y,
+      this.stats.area,
+      0xffeb3b,
+      0.1
+    )
+    aura.setDepth(-1)
+    aura.setVisible(true)
+    this.aura = aura
   }
 
   update(_dt: number, enemies: EnemySprite[], _worldView: Phaser.Geom.Rectangle): void {
+    this.aura.setPosition(this.context.hero.sprite.x, this.context.hero.sprite.y)
     enemies.forEach((enemy) => {
       const mob = enemy.getData('mob') as MobStats | undefined
       if (!enemy.active || !mob) return false
@@ -65,7 +83,7 @@ export class Aura implements Weapon {
     }
   }
 
-  reset() {
-    // empty
+  destroy() {
+    this.aura?.destroy()
   }
 }
