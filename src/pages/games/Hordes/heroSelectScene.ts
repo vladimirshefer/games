@@ -5,6 +5,7 @@ import { ONE_BIT_PACK } from './game/sprite.ts'
 
 const HERO_CARD_WIDTH = 200
 const HERO_CARD_HEIGHT = 260
+const DRAG_THRESHOLD = 6
 
 export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes.CreateSceneFromObjectConfig {
   private hasChosen = false
@@ -15,6 +16,8 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
   private isDraggingHeroList = false
   private dragStartPointerY = 0
   private dragStartListY = 0
+  private scrollPointerId: number | null = null
+  private heroSelectionLocked = false
 
   constructor() {
     super(HERO_SELECT_SCENE_KEY)
@@ -147,7 +150,10 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
     })
     container.on('pointerover', () => background.setStrokeStyle(2, 0xffeb3b, 0.9))
     container.on('pointerout', () => background.setStrokeStyle(2, 0xffffff, 0.15))
-    container.on('pointerdown', () => this.handleHeroPick(hero.id))
+    container.on('pointerup', () => {
+      if (this.heroSelectionLocked) return
+      this.handleHeroPick(hero.id)
+    })
     return container
   }
 
@@ -155,17 +161,25 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
     this.input.on('wheel', (_pointer: any, _objects: any, _dx: number, dy: number) => this.adjustHeroListPosition(-dy))
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (!this.isPointerInHeroViewport(pointer)) return
-      this.isDraggingHeroList = true
+      this.scrollPointerId = pointer.id
+      this.isDraggingHeroList = false
+      this.heroSelectionLocked = false
       this.dragStartPointerY = pointer.y
       this.dragStartListY = this.heroListContainer?.y ?? 0
     })
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isDraggingHeroList || !pointer.isDown) return
+      if (!pointer.isDown || pointer.id !== this.scrollPointerId) return
       const delta = pointer.y - this.dragStartPointerY
-      this.setHeroListPosition(this.dragStartListY + delta)
+      if (!this.isDraggingHeroList && Math.abs(delta) >= DRAG_THRESHOLD) {
+        this.isDraggingHeroList = true
+        this.heroSelectionLocked = true
+      }
+      if (this.isDraggingHeroList) {
+        this.setHeroListPosition(this.dragStartListY + delta)
+      }
     })
-    this.input.on('pointerup', () => this.endHeroListDrag())
-    this.input.on('pointerupoutside', () => this.endHeroListDrag())
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.endHeroListDrag(pointer))
+    this.input.on('pointerupoutside', (pointer: Phaser.Input.Pointer) => this.endHeroListDrag(pointer))
   }
 
   private adjustHeroListPosition(delta: number) {
@@ -186,8 +200,16 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
     return pointer.y >= top && pointer.y <= bottom
   }
 
-  private endHeroListDrag() {
+  private endHeroListDrag(pointer: Phaser.Input.Pointer) {
+    if (pointer.id !== this.scrollPointerId) return
+    const unlockSelection = this.isDraggingHeroList
     this.isDraggingHeroList = false
+    this.scrollPointerId = null
+    if (unlockSelection) {
+      this.time.delayedCall(0, () => {
+        this.heroSelectionLocked = false
+      })
+    }
   }
 
   private handleHeroPick(heroId: HeroId) {
