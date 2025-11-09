@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import Phaser from 'phaser'
 import { HordesScene } from './scene'
+import { HeroSelectScene } from './heroSelectScene'
 
 const DEFAULT_GAME_WIDTH = 600
 const DEFAULT_GAME_HEIGHT = 800
@@ -10,7 +11,7 @@ const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   width: DEFAULT_GAME_WIDTH,
   height: DEFAULT_GAME_HEIGHT,
   backgroundColor: '#101014',
-  scene: HordesScene,
+  scene: [HeroSelectScene, HordesScene],
   fps: {
     target: 60
   },

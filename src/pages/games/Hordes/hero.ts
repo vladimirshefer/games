@@ -5,11 +5,17 @@ import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
 
 export const AURA_RADIUS = MOB_BASE_RADIUS * 2
 
-export function createHero(scene: Phaser.Scene): HeroState {
-  const sprite = scene.add.sprite(0, 0, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.hero)
+export interface HeroAppearanceOptions {
+  frame?: number
+  tint?: number
+}
+
+export function createHero(scene: Phaser.Scene, appearance?: HeroAppearanceOptions): HeroState {
+  const frame = appearance?.frame ?? ONE_BIT_PACK_KNOWN_FRAMES.hero
+  const sprite = scene.add.sprite(0, 0, ONE_BIT_PACK.key, frame)
   sprite.setOrigin(0.5)
   sprite.setDisplaySize(HERO_BASE_RADIUS * 2, HERO_BASE_RADIUS * 2)
-  sprite.setTint(0x4caf50)
+  sprite.setTint(appearance?.tint ?? 0x4caf50)
   sprite.setDepth(0.2)
   sprite.setData('radius', HERO_BASE_RADIUS)
 

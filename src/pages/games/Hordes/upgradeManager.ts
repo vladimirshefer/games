@@ -135,7 +135,7 @@ export class UpgradeManager {
     this.clearOverlay()
   }
 
-  private applyUpgrade(id: string) {
+  applyUpgrade(id: string) {
     if (!this.hero.upgrades.includes(id)) {
       this.hero.upgrades.push(id)
     }

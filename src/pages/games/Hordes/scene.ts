@@ -13,6 +13,8 @@ import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from './game/sprite.ts'
 import { HERO_BASE_SPEED, LEVEL_BASE_PROGRESSION, LEVEL_BASE_XP, WORLD_BOUNDS } from './game/constants.ts'
 import { WeaponHud } from './game/view/hud/WeaponHud.ts'
 import { GameOverHud } from './game/view/hud/GameOverHud.ts'
+import { DEFAULT_HERO, getHeroById, type HeroDefinition } from './heroes.ts'
+import { HORDES_SCENE_KEY } from './sceneKeys.ts'
 
 interface ExitStats {
   kills: number
@@ -182,9 +184,18 @@ export class HordesScene extends Phaser.Scene {
   private isGameOver: boolean = false
   private exitHandled: boolean = false
   private gameOverHud?: GameOverHud
+  private heroDefinition: HeroDefinition = DEFAULT_HERO
+
+  constructor() {
+    super(HORDES_SCENE_KEY)
+  }
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     HordesScene.exitHandler = handler
+  }
+
+  init(data?: { heroId?: string }) {
+    this.heroDefinition = getHeroById(data?.heroId)
   }
 
   preload() {
@@ -235,7 +246,9 @@ export class HordesScene extends Phaser.Scene {
     this.background.setScrollFactor(0)
     this.background.setDepth(-2)
 
-    this.hero = createHero(this)
+    const heroDefinition = this.heroDefinition ?? DEFAULT_HERO
+    this.hero = createHero(this, { frame: heroDefinition.spriteFrame, tint: heroDefinition.tint })
+    this.heroDefinition = heroDefinition
     this.heroHpBar = new HeroHpBar(this, this.hero)
     this.heroXpBar = new HeroXpBar(this, this.hero)
 
@@ -282,6 +295,8 @@ export class HordesScene extends Phaser.Scene {
       onUpgradeApplied: () => this.updateHud(),
       onShowMessage: (message) => this.showWeaponUpgrade(message)
     })
+
+    this.upgradeManager.applyUpgrade(heroDefinition.startingUpgradeId)
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.combat.reset()
