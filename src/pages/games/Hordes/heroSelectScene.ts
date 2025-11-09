@@ -3,8 +3,18 @@ import { HERO_ROSTER, type HeroDefinition, type HeroId } from './heroes.ts'
 import { HERO_SELECT_SCENE_KEY, HORDES_SCENE_KEY } from './sceneKeys.ts'
 import { ONE_BIT_PACK } from './game/sprite.ts'
 
+const HERO_CARD_WIDTH = 200
+const HERO_CARD_HEIGHT = 260
+
 export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes.CreateSceneFromObjectConfig {
   private hasChosen = false
+  private heroListContainer?: Phaser.GameObjects.Container
+  private heroListBounds = { minY: 0, maxY: 0 }
+  private heroViewportTop = 0
+  private heroViewportHeight = 0
+  private isDraggingHeroList = false
+  private dragStartPointerY = 0
+  private dragStartListY = 0
 
   constructor() {
     super(HERO_SELECT_SCENE_KEY)
@@ -40,28 +50,65 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
       })
       .setOrigin(0.5)
 
-    const spacing = 220
-    const startX = width / 2 - ((HERO_ROSTER.length - 1) * spacing) / 2
+    this.heroViewportTop = 190
+    this.heroViewportHeight = height - this.heroViewportTop - 40
+    const viewportWidth = Math.min(width - 40, HERO_CARD_WIDTH * 2 + 120)
+    const maskShape = this.add
+      .rectangle(
+        width / 2,
+        this.heroViewportTop + this.heroViewportHeight / 2,
+        viewportWidth,
+        this.heroViewportHeight,
+        0x000000,
+        0
+      )
+      .setVisible(false)
+
+    this.heroListContainer = this.add.container(width / 2, 0)
+    this.heroListContainer.setMask(maskShape.createGeometryMask())
+
+    const columns = 2
+    const horizontalOffset = HERO_CARD_WIDTH / 2 + 5
+    const verticalSpacing = HERO_CARD_HEIGHT + 5
+    let contentTop = Number.POSITIVE_INFINITY
+    let contentBottom = Number.NEGATIVE_INFINITY
 
     HERO_ROSTER.forEach((hero, index) => {
-      const cardX = startX + index * spacing
-      this.createHeroCard(hero, cardX, height / 2 + 40)
+      const column = index % columns
+      const row = Math.floor(index / columns)
+      const card = this.createHeroCard(hero)
+      const cardX = column === 0 ? -horizontalOffset : horizontalOffset
+      const cardY = this.heroViewportTop + HERO_CARD_HEIGHT / 2 + row * verticalSpacing
+      card.setPosition(cardX, cardY)
+      this.heroListContainer!.add(card)
+      contentTop = Math.min(contentTop, cardY - HERO_CARD_HEIGHT / 2)
+      contentBottom = Math.max(contentBottom, cardY + HERO_CARD_HEIGHT / 2)
     })
+
+    if (contentTop === Number.POSITIVE_INFINITY) {
+      contentTop = this.heroViewportTop
+      contentBottom = this.heroViewportTop
+    }
+
+    const viewportBottom = this.heroViewportTop + this.heroViewportHeight
+    const minY = Math.min(viewportBottom - contentBottom, 0)
+    this.heroListBounds = { minY, maxY: 0 }
+    this.heroListContainer.setY(0)
+
+    this.setupHeroListInput()
   }
 
-  private createHeroCard(hero: HeroDefinition, x: number, y: number) {
-    const cardWidth = 200
-    const cardHeight = 260
-    const container = this.add.container(x, y)
-    container.setSize(cardWidth, cardHeight)
+  private createHeroCard(hero: HeroDefinition) {
+    const container = this.add.container(0, 0)
+    container.setSize(HERO_CARD_WIDTH, HERO_CARD_HEIGHT)
 
     const background = this.add
-      .rectangle(0, 0, cardWidth, cardHeight, 0x1b1b2b, 0.92)
+      .rectangle(0, 0, HERO_CARD_WIDTH, HERO_CARD_HEIGHT, 0x1b1b2b, 0.92)
       .setStrokeStyle(2, 0xffffff, 0.15)
       .setOrigin(0.5)
 
     const sprite = this.add
-      .sprite(0, -cardHeight / 2 + 70, ONE_BIT_PACK.key, hero.spriteFrame)
+      .sprite(0, -HERO_CARD_HEIGHT / 2 + 70, ONE_BIT_PACK.key, hero.spriteFrame)
       .setDisplaySize(56, 56)
       .setOrigin(0.5)
       .setTint(hero.tint ?? 0xffffff)
@@ -87,20 +134,60 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
         color: '#cfd8dc',
         fontFamily: 'monospace',
         fontSize: '14px',
-        wordWrap: { width: cardWidth - 40 }
+        wordWrap: { width: HERO_CARD_WIDTH - 40 }
       })
       .setOrigin(0.5, 0)
 
     container.add([background, sprite, nameText, weaponText, description])
 
     container.setInteractive({
-      hitArea: new Phaser.Geom.Rectangle(0, 0, cardWidth, cardHeight),
+      hitArea: new Phaser.Geom.Rectangle(0, 0, HERO_CARD_WIDTH, HERO_CARD_HEIGHT),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
       useHandCursor: true
     })
     container.on('pointerover', () => background.setStrokeStyle(2, 0xffeb3b, 0.9))
     container.on('pointerout', () => background.setStrokeStyle(2, 0xffffff, 0.15))
     container.on('pointerdown', () => this.handleHeroPick(hero.id))
+    return container
+  }
+
+  private setupHeroListInput() {
+    this.input.on('wheel', (_pointer: any, _objects: any, _dx: number, dy: number) => this.adjustHeroListPosition(-dy))
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (!this.isPointerInHeroViewport(pointer)) return
+      this.isDraggingHeroList = true
+      this.dragStartPointerY = pointer.y
+      this.dragStartListY = this.heroListContainer?.y ?? 0
+    })
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!this.isDraggingHeroList || !pointer.isDown) return
+      const delta = pointer.y - this.dragStartPointerY
+      this.setHeroListPosition(this.dragStartListY + delta)
+    })
+    this.input.on('pointerup', () => this.endHeroListDrag())
+    this.input.on('pointerupoutside', () => this.endHeroListDrag())
+  }
+
+  private adjustHeroListPosition(delta: number) {
+    if (!this.heroListContainer || delta === 0) return
+    this.setHeroListPosition(this.heroListContainer.y + delta)
+  }
+
+  private setHeroListPosition(value: number) {
+    if (!this.heroListContainer) return
+    const { minY, maxY } = this.heroListBounds
+    const clamped = Phaser.Math.Clamp(value, minY, maxY)
+    this.heroListContainer.setY(clamped)
+  }
+
+  private isPointerInHeroViewport(pointer: Phaser.Input.Pointer) {
+    const top = this.heroViewportTop
+    const bottom = top + this.heroViewportHeight
+    return pointer.y >= top && pointer.y <= bottom
+  }
+
+  private endHeroListDrag() {
+    this.isDraggingHeroList = false
   }
 
   private handleHeroPick(heroId: HeroId) {
