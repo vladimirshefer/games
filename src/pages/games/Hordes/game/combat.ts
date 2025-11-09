@@ -43,7 +43,7 @@ export class CombatSystem {
     this.setAuraWeapon(this.originalStats['aura'] ?? null)
   }
 
-  private damageEnemy(enemy: EnemySprite, amount: number, mob: MobStats) {
+  private damageEnemy(enemy: EnemySprite, amount: number, mob: MobStats, weaponId: string) {
     if (!enemy.active) return false
 
     const currentHp = (enemy.getData('hp') as number | undefined) ?? mob.health
@@ -54,6 +54,9 @@ export class CombatSystem {
     if (hpText?.active) {
       hpText.setText(`${Math.max(nextHp, 0)}`)
     }
+
+    const actualDamage = currentHp - nextHp
+    STATS_FOR_RUN.weapon_damage[weaponId] = (STATS_FOR_RUN.weapon_damage[weaponId] ?? 0) + actualDamage
 
     if (nextHp <= 0) {
       this.context.onEnemyKilled(enemy, mob)
@@ -75,9 +78,8 @@ export class CombatSystem {
     this.setWeapon(new Pistol(this.scene, this.context, configured, this.damageEnemyWithStats('pistol')))
   }
 
-  private damageEnemyWithStats = (weapon: string) => (e: EnemySprite, a: number, s: MobStats) => {
-    STATS_FOR_RUN.weapon_damage[weapon] = (STATS_FOR_RUN.weapon_damage[weapon] ?? 0) + a
-    this.damageEnemy(e, a, s)
+  private damageEnemyWithStats = (weapon: string) => (enemy: EnemySprite, damageAmount: number, mobStats: MobStats) => {
+    this.damageEnemy(enemy, damageAmount, mobStats, weapon)
   }
 
   setAuraWeapon(weapon: WeaponStats | null) {
