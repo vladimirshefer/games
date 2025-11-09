@@ -18,12 +18,10 @@ export class WeaponHud extends Phaser.GameObjects.Container {
   }
 
   private readonly hero: HeroState
-  private readonly infoText: Phaser.GameObjects.Text
 
-  constructor(scene: Phaser.Scene, infoText: Phaser.GameObjects.Text, hero: HeroState) {
-    super(scene, 16, infoText.y + infoText.height + 12)
+  constructor(scene: Phaser.Scene, hero: HeroState) {
+    super(scene, 16, 30)
     this.hero = hero
-    this.infoText = infoText
     this.setDepth(2)
     this.setScrollFactor(0)
     scene.add.existing(this)
@@ -31,7 +29,7 @@ export class WeaponHud extends Phaser.GameObjects.Container {
 
   refresh() {
     this.removeAll(true)
-    this.setPosition(16, this.infoText.y + this.infoText.height + 12)
+    this.setPosition(16, 30)
     const ICON_SIZE = 20
 
     this.hero.weaponIds.forEach((weaponId, index) => {

@@ -193,7 +193,7 @@ export class HordesScene extends Phaser.Scene {
       .setDepth(2)
     this.infoText.setScrollFactor(0)
 
-    this.weaponHud = new WeaponHud(this, this.infoText, this.hero)
+    this.weaponHud = new WeaponHud(this, this.hero)
 
     this.updateHud()
 
