@@ -29,6 +29,7 @@ export class MapRenderer {
   private readonly map: GameMap
   private readonly tileSpriteLookup = new Map<string, Phaser.GameObjects.Sprite>()
   private readonly pathIndexByCell = new Map<string, number>()
+  private viewportPadding = { top: 0, right: 0, bottom: 0, left: 0 }
   private gridTileSize = 0
   private gridOriginX = 0
   private gridOriginY = 0
@@ -39,6 +40,13 @@ export class MapRenderer {
     this.map.path.forEach((node, index) => {
       this.pathIndexByCell.set(this.cellKey(node.col, node.row), index)
     })
+  }
+
+  setViewportPadding(padding: Partial<typeof this.viewportPadding>) {
+    this.viewportPadding = {
+      ...this.viewportPadding,
+      ...padding
+    }
   }
 
   render() {
@@ -105,13 +113,17 @@ export class MapRenderer {
   }
 
   private updateMetrics(width: number, height: number) {
-    const tileWidth = width / this.map.cols
-    const tileHeight = height / this.map.rows
+    const usableWidth = Math.max(0, width - this.viewportPadding.left - this.viewportPadding.right)
+    const usableHeight = Math.max(0, height - this.viewportPadding.top - this.viewportPadding.bottom)
+    const tileWidth = usableWidth / this.map.cols
+    const tileHeight = usableHeight / this.map.rows
     this.gridTileSize = Math.min(tileWidth, tileHeight)
     const mapWidth = this.gridTileSize * this.map.cols
     const mapHeight = this.gridTileSize * this.map.rows
-    this.gridOriginX = (width - mapWidth) / 2
-    this.gridOriginY = (height - mapHeight) / 2
+    const extraWidth = Math.max(0, usableWidth - mapWidth)
+    const extraHeight = Math.max(0, usableHeight - mapHeight)
+    this.gridOriginX = this.viewportPadding.left + extraWidth / 2
+    this.gridOriginY = this.viewportPadding.top + extraHeight / 2
   }
 
   private appearanceForTile(col: number, row: number, type: TileType): TileAppearance {

@@ -37,5 +37,7 @@ export const ONE_BIT_PACK_KNOWN_FRAMES = {
   aura: 12 * ENEMY_SPRITESHEET_COLUMNS + 27,
   scull: 12 * ENEMY_SPRITESHEET_COLUMNS + 34,
   healPotion: 13 * ENEMY_SPRITESHEET_COLUMNS + 32, // 14th row (0-indexed), 17th from the right
+  dollar: 16 * ENEMY_SPRITESHEET_COLUMNS + 35, // 14th row (0-indexed), 17th from the right
+  arrowRightOutline: 20 * ENEMY_SPRITESHEET_COLUMNS + 29, // 14th row (0-indexed), 17th from the right
   tower1: 19 * ENEMY_SPRITESHEET_COLUMNS + 2
 }

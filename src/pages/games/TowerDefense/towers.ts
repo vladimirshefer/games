@@ -304,9 +304,7 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
     if (!aoeRadius) return false
     const target = this.findTargetForTower(tower)
     if (!target) return false
-    overlay
-      ?.lineStyle(2, 0xfbbf24, 0.4)
-      .lineBetween(tower.sprite.x, tower.sprite.y, target.sprite.x, target.sprite.y)
+    overlay?.lineStyle(2, 0xfbbf24, 0.4).lineBetween(tower.sprite.x, tower.sprite.y, target.sprite.x, target.sprite.y)
     this.spawnBombProjectile(tower, target, aoeRadius)
     return true
   }

@@ -11,7 +11,7 @@ const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   scene: TowerDefenseScene,
   fps: { target: 60 },
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
   }
 }
@@ -112,7 +112,7 @@ const TowerDefensePage = () => {
       const width = parent.clientWidth
       const height = parent.clientHeight
       if (width && height) {
-        game.scale.resize(width, height)
+        game.scale.setGameSize(width, height)
       }
     }
 
@@ -194,8 +194,9 @@ const TowerDefensePage = () => {
           >
             <h2 className="text-xl font-semibold">How to Play</h2>
             <ul className="list-disc space-y-1 pl-5 opacity-80">
-              <li>Click a glowing pad to spend 25 coins on a tower.</li>
+              <li>Drag a tower card from the right sidebar onto a glowing pad to build it.</li>
               <li>Towers auto-target creeps closest to your base.</li>
+              <li>Tap the info arrow to pause the action and read tower stats.</li>
               <li>Kills drop coins; leaks damage the base.</li>
               <li>Survive as long as you can — waves keep scaling.</li>
             </ul>

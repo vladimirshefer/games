@@ -24,7 +24,8 @@ import {
   type Tower,
   TOWER_DEFINITIONS,
   TowerController,
-  type TowerDefinition
+  type TowerDefinition,
+  type TowerTypeKey
 } from './towers.ts'
 
 interface ExitStats {
@@ -54,10 +55,24 @@ interface Enemy {
   baseTint: number
 }
 
+interface TowerSidebarEntry {
+  definition: TowerDefinition
+  container: Phaser.GameObjects.Container
+  background: Phaser.GameObjects.Rectangle
+  costText: Phaser.GameObjects.Text
+  icon: Phaser.GameObjects.Sprite
+}
+
+interface DragState {
+  definition: TowerDefinition
+  pointerId: number
+  sprite: Phaser.GameObjects.Sprite
+}
+
 /**
  * Lightweight Phaser scene implementing a simple tower defence loop.
  */
-export class TowerDefenseScene extends Phaser.Scene {
+export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scenes.CreateSceneFromObjectConfig {
   private static exitHandler?: (stats: ExitStats) => void
 
   private readonly mapGenerator = new TowerDefenseMapGenerator({
@@ -92,12 +107,19 @@ export class TowerDefenseScene extends Phaser.Scene {
   private baseMarker!: Phaser.GameObjects.Rectangle
   private runEnded = false
   private mapRotatedForVerticalMode = false
+  private sidebarContainer?: Phaser.GameObjects.Container
+  private sidebarBg?: Phaser.GameObjects.Rectangle
+  private sidebarEntries = new Map<TowerTypeKey, TowerSidebarEntry>()
+  private sidebarWidth = 0
+  private placementOverlay?: Phaser.GameObjects.Graphics
+  private dragState?: DragState
+  private isHudPaused = false
+  private towerDetailsHud?: { definition: TowerDefinition; container: Phaser.GameObjects.Container }
 
   static registerExitHandler(handler?: (stats: ExitStats) => void) {
     TowerDefenseScene.exitHandler = handler
   }
 
-  // Loads shared sprite sheet when needed.
   preload() {
     this.load.setPath('')
     if (!this.textures.exists(ONE_BIT_PACK.key)) {
@@ -119,6 +141,7 @@ export class TowerDefenseScene extends Phaser.Scene {
 
     this.enemyOverlay = this.add.graphics().setDepth(5)
     this.towerOverlay = this.add.graphics().setDepth(4)
+    this.placementOverlay = this.add.graphics().setDepth(16)
     this.towerController = new TowerController<Enemy>({
       getEnemies: () => this.enemies,
       getOverlay: () => this.towerOverlay,
@@ -126,13 +149,21 @@ export class TowerDefenseScene extends Phaser.Scene {
       onKill: (enemy) => this.handleKill(enemy)
     })
 
+    this.sidebarWidth = this.computeSidebarWidth()
     this.mapRenderer = new MapRenderer(this, this.gameMap)
+    this.mapRenderer.setViewportPadding({
+      left: 16,
+      right: this.sidebarWidth + 24,
+      top: 16,
+      bottom: 24
+    })
     this.mapRenderer.render()
 
     this.createPath()
     this.createBaseMarker()
     this.createBuildSpots()
     this.createHud()
+    this.createSidebar()
     this.configureInput()
 
     this.scale.on('resize', this.handleResize, this)
@@ -141,7 +172,7 @@ export class TowerDefenseScene extends Phaser.Scene {
 
   // Frame update loop.
   update(_: number, delta: number) {
-    if (this.runEnded) return
+    if (this.runEnded || this.isHudPaused) return
     const deltaSeconds = delta / 1000
     this.updateEnemies(deltaSeconds)
     this.updateTowers(delta)
@@ -219,7 +250,7 @@ export class TowerDefenseScene extends Phaser.Scene {
       fontSize: '16px',
       color: '#7dd3fc'
     })
-    this.hudHint = this.add.text(16, 154, this.selectedTowerDefinition.description, {
+    this.hudHint = this.add.text(16, 154, 'Drag towers from the sidebar. Tap a placed tower to upgrade.', {
       ...this.hudStyle(),
       fontSize: '14px',
       color: '#94a3b8'
@@ -230,11 +261,16 @@ export class TowerDefenseScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.endRun())
     this.add
-      .text(this.scale.width / 2, this.scale.height - 24, 'Press 1-4 to swap. Click tower to upgrade.', {
-        ...this.hudStyle(),
-        fontSize: '14px',
-        color: '#9ca3af'
-      })
+      .text(
+        this.scale.width / 2,
+        this.scale.height - 24,
+        'Drag towers from the sidebar • Info buttons pause the game.',
+        {
+          ...this.hudStyle(),
+          fontSize: '14px',
+          color: '#9ca3af'
+        }
+      )
       .setOrigin(0.5, 1)
     this.refreshHud()
   }
@@ -243,39 +279,338 @@ export class TowerDefenseScene extends Phaser.Scene {
   private configureInput() {
     const keyboard = this.input.keyboard
     keyboard?.on('keydown-ESC', () => this.endRun())
-    keyboard?.on('keydown-ONE', () => this.selectTowerByShortcut('1'))
-    keyboard?.on('keydown-TWO', () => this.selectTowerByShortcut('2'))
-    keyboard?.on('keydown-THREE', () => this.selectTowerByShortcut('3'))
-    keyboard?.on('keydown-FOUR', () => this.selectTowerByShortcut('4'))
-    keyboard?.on('keydown-NUMPAD_ONE', () => this.selectTowerByShortcut('1'))
-    keyboard?.on('keydown-NUMPAD_TWO', () => this.selectTowerByShortcut('2'))
-    keyboard?.on('keydown-NUMPAD_THREE', () => this.selectTowerByShortcut('3'))
-    keyboard?.on('keydown-NUMPAD_FOUR', () => this.selectTowerByShortcut('4'))
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.runEnded) return
-      const spot = this.buildSpots.find((candidate) => {
-        const bounds = candidate.marker.getBounds()
-        return bounds.contains(pointer.worldX, pointer.worldY)
-      })
-      if (!spot) return
-      if (spot.occupied) {
-        this.tryUpgradeTower(spot, pointer.worldX, pointer.worldY)
-        return
-      }
-      const cost = this.selectedTowerDefinition.levels[0].cost
-      if (this.coins < cost) {
-        this.showFloatingText(pointer.worldX, pointer.worldY, 'Not enough coins')
-        return
-      }
-      this.placeTower(spot)
+      if (this.runEnded || this.isHudPaused || this.dragState) return
+      if (pointer.event?.defaultPrevented) return
+      const spot = this.getBuildSpotAt(pointer.worldX, pointer.worldY)
+      if (!spot || !spot.occupied) return
+      this.tryUpgradeTower(spot, pointer.worldX, pointer.worldY)
+    })
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!this.dragState || pointer.id !== this.dragState.pointerId) return
+      this.updateTowerDrag(pointer)
+    })
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (!this.dragState || pointer.id !== this.dragState.pointerId) return
+      this.completeTowerDrag(pointer)
+    })
+    this.input.on('pointerupoutside', (pointer: Phaser.Input.Pointer) => {
+      if (!this.dragState || pointer.id !== this.dragState.pointerId) return
+      this.cancelTowerDrag()
     })
   }
 
-  private selectTowerByShortcut(shortcut: string) {
-    const definition = TOWER_DEFINITIONS.find((candidate) => candidate.shortcut === shortcut)
-    if (!definition || definition === this.selectedTowerDefinition) return
+  private createSidebar() {
+    this.sidebarContainer?.destroy(true)
+    this.sidebarBg = undefined
+    this.sidebarEntries.clear()
+    const width = this.sidebarWidth
+    const height = this.scale.height
+    const container = this.add.container(this.scale.width - width, 0).setDepth(12)
+    this.sidebarContainer = container
+    const background = this.add
+      .rectangle(width / 2, height / 2, width, height, 0x050a11, 0.92)
+      .setOrigin(0.5)
+      .setInteractive()
+    background.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      pointer.event?.stopPropagation()
+      pointer.event?.preventDefault()
+    })
+    container.add(background)
+    this.sidebarBg = background
+
+    const title = this.add
+      .text(width / 2, 16, 'Towers', {
+        ...this.hudStyle(),
+        fontSize: '20px',
+        color: '#f8fafc'
+      })
+      .setOrigin(0.5, 0)
+    container.add(title)
+
+    const cardWidth = width - 24
+    const cardHeight = 76
+    let offsetY = 56
+
+    for (const definition of TOWER_DEFINITIONS) {
+      const card = this.add.container(12, offsetY)
+      const cardBg = this.add
+        .rectangle(0, 0, cardWidth, cardHeight, 0x111827, 0.9)
+        .setOrigin(0)
+        .setStrokeStyle(1, 0x1f2937, 0.8)
+        .setInteractive({ useHandCursor: true })
+      const startDrag = (pointer: Phaser.Input.Pointer) => {
+        pointer.event?.stopPropagation()
+        pointer.event?.preventDefault()
+        if (pointer.event && 'button' in pointer.event && pointer.event.button !== 0) return
+        this.startTowerDrag(definition, pointer)
+      }
+      cardBg.on('pointerdown', startDrag)
+
+      const iconSize = Math.min(48, cardHeight - 20)
+      const icon = this.add
+        .sprite(18, cardHeight / 2, ONE_BIT_PACK.key, definition.spriteFrame)
+        .setOrigin(0, 0.5)
+        .setDisplaySize(iconSize, iconSize)
+        .setTint(definition.levelTints?.[0] ?? DEFAULT_TOWER_LEVEL_TINTS[0])
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', startDrag)
+
+      const label = this.add
+        .text(icon.x + iconSize + 10, cardHeight / 2 - 16, definition.label, {
+          ...this.hudStyle(),
+          fontSize: '16px'
+        })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', startDrag)
+
+      const helper = this.add.text(icon.x + iconSize + 10, cardHeight / 2 + 6, 'Drag to build', {
+        ...this.hudStyle(),
+        fontSize: '12px',
+        color: '#94a3b8'
+      })
+
+      const costIcon = this.add
+        .sprite(cardWidth - 76, cardHeight / 2, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.dollar)
+        .setOrigin(0, 0.5)
+        .setDisplaySize(18, 18)
+        .setTint(0xfacc15)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', startDrag)
+
+      const costText = this.add
+        .text(costIcon.x + 20, cardHeight / 2, `${definition.levels[0].cost}`, {
+          ...this.hudStyle(),
+          fontSize: '16px',
+          color: '#facc15'
+        })
+        .setOrigin(0, 0.5)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', startDrag)
+
+      const infoButton = this.add
+        .sprite(cardWidth - 24, cardHeight / 2, ONE_BIT_PACK.key, ONE_BIT_PACK_KNOWN_FRAMES.arrowRightOutline)
+        .setOrigin(0.5)
+        .setDisplaySize(20, 20)
+        .setTint(0x7dd3fc)
+        .setInteractive({ useHandCursor: true })
+      infoButton.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        pointer.event?.stopPropagation()
+        pointer.event?.preventDefault()
+        this.openTowerDetails(definition)
+      })
+
+      card.add([cardBg, icon, label, helper, costIcon, costText, infoButton])
+      container.add(card)
+      this.sidebarEntries.set(definition.key, {
+        definition,
+        container: card,
+        background: cardBg,
+        costText,
+        icon
+      })
+      offsetY += cardHeight + 16
+    }
+
+    this.refreshTowerCardsAffordability()
+  }
+
+  private computeSidebarWidth() {
+    const width = this.scale.width
+    if (width < 640) {
+      return Math.max(140, Math.round(width * 0.38))
+    }
+    if (width < 960) {
+      return 180
+    }
+    return 240
+  }
+
+  private startTowerDrag(definition: TowerDefinition, pointer: Phaser.Input.Pointer) {
+    if (this.runEnded || this.isHudPaused) return
+    if (this.dragState) {
+      this.cancelTowerDrag()
+    }
     this.selectedTowerDefinition = definition
+    const tileSize = Math.max(this.mapRenderer?.getTileSize() ?? 64, 32)
+    const sprite = this.add
+      .sprite(pointer.worldX, pointer.worldY, ONE_BIT_PACK.key, definition.spriteFrame)
+      .setOrigin(0.5)
+      .setDisplaySize(tileSize * 0.6, tileSize * 0.6)
+      .setTint(definition.levelTints?.[0] ?? DEFAULT_TOWER_LEVEL_TINTS[0])
+      .setDepth(25)
+      .setAlpha(0.9)
+    this.dragState = {
+      definition,
+      pointerId: pointer.id,
+      sprite
+    }
+    this.updatePlacementOverlay(pointer.worldX, pointer.worldY, this.getBuildSpotAt(pointer.worldX, pointer.worldY))
     this.refreshHud()
+  }
+
+  private updateTowerDrag(pointer: Phaser.Input.Pointer) {
+    if (!this.dragState) return
+    this.dragState.sprite.setPosition(pointer.worldX, pointer.worldY)
+    const spot = this.getBuildSpotAt(pointer.worldX, pointer.worldY)
+    this.updatePlacementOverlay(pointer.worldX, pointer.worldY, spot)
+  }
+
+  private completeTowerDrag(pointer: Phaser.Input.Pointer) {
+    if (!this.dragState) return
+    const { definition } = this.dragState
+    const spot = this.getBuildSpotAt(pointer.worldX, pointer.worldY)
+    if (!spot || spot.occupied) {
+      this.showFloatingText(pointer.worldX, pointer.worldY, 'Pick a free build pad')
+      this.cancelTowerDrag()
+      return
+    }
+    const cost = definition.levels[0].cost
+    if (this.coins < cost) {
+      this.showFloatingText(pointer.worldX, pointer.worldY, `Need ${cost} coins`)
+      this.cancelTowerDrag()
+      return
+    }
+    this.placeTower(spot, definition)
+    this.cancelTowerDrag()
+  }
+
+  private cancelTowerDrag() {
+    if (!this.dragState) return
+    const { sprite } = this.dragState
+    sprite.destroy()
+    this.dragState = undefined
+    this.placementOverlay?.clear()
+  }
+
+  private getBuildSpotAt(worldX: number, worldY: number) {
+    return this.buildSpots.find((candidate) => candidate.marker.getBounds().contains(worldX, worldY))
+  }
+
+  private updatePlacementOverlay(worldX: number, worldY: number, hoveredSpot?: BuildSpot) {
+    if (!this.placementOverlay || !this.dragState) return
+    this.placementOverlay.clear()
+    const stats = this.dragState.definition.levels[0]
+    const affordable = this.coins >= stats.cost
+    if (hoveredSpot && this.mapRenderer) {
+      const tileCenter = this.mapRenderer.gridToWorldCenter(hoveredSpot.col, hoveredSpot.row)
+      const tileSize = this.mapRenderer.getTileSize()
+      const valid = !hoveredSpot.occupied && affordable
+      const fillColor = valid ? 0x22c55e : 0xf87171
+      this.placementOverlay.fillStyle(fillColor, 0.28)
+      this.placementOverlay.fillRoundedRect(
+        tileCenter.x - tileSize / 2,
+        tileCenter.y - tileSize / 2,
+        tileSize,
+        tileSize,
+        8
+      )
+    }
+    if (stats.range > 0) {
+      const radiusColor = affordable ? 0x38bdf8 : 0xf87171
+      this.placementOverlay.lineStyle(2, radiusColor, 0.85).strokeCircle(worldX, worldY, stats.range)
+    }
+  }
+
+  private openTowerDetails(definition: TowerDefinition, preservePause = false) {
+    if (this.towerDetailsHud) return
+    this.cancelTowerDrag()
+    if (!preservePause) {
+      this.setHudPause(true)
+    }
+    const width = this.scale.width
+    const height = this.scale.height
+    const panelWidth = Math.min(420, width - 80)
+    const panelHeight = Math.min(380, height - 80)
+    const centerX = width / 2
+    const centerY = height / 2
+    const container = this.add.container(0, 0).setDepth(30)
+    const scrim = this.add
+      .rectangle(centerX, centerY, width, height, 0x020617, 0.65)
+      .setInteractive()
+      .on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        pointer.event?.stopPropagation()
+        pointer.event?.preventDefault()
+      })
+    const panel = this.add
+      .rectangle(centerX, centerY, panelWidth, panelHeight, 0x0f172a, 0.96)
+      .setStrokeStyle(2, 0x38bdf8, 0.45)
+
+    const title = this.add.text(
+      centerX - panelWidth / 2 + 24,
+      centerY - panelHeight / 2 + 24,
+      `${definition.label} Tower`,
+      {
+        ...this.hudStyle(),
+        fontSize: '20px'
+      }
+    )
+
+    const spriteSize = Math.min(80, panelHeight / 4)
+    const sprite = this.add
+      .sprite(centerX - panelWidth / 2 + 60, centerY - panelHeight / 2 + 90, ONE_BIT_PACK.key, definition.spriteFrame)
+      .setDisplaySize(spriteSize, spriteSize)
+      .setTint(definition.levelTints?.[0] ?? DEFAULT_TOWER_LEVEL_TINTS[0])
+
+    const stats = definition.levels[0]
+    const statsText = this.add.text(centerX - panelWidth / 2 + 120, centerY - panelHeight / 2 + 64, '', {
+      ...this.hudStyle(),
+      fontSize: '16px'
+    })
+    const cooldownSeconds = (stats.fireRate / 1000).toFixed(1)
+    const radiusTiles = this.getRangeInTiles(stats.range)
+    statsText.setText(`Damage: ${stats.damage}\nCooldown: ${cooldownSeconds}s\nRadius: ${radiusTiles} tiles`)
+
+    const description = this.add.text(
+      centerX - panelWidth / 2 + 24,
+      centerY - panelHeight / 2 + 160,
+      definition.description,
+      {
+        ...this.hudStyle(),
+        fontSize: '14px',
+        wordWrap: { width: panelWidth - 48 }
+      }
+    )
+
+    const closeButton = this.add
+      .text(centerX, centerY + panelHeight / 2 - 32, 'Close HUD', {
+        ...this.hudStyle(),
+        fontSize: '16px',
+        color: '#fbbf24'
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        pointer.event?.stopPropagation()
+        pointer.event?.preventDefault()
+        this.closeTowerDetails()
+      })
+
+    container.add([scrim, panel, title, sprite, statsText, description, closeButton])
+    this.towerDetailsHud = { definition, container }
+  }
+
+  private closeTowerDetails(resume = true) {
+    if (!this.towerDetailsHud) return
+    this.towerDetailsHud.container.destroy(true)
+    this.towerDetailsHud = undefined
+    if (resume) {
+      this.setHudPause(false)
+    }
+  }
+
+  private setHudPause(paused: boolean) {
+    if (this.isHudPaused === paused) return
+    this.isHudPaused = paused
+    this.time.timeScale = paused ? 0 : 1
+  }
+
+  private getRangeInTiles(range: number) {
+    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSize() : 1
+    if (tileSize <= 0) {
+      return Math.max(1, Math.floor(range / 60))
+    }
+    return Math.max(1, Math.floor(range / tileSize))
   }
 
   private tryUpgradeTower(spot: BuildSpot, worldX: number, worldY: number) {
@@ -364,10 +699,9 @@ export class TowerDefenseScene extends Phaser.Scene {
   }
 
   // Places a tower on the chosen pad.
-  private placeTower(spot: BuildSpot) {
+  private placeTower(spot: BuildSpot, definition: TowerDefinition = this.selectedTowerDefinition) {
     if (!this.mapRenderer) return
     const towerSprite = spot.marker
-    const definition = this.selectedTowerDefinition
     const stats = { ...definition.levels[0] }
     const tower: Tower = {
       spotId: spot.id,
@@ -380,6 +714,7 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.towers.push(tower)
     this.coins -= stats.cost
     this.applyBuildSpotAppearance(spot)
+    this.selectedTowerDefinition = definition
     this.refreshHud()
     const tileSize = this.mapRenderer.getTileSize()
     const offset = Math.max(24, tileSize * 0.5)
@@ -471,21 +806,41 @@ export class TowerDefenseScene extends Phaser.Scene {
     this.hudLeaks.setText(`Leaks: ${this.leaks}`)
     if (this.hudTower) {
       const stats = this.selectedTowerDefinition.levels[0]
-      this.hudTower.setText(
-        `Building: ${this.selectedTowerDefinition.label} [${this.selectedTowerDefinition.shortcut}] - ${stats.cost}c`
-      )
+      this.hudTower.setText(`Last dragged: ${this.selectedTowerDefinition.label} - ${stats.cost}c`)
     }
-    this.hudHint?.setText(this.selectedTowerDefinition.description)
     if (this.baseMarker) {
       this.baseMarker.setFillStyle(this.baseHp > 5 ? 0x14222f : 0x3f1d2b, 1)
     }
+    this.refreshTowerCardsAffordability()
+  }
+
+  private refreshTowerCardsAffordability() {
+    const baseColor = 0x111827
+    this.sidebarEntries.forEach((entry) => {
+      const affordable = this.coins >= entry.definition.levels[0].cost
+      entry.background.setFillStyle(baseColor, affordable ? 0.9 : 0.45)
+      entry.icon.setAlpha(affordable ? 1 : 0.5)
+      entry.costText.setColor(affordable ? '#facc15' : '#f87171')
+    })
   }
 
   // Repositions everything when the canvas resizes.
   private handleResize(gameSize: Phaser.Structs.Size): void {
     const { width, height } = gameSize
     if (!width || !height || !this.mapRenderer) return
+    const openDefinition = this.towerDetailsHud?.definition
+    if (openDefinition) {
+      this.closeTowerDetails(false)
+    }
+    this.cancelTowerDrag()
     const previousLength = this.pathLength
+    this.sidebarWidth = this.computeSidebarWidth()
+    this.mapRenderer.setViewportPadding({
+      left: 16,
+      right: this.sidebarWidth + 24,
+      top: 16,
+      bottom: 24
+    })
     this.mapRenderer.render()
     const tileSize = this.mapRenderer.getTileSize()
     this.createPath()
@@ -508,11 +863,18 @@ export class TowerDefenseScene extends Phaser.Scene {
       enemy.sprite.setPosition(point.x, point.y).setDisplaySize(enemySize, enemySize)
     }
     this.exitButton?.setPosition(width - 20, 16)
+    this.createSidebar()
+    if (openDefinition) {
+      this.openTowerDetails(openDefinition, true)
+    }
   }
 
   // Stops the scene and reports results.
   private endRun() {
     if (this.runEnded) return
+    this.cancelTowerDrag()
+    this.closeTowerDetails()
+    this.setHudPause(false)
     this.runEnded = true
     this.timers.forEach((timer) => timer.remove())
     this.timers = []
