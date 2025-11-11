@@ -9,12 +9,6 @@ interface TileAppearance {
   angle: number
 }
 
-const TILE_FRAME_POOL = [
-  ONE_BIT_PACK_KNOWN_FRAMES.portalOpens,
-  ONE_BIT_PACK_KNOWN_FRAMES.empty,
-  ONE_BIT_PACK_KNOWN_FRAMES.tree1
-]
-
 const OBSTACLE_TILE_FRAME_POOL = [
   ONE_BIT_PACK_KNOWN_FRAMES.tree1,
   ONE_BIT_PACK_KNOWN_FRAMES.tree2,
@@ -109,7 +103,12 @@ export class MapRenderer {
       return
     }
     const size = this.gridTileSize * 0.98
-    sprite.setFrame(TILE_FRAME_POOL[1]).setDisplaySize(size, size).setDepth(0).setTint(0x60a5fa).setAngle(0)
+    sprite
+      .setFrame(ONE_BIT_PACK_KNOWN_FRAMES.empty)
+      .setDisplaySize(size, size)
+      .setDepth(0)
+      .setTint(0x60a5fa)
+      .setAngle(0)
   }
 
   private updateMetrics(width: number, height: number) {
@@ -132,7 +131,7 @@ export class MapRenderer {
     }
     if (type === 'obstacle') {
       return {
-        frame: OBSTACLE_TILE_FRAME_POOL[Phaser.Math.Between(0, OBSTACLE_TILE_FRAME_POOL.length)],
+        frame: OBSTACLE_TILE_FRAME_POOL[Phaser.Math.Between(0, OBSTACLE_TILE_FRAME_POOL.length - 1)],
         angle: 0
       }
     }
