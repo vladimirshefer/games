@@ -108,7 +108,6 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
   private runEnded = false
   private mapRotatedForVerticalMode = false
   private sidebarContainer?: Phaser.GameObjects.Container
-  private sidebarBg?: Phaser.GameObjects.Rectangle
   private sidebarEntries = new Map<TowerTypeKey, TowerSidebarEntry>()
   private sidebarWidth = 0
   private placementOverlay?: Phaser.GameObjects.Graphics
@@ -335,7 +334,6 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
 
   private createSidebar() {
     this.sidebarContainer?.destroy(true)
-    this.sidebarBg = undefined
     this.sidebarEntries.clear()
     const width = this.sidebarWidth
     const height = this.scale.height
@@ -350,7 +348,6 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       pointer.event?.preventDefault()
     })
     container.add(background)
-    this.sidebarBg = background
 
     const title = this.add
       .text(width / 2, 16, 'Towers', {
@@ -684,10 +681,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       callback: () => {
         this.spawnEnemy()
       },
-      callbackScope: this,
-      onComplete: () => {
-        this.timers = this.timers.filter((current) => current !== timer)
-      }
+      callbackScope: this
     })
     this.timers.push(timer)
     this.spawnEnemy()
