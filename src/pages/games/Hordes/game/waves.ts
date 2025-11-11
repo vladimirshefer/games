@@ -35,13 +35,12 @@ export class WaveManager {
   start() {
     if (this.running) return
     this.running = true
-    this.spawnWave()
     this.waveTimer = this.scene.time.addEvent({
       delay: 5000,
       callback: this.spawnWave,
       callbackScope: this,
       loop: true,
-      startAt: 0
+      startAt: 4500
     })
   }
 
@@ -175,7 +174,10 @@ const KNOWN_MOB_STATS: { [key: string]: MobStats } = {
 }
 
 export const WAVES: Wave[] = [
-  ...repeat(3, {
+  {
+    mobs: [] // first wave is empty
+  },
+  ...repeat(10, {
     mobs: [
       {
         stats: KNOWN_MOB_STATS['default'],
@@ -273,8 +275,13 @@ export const WAVES: Wave[] = [
       }
     ]
   },
-  ...repeat(13, {
+  ...repeat(20, {
     mobs: [
+      {
+        stats: KNOWN_MOB_STATS['default'],
+        appearance: KNOWN_MOB_APPEARANCE['default'],
+        amount: WAVE_BASE_AMOUNT / 2
+      },
       {
         stats: KNOWN_MOB_STATS['strong'],
         appearance: KNOWN_MOB_APPEARANCE['strong'],
@@ -292,7 +299,7 @@ export const WAVES: Wave[] = [
       {
         stats: KNOWN_MOB_STATS['default'],
         appearance: KNOWN_MOB_APPEARANCE['default'],
-        amount: 1
+        amount: 10
       }
     ]
   }),
