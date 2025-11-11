@@ -80,7 +80,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     width: MAP_WIDTH,
     roadLength: MAP_ROAD_LENGTH
   })
-  private readonly gameMap: GameMap = this.mapGenerator.getMap()
+  private gameMap!: GameMap
   private mapRenderer!: MapRenderer
   private buildSpots: BuildSpot[] = []
   private towers: Tower[] = []
@@ -131,8 +131,41 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     }
   }
 
+  private resetState() {
+    this.timers.forEach((timer) => timer.remove())
+    this.timers = []
+    this.time.removeAllEvents()
+    this.towerController = undefined
+    this.towerDetailsHud?.container.destroy(true)
+    this.towerDetailsHud = undefined
+    this.dragState?.sprite.destroy()
+    this.dragState = undefined
+    this.placementOverlay?.destroy()
+    this.placementOverlay = undefined
+    this.enemyOverlay?.destroy()
+    this.enemyOverlay = undefined
+    this.towerOverlay?.destroy()
+    this.towerOverlay = undefined
+    this.sidebarEntries.clear()
+    this.gameMap = this.mapGenerator.getMap()
+    this.buildSpots = []
+    this.towers = []
+    this.enemies = []
+    this.selectedTowerDefinition = TOWER_DEFINITIONS[0]
+    this.pathLength = 0
+    this.wave = 0
+    this.leaks = 0
+    this.baseHp = BASE_HP
+    this.coins = STARTING_COINS
+    this.coinsEarned = 0
+    this.runEnded = false
+    this.isHudPaused = false
+    this.mapRotatedForVerticalMode = false
+  }
+
   // Scene setup entry point.
   create() {
+    this.resetState()
     this.rotateMapForVerticalStartIfNeeded()
     printGameMap(this.gameMap)
     // const {width, height} = this.scale
@@ -650,6 +683,10 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       repeat: enemiesThisWave - 1,
       callback: () => {
         this.spawnEnemy()
+      },
+      callbackScope: this,
+      onComplete: () => {
+        this.timers = this.timers.filter((current) => current !== timer)
       }
     })
     this.timers.push(timer)
