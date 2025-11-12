@@ -25,6 +25,7 @@ export const ONE_BIT_PACK_KNOWN_FRAMES = {
   portalOpens: 2 * ENEMY_SPRITESHEET_COLUMNS + 45, // 3rd row (0-indexed), 4th from the right
   roadStraight: 4 * ENEMY_SPRITESHEET_COLUMNS + 8, // Top to bottom.
   roadTurn: 4 * ENEMY_SPRITESHEET_COLUMNS + 9, // Bottom to right turn.
+  giant: 6 * ENEMY_SPRITESHEET_COLUMNS + 30,
   hero: 9 * ENEMY_SPRITESHEET_COLUMNS + 30,
   king: 3 * ENEMY_SPRITESHEET_COLUMNS + 28,
   miner: 4 * ENEMY_SPRITESHEET_COLUMNS + 26,

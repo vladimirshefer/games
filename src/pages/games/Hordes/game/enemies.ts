@@ -29,6 +29,11 @@ export interface IEnemyManager {
   spawn(edge: number, mob: MobStats, appearance: MobAppearance): EnemySprite
 
   /**
+   * Spawns an enemy at specific coordinates (used for scripted encounters)
+   */
+  spawnAt(x: number, y: number, mob: MobStats, appearance: MobAppearance): EnemySprite
+
+  /**
    * Creates and tracks the floating HP label for an enemy.
    */
   attachHpLabel(enemy: EnemySprite, mob: MobStats): void
@@ -62,25 +67,12 @@ export class EnemyManager implements IEnemyManager {
   spawn(edge: number, mob: MobStats, appearance: MobAppearance) {
     const radius = mob.size / 2
     const { x, y } = this.findSpawnPosition(edge, radius)
+    return this.spawnAt(x, y, mob, appearance)
+  }
 
-    const frame = appearance.frame ?? ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
-    const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, frame)
-    enemy.setOrigin(0.5)
-    enemy.setDisplaySize(mob.size, mob.size)
-    enemy.setTint(appearance.color)
-    enemy.setDepth(0.1)
-    enemy.setActive(true)
-    enemy.setData('mob', mob)
-    enemy.setData('hp', mob.health)
-    enemy.setData('lastHit', 0)
-    enemy.setData('lastAuraTick', 0)
-    enemy.setData('auraKnockback', 40)
-    enemy.setData('radius', radius)
-    if (!appearance.frame && this.scene.anims.exists('enemy-walk')) {
-      enemy.play('enemy-walk')
-      enemy.anims.setProgress(Math.random())
-    }
-
+  spawnAt(x: number, y: number, mob: MobStats, appearance: MobAppearance) {
+    const radius = mob.size / 2
+    const enemy = this.createEnemy(x, y, radius, mob, appearance)
     this.enemies.push(enemy)
     this.attachHpLabel(enemy, mob)
     return enemy
@@ -235,6 +227,27 @@ export class EnemyManager implements IEnemyManager {
     }
 
     return position
+  }
+
+  private createEnemy(x: number, y: number, radius: number, mob: MobStats, appearance: MobAppearance) {
+    const frame = appearance.frame ?? ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
+    const enemy = this.scene.add.sprite(x, y, ONE_BIT_PACK.key, frame)
+    enemy.setOrigin(0.5)
+    enemy.setDisplaySize(mob.size, mob.size)
+    enemy.setTint(appearance.color)
+    enemy.setDepth(0.1)
+    enemy.setActive(true)
+    enemy.setData('mob', mob)
+    enemy.setData('hp', mob.health)
+    enemy.setData('lastHit', 0)
+    enemy.setData('lastAuraTick', 0)
+    enemy.setData('auraKnockback', 40)
+    enemy.setData('radius', radius)
+    if (!appearance.frame && this.scene.anims.exists('enemy-walk')) {
+      enemy.play('enemy-walk')
+      enemy.anims.setProgress(Math.random())
+    }
+    return enemy
   }
 
   private isPositionClear(x: number, y: number, radius: number) {

@@ -18,7 +18,9 @@ import { HORDES_SCENE_KEY } from './sceneKeys.ts'
 import { HeroHpBar } from './heroHpBar.ts'
 import { HeroXpBar } from './heroXpBar.ts'
 import { STATS_FOR_RUN } from './profile.ts'
-import { saveAllAfterRun } from './save.ts'
+import { isHeroUnlocked, saveAllAfterRun } from './save.ts'
+import { RescueEncounter } from './rescueEncounter.ts'
+import { HERO_RESCUES, type HeroRescueConfig } from './heroUnlocks.ts'
 
 interface ExitStats {
   kills: number
@@ -63,6 +65,7 @@ export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.Cre
   private exitHandled: boolean = false
   private gameOverHud?: GameOverHud
   private heroDefinition: HeroDefinition = DEFAULT_HERO
+  private rescueEncounter?: RescueEncounter
 
   constructor() {
     super(HORDES_SCENE_KEY)
@@ -147,6 +150,7 @@ export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.Cre
         this.updateHud()
       }
     })
+    this.setupRescueEncounter()
     this.ensureEnemyWalkAnimation()
     this.kills = 0
     this.wave = 0
@@ -163,6 +167,7 @@ export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.Cre
       onEnemyKilled: (enemy, mob) => {
         this.kills += 1
         this.xpManager.spawn(enemy.x, enemy.y, mob.xp)
+        this.rescueEncounter?.handleEnemyKilled(enemy)
       }
     })
 
@@ -177,6 +182,7 @@ export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.Cre
       this.waveManager.destroy()
       this.clearSupportTimers()
       this.weaponHud?.destroy(true)
+      this.rescueEncounter?.destroy()
     })
 
     const camera = this.cameras.main
@@ -284,12 +290,30 @@ export class HordesScene extends Phaser.Scene implements Phaser.Types.Scenes.Cre
 
     this.pickupManager.update(view)
 
+    this.rescueEncounter?.update()
+
     this.enemyManager.resolveOverlaps()
   }
 
   private maybeStartWaves() {
     this.waveManager.start()
     this.startSupportTimers()
+  }
+
+  private setupRescueEncounter() {
+    const pendingRescue = this.findPendingRescue()
+    if (!pendingRescue) return
+    this.rescueEncounter = new RescueEncounter({
+      scene: this,
+      hero: this.hero,
+      enemyManager: this.enemyManager,
+      config: pendingRescue
+    })
+  }
+
+  private findPendingRescue(): HeroRescueConfig | undefined {
+    const rescues = Object.values(HERO_RESCUES).filter((config): config is HeroRescueConfig => !!config)
+    return rescues.find((config) => !isHeroUnlocked(config.heroId))
   }
 
   private startSupportTimers() {

@@ -2,6 +2,8 @@ import Phaser from 'phaser'
 import { HERO_ROSTER, type HeroDefinition, type HeroId } from './heroes.ts'
 import { HERO_SELECT_SCENE_KEY, HORDES_SCENE_KEY } from './sceneKeys.ts'
 import { ONE_BIT_PACK } from './sprite.ts'
+import { getUnlockedHeroes } from './save.ts'
+import { getRescueConfig } from './heroUnlocks.ts'
 
 const HERO_CARD_WIDTH = 200
 const HERO_CARD_HEIGHT = 260
@@ -18,6 +20,7 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
   private dragStartListY = 0
   private scrollPointerId: number | null = null
   private heroSelectionLocked = false
+  private unlockedHeroes = new Set<HeroId>()
 
   constructor() {
     super(HERO_SELECT_SCENE_KEY)
@@ -36,6 +39,7 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
   create() {
     this.cameras.main.setBackgroundColor('#101014')
     const { width, height } = this.scale
+    this.unlockedHeroes = new Set(getUnlockedHeroes() as HeroId[])
 
     this.add
       .text(width / 2, 90, 'Choose your hero', {
@@ -102,12 +106,14 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
   }
 
   private createHeroCard(hero: HeroDefinition) {
+    const isUnlocked = this.isHeroUnlocked(hero.id)
+    const rescueHint = getRescueConfig(hero.id)?.hint
     const container = this.add.container(0, 0)
     container.setSize(HERO_CARD_WIDTH, HERO_CARD_HEIGHT)
 
     const background = this.add
-      .rectangle(0, 0, HERO_CARD_WIDTH, HERO_CARD_HEIGHT, 0x1b1b2b, 0.92)
-      .setStrokeStyle(2, 0xffffff, 0.15)
+      .rectangle(0, 0, HERO_CARD_WIDTH, HERO_CARD_HEIGHT, isUnlocked ? 0x1b1b2b : 0x11111d, 0.92)
+      .setStrokeStyle(2, isUnlocked ? 0xffffff : 0xffc400, isUnlocked ? 0.15 : 0.5)
       .setOrigin(0.5)
 
     const sprite = this.add
@@ -141,20 +147,46 @@ export class HeroSelectScene extends Phaser.Scene implements Phaser.Types.Scenes
       })
       .setOrigin(0.5, 0)
 
-    container.add([background, sprite, nameText, weaponText, description])
+    const lockShade = this.add
+      .rectangle(0, 0, HERO_CARD_WIDTH, HERO_CARD_HEIGHT, 0x000000, 0.65)
+      .setOrigin(0.5)
+      .setVisible(!isUnlocked)
+
+    const requirementText = this.add
+      .text(0, 0, rescueHint ?? 'Coming soon', {
+        color: '#ffe082',
+        fontFamily: 'monospace',
+        fontSize: '15px',
+        align: 'center',
+        wordWrap: { width: HERO_CARD_WIDTH - 40 }
+      })
+      .setOrigin(0.5)
+      .setVisible(!isUnlocked)
+
+    container.add([background, sprite, nameText, weaponText, description, lockShade, requirementText])
 
     container.setInteractive({
       hitArea: new Phaser.Geom.Rectangle(0, 0, HERO_CARD_WIDTH, HERO_CARD_HEIGHT),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
       useHandCursor: true
     })
-    container.on('pointerover', () => background.setStrokeStyle(2, 0xffeb3b, 0.9))
-    container.on('pointerout', () => background.setStrokeStyle(2, 0xffffff, 0.15))
+    container.on('pointerover', () => {
+      if (isUnlocked) {
+        background.setStrokeStyle(2, 0xffeb3b, 0.9)
+      }
+    })
+    container.on('pointerout', () =>
+      background.setStrokeStyle(2, isUnlocked ? 0xffffff : 0xffc400, isUnlocked ? 0.15 : 0.5)
+    )
     container.on('pointerup', () => {
-      if (this.heroSelectionLocked) return
+      if (this.heroSelectionLocked || !isUnlocked) return
       this.handleHeroPick(hero.id)
     })
     return container
+  }
+
+  private isHeroUnlocked(heroId: HeroId) {
+    return this.unlockedHeroes.has(heroId)
   }
 
   private setupHeroListInput() {
