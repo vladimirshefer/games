@@ -18,16 +18,28 @@ const OBSTACLE_TILE_FRAME_POOL = [
   ONE_BIT_PACK_KNOWN_FRAMES.tree6
 ]
 
-export interface IMapRenderer {
-  render(): void
+interface RectangleCoordinates {
+  top: number
+  right: number
+  bottom: number
+  left: number
 }
 
-export class MapRenderer {
+export interface MapRenderer {
+  render(): void
+  setViewportPadding(padding: Partial<RectangleCoordinates>): void
+  getTileSprite(col: number, row: number): Phaser.GameObjects.Sprite | undefined
+  getTileSize(): number
+  gridToWorldCenter(col: number, row: number): Phaser.Math.Vector2
+  applyBuildSpotAppearance(sprite: Phaser.GameObjects.Sprite, occupied: boolean, frame?: number, tint?: number): void
+}
+
+export class MapRendererImpl implements MapRenderer {
   private readonly scene: Phaser.Scene
   private readonly map: GameMap
   private readonly tileSpriteLookup = new Map<string, Phaser.GameObjects.Sprite>()
   private readonly pathIndexByCell = new Map<string, number>()
-  private viewportPadding = { top: 0, right: 0, bottom: 0, left: 0 }
+  private viewportPadding: RectangleCoordinates = { top: 0, right: 0, bottom: 0, left: 0 }
   private gridTileSize = 0
   private gridOriginX = 0
   private gridOriginY = 0
@@ -40,7 +52,7 @@ export class MapRenderer {
     })
   }
 
-  setViewportPadding(padding: Partial<typeof this.viewportPadding>) {
+  setViewportPadding(padding: Partial<RectangleCoordinates>) {
     this.viewportPadding = {
       ...this.viewportPadding,
       ...padding
@@ -81,11 +93,11 @@ export class MapRenderer {
     }
   }
 
-  getTileSprite(col: number, row: number) {
+  getTileSprite(col: number, row: number): Phaser.GameObjects.Sprite | undefined {
     return this.tileSpriteLookup.get(this.cellKey(col, row))
   }
 
-  getTileSize() {
+  getTileSize(): number {
     return this.gridTileSize
   }
 
@@ -95,7 +107,7 @@ export class MapRenderer {
     return new Phaser.Math.Vector2(x, y)
   }
 
-  applyBuildSpotAppearance(sprite: Phaser.GameObjects.Sprite, occupied: boolean, frame?: number, tint?: number) {
+  applyBuildSpotAppearance(sprite: Phaser.GameObjects.Sprite, occupied: boolean, frame?: number, tint?: number): void {
     if (occupied) {
       const size = this.gridTileSize * 0.6
       sprite

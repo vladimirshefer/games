@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
 import { type GameMap, printGameMap, type TileType, TowerDefenseMapGenerator } from './game/map.ts'
-import { MapRenderer } from './game/mapRenderer.ts'
+import { type MapRenderer, MapRendererImpl } from './game/mapRenderer.ts'
 import {
   BASE_HP,
   ENEMIES_PER_WAVE,
@@ -175,7 +175,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     })
 
     this.sidebarWidth = this.computeSidebarWidth()
-    this.mapRenderer = new MapRenderer(this, this.gameMap)
+    this.mapRenderer = new MapRendererImpl(this, this.gameMap)
     this.mapRenderer.setViewportPadding({
       left: 16,
       right: this.sidebarWidth + 24,
