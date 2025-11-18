@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../../Hordes/game/sprite.ts'
-import type { GameMap, TileType } from './map.ts'
+import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../../../Hordes/game/sprite.ts'
+import type { GameMap, TileType } from '../backend/map.ts'
 
 type Direction = 'up' | 'down' | 'left' | 'right'
 
@@ -29,8 +29,8 @@ export interface MapRenderer {
   render(): void
   setViewportPadding(padding: Partial<RectangleCoordinates>): void
   getTileSprite(col: number, row: number): Phaser.GameObjects.Sprite | undefined
-  getTileSize(): number
-  gridToWorldCenter(col: number, row: number): Phaser.Math.Vector2
+  getTileSizePx(): number
+  tileToPixels(col: number, row: number): Phaser.Math.Vector2
   applyBuildSpotAppearance(sprite: Phaser.GameObjects.Sprite, occupied: boolean, frame?: number, tint?: number): void
 }
 
@@ -70,7 +70,7 @@ export class MapRendererImpl implements MapRenderer {
       for (let col = 0; col < this.map.cols; col += 1) {
         const type = this.map.tiles[row][col]
         const key = this.cellKey(col, row)
-        const center = this.gridToWorldCenter(col, row)
+        const center = this.tileToPixels(col, row)
         const appearance = this.appearanceForTile(col, row, type)
         let sprite = this.tileSpriteLookup.get(key)
         if (!sprite) {
@@ -97,11 +97,11 @@ export class MapRendererImpl implements MapRenderer {
     return this.tileSpriteLookup.get(this.cellKey(col, row))
   }
 
-  getTileSize(): number {
+  getTileSizePx(): number {
     return this.gridTileSize
   }
 
-  gridToWorldCenter(col: number, row: number): Phaser.Math.Vector2 {
+  tileToPixels(col: number, row: number): Phaser.Math.Vector2 {
     const x = this.gridOriginX + col * this.gridTileSize + this.gridTileSize / 2
     const y = this.gridOriginY + row * this.gridTileSize + this.gridTileSize / 2
     return new Phaser.Math.Vector2(x, y)

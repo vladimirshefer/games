@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { ONE_BIT_PACK, ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
-import { type GameMap, printGameMap, type TileType, TowerDefenseMapGenerator } from './game/map.ts'
-import { type MapRenderer, MapRendererImpl } from './game/mapRenderer.ts'
+import { type GameMap, printGameMap, type TileType, TowerDefenseMapGenerator } from './game/backend/map.ts'
+import { type MapRenderer, MapRendererImpl } from './game/frontend/mapRenderer.ts'
 import {
   BASE_HP,
   ENEMIES_PER_WAVE,
@@ -28,6 +28,7 @@ import {
   type TowerEnemy,
   type TowerTypeKey
 } from './towers.ts'
+import { type EnemyRenderer, EnemyRendererImpl } from './game/frontend/enemyRendeder.ts'
 
 interface ExitStats {
   waves: number
@@ -43,7 +44,7 @@ interface BuildSpot {
   marker: Phaser.GameObjects.Sprite
 }
 
-interface Enemy extends TowerEnemy {
+export interface Enemy extends TowerEnemy {
   baseSpeed: number
 }
 
@@ -74,6 +75,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
   })
   private gameMap!: GameMap
   private mapRenderer!: MapRenderer
+  private enemyRenderer!: EnemyRenderer
   private buildSpots: BuildSpot[] = []
   private towers: Tower[] = []
   private towerController?: TowerController<Enemy>
@@ -183,6 +185,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       bottom: 24
     })
     this.mapRenderer.render()
+    this.enemyRenderer = new EnemyRendererImpl(this.mapRenderer)
 
     this.createPath()
     this.createBaseMarker()
@@ -208,11 +211,11 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
   private createPath() {
     const path = this.gameMap.path
     if (path.length === 0 || !this.mapRenderer) return
-    const firstPoint = this.mapRenderer.gridToWorldCenter(path[0].col, path[0].row)
+    const firstPoint = this.mapRenderer.tileToPixels(path[0].col, path[0].row)
     this.path = new Phaser.Curves.Path(firstPoint.x, firstPoint.y)
     this.pathTiles = new Phaser.Curves.Path(path[0].col, path[0].row)
     for (let i = 1; i < path.length; i += 1) {
-      const point = this.mapRenderer.gridToWorldCenter(path[i].col, path[i].row)
+      const point = this.mapRenderer.tileToPixels(path[i].col, path[i].row)
       this.path.lineTo(point.x, point.y)
       this.pathTiles.lineTo(path[i].col, path[i].row)
     }
@@ -225,8 +228,8 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     const path = this.gameMap.path
     if (path.length === 0 || !this.mapRenderer) return
     const target = path[path.length - 1]
-    const endPoint = this.mapRenderer.gridToWorldCenter(target.col, target.row)
-    const tileSize = this.mapRenderer.getTileSize()
+    const endPoint = this.mapRenderer.tileToPixels(target.col, target.row)
+    const tileSize = this.mapRenderer.getTileSizePx()
     const size = tileSize * 0.9
     this.baseMarker = this.add
       .rectangle(endPoint.x, endPoint.y, size, size, 0x14222f)
@@ -457,7 +460,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       this.cancelTowerDrag()
     }
     this.selectedTowerDefinition = definition
-    const tileSize = Math.max(this.mapRenderer?.getTileSize() ?? 64, 32)
+    const tileSize = Math.max(this.mapRenderer?.getTileSizePx() ?? 64, 32)
     const sprite = this.add
       .sprite(pointer.worldX, pointer.worldY, ONE_BIT_PACK.key, definition.spriteFrame)
       .setOrigin(0.5)
@@ -518,8 +521,8 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     const stats = this.dragState.definition.levels[0]
     const affordable = this.coins >= stats.cost
     if (hoveredSpot && this.mapRenderer) {
-      const tileCenter = this.mapRenderer.gridToWorldCenter(hoveredSpot.col, hoveredSpot.row)
-      const tileSize = this.mapRenderer.getTileSize()
+      const tileCenter = this.mapRenderer.tileToPixels(hoveredSpot.col, hoveredSpot.row)
+      const tileSize = this.mapRenderer.getTileSizePx()
       const valid = !hoveredSpot.occupied && affordable
       const fillColor = valid ? 0x22c55e : 0xf87171
       this.placementOverlay.fillStyle(fillColor, 0.28)
@@ -633,7 +636,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
   }
 
   private tilesToPixels(rangeTiles: number) {
-    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSize() : 1
+    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSizePx() : 1
     if (tileSize <= 0) {
       throw new Error(`Cannot convert tiles to pixels when tile size below zero. ${tileSize}`)
     }
@@ -659,7 +662,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     tower.cooldown = 0
     this.applyBuildSpotAppearance(spot)
     this.refreshHud()
-    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSize() : 0
+    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSizePx() : 0
     const offset = Math.max(24, tileSize * 0.5)
     this.showFloatingText(tower.sprite.x, tower.sprite.y - offset, `Lvl ${tower.level + 1}`, '#facc15')
   }
@@ -699,7 +702,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     const reward = ENEMY_BASE_REWARD + (this.wave - 1) * ENEMY_REWARD_PER_WAVE
     const startPointTiles = new Phaser.Math.Vector2()
     this.pathTiles.getPoint(0, startPointTiles)
-    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSize() : 64
+    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSizePx() : 64
     const enemySize = tileSize * 0.7
     const baseTint = 0xdd5577
     const sprite = this.add
@@ -754,7 +757,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     this.applyBuildSpotAppearance(spot)
     this.selectedTowerDefinition = definition
     this.refreshHud()
-    const tileSize = this.mapRenderer.getTileSize()
+    const tileSize = this.mapRenderer.getTileSizePx()
     const offset = Math.max(24, tileSize * 0.5)
     this.showFloatingText(towerSprite.x, towerSprite.y - offset, `${definition.label} ready`)
   }
@@ -765,26 +768,30 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     const remaining: Enemy[] = []
     const now = this.time.now
     for (const enemy of this.enemies) {
-      if (enemy.slowUntil <= now && enemy.slowFactor < 1) {
-        enemy.slowFactor = 1
-        enemy.sprite.setTint(enemy.baseTint)
-      }
-      const speed = enemy.baseSpeed * enemy.slowFactor
-      enemy.distanceTiles += speed * deltaSeconds
-      const progress = enemy.distanceTiles / this.pathLengthTiles
-      if (progress >= 1) {
-        this.handleLeak(enemy)
-        enemy.sprite.destroy()
-        continue
-      }
-      this.pathTiles.getPoint(progress, pointTiles)
-      const positionPx = this.mapRenderer.gridToWorldCenter(pointTiles.x, pointTiles.y)
-      enemy.sprite.setPosition(positionPx.x, positionPx.y)
-      enemy.xTiles = pointTiles.x
-      enemy.yTiles = pointTiles.y
-      remaining.push(enemy)
+      const enemyAlive = this.updateEnemy(deltaSeconds, enemy, pointTiles, now)
+      if (enemyAlive) remaining.push(enemy)
     }
     this.enemies = remaining
+  }
+
+  private updateEnemy(deltaSeconds: number, enemy: Enemy, pointTiles: Phaser.Math.Vector2, timeNow: number): boolean {
+    if (enemy.slowUntil <= timeNow && enemy.slowFactor < 1) {
+      enemy.slowFactor = 1
+      enemy.sprite.setTint(enemy.baseTint)
+    }
+    const speed = enemy.baseSpeed * enemy.slowFactor
+    enemy.distanceTiles += speed * deltaSeconds
+    const progress = enemy.distanceTiles / this.pathLengthTiles
+    if (progress >= 1) {
+      this.handleLeak(enemy)
+      enemy.sprite.destroy()
+      return false
+    }
+    this.pathTiles.getPoint(progress, pointTiles)
+    enemy.xTiles = pointTiles.x
+    enemy.yTiles = pointTiles.y
+    this.enemyRenderer.setEnemyPosition(enemy, pointTiles)
+    return true
   }
 
   // Handles tower cooldowns and attacks.
@@ -797,7 +804,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     if (!this.enemyOverlay || !this.mapRenderer) return
     this.enemyOverlay.clear()
     this.enemyOverlay.fillStyle(0x1f2937, 0.8)
-    const tileSize = this.mapRenderer.getTileSize()
+    const tileSize = this.mapRenderer.getTileSizePx()
     const barWidth = Math.max(24, tileSize * 0.7)
     const barHeight = Math.max(4, tileSize * 0.12)
     for (const enemy of this.enemies) {
@@ -834,7 +841,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     this.coins += enemy.reward
     this.coinsEarned += enemy.reward
     this.refreshHud()
-    const tileSize = this.mapRenderer.getTileSize()
+    const tileSize = this.mapRenderer.getTileSizePx()
     const offset = Math.max(18, tileSize * 0.45)
     this.showFloatingText(x, y - offset, `+${enemy.reward}`, '#34d399')
   }
@@ -874,7 +881,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       this.closeTowerDetails(false)
     }
     this.cancelTowerDrag()
-    const previousLength = this.pathLengthTiles * this.mapRenderer.getTileSize()
+    const previousLength = this.pathLengthTiles * this.mapRenderer.getTileSizePx()
     this.sidebarWidth = this.computeSidebarWidth()
     this.mapRenderer.setViewportPadding({
       left: 16,
@@ -883,11 +890,11 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       bottom: 24
     })
     this.mapRenderer.render()
-    const tileSize = this.mapRenderer.getTileSize()
+    const tileSize = this.mapRenderer.getTileSizePx()
     this.createPath()
     this.createBaseMarker()
     this.buildSpots.forEach((spot) => {
-      const spotCoordinatesPx = this.mapRenderer.gridToWorldCenter(spot.col, spot.row)
+      const spotCoordinatesPx = this.mapRenderer.tileToPixels(spot.col, spot.row)
       const tower = this.towers.find((candidate) => candidate.spotId === spot.id)
       if (tower) {
         const size = tileSize * 0.6
@@ -901,7 +908,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       const progress = previousLength > 0 ? enemy.distanceTiles / previousLength : 0
       enemy.distanceTiles = progress * this.pathLengthTiles
       this.pathTiles.getPoint(progress, point)
-      const positionPixels = this.mapRenderer.gridToWorldCenter(point.x, point.y)
+      const positionPixels = this.mapRenderer.tileToPixels(point.x, point.y)
       enemy.sprite.setPosition(positionPixels.x, positionPixels.y).setDisplaySize(enemySize, enemySize)
     }
     this.exitButton?.setPosition(width - 20, 16)
@@ -932,7 +939,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
 
   // Creates a short-lived floating label.
   private showFloatingText(x: number, y: number, message: string, color = '#fbbf24') {
-    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSize() : 0
+    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSizePx() : 0
     const travel = Math.max(28, tileSize * 0.5)
     const text = this.add
       .text(x, y, message, { ...this.hudStyle(), fontSize: '14px', color })
