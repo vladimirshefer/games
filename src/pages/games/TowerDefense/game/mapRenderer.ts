@@ -18,6 +18,10 @@ const OBSTACLE_TILE_FRAME_POOL = [
   ONE_BIT_PACK_KNOWN_FRAMES.tree6
 ]
 
+export interface IMapRenderer {
+  render(): void
+}
+
 export class MapRenderer {
   private readonly scene: Phaser.Scene
   private readonly map: GameMap
@@ -85,7 +89,7 @@ export class MapRenderer {
     return this.gridTileSize
   }
 
-  gridToWorldCenter(col: number, row: number) {
+  gridToWorldCenter(col: number, row: number): Phaser.Math.Vector2 {
     const x = this.gridOriginX + col * this.gridTileSize + this.gridTileSize / 2
     const y = this.gridOriginY + row * this.gridTileSize + this.gridTileSize / 2
     return new Phaser.Math.Vector2(x, y)

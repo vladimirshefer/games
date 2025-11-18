@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 
 import { ONE_BIT_PACK_KNOWN_FRAMES } from '../Hordes/game/sprite.ts'
-import { TOWER_COST, TOWER_RANGE, TOWER_FIRE_RATE, TOWER_DAMAGE } from './game/constants.ts'
+import { TOWER_COST, TOWER_DAMAGE, TOWER_FIRE_RATE } from './game/constants.ts'
 
 export type TowerTypeKey = 'regular' | 'scatter' | 'bomber' | 'freezer'
 
@@ -38,19 +38,19 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
     levels: [
       {
         cost: TOWER_COST,
-        range: TOWER_RANGE,
+        range: 2,
         fireRate: TOWER_FIRE_RATE,
         damage: TOWER_DAMAGE
       },
       {
         cost: TOWER_COST + 10,
-        range: TOWER_RANGE + 25,
+        range: 2.5,
         fireRate: Math.max(450, TOWER_FIRE_RATE - 80),
         damage: Math.round(TOWER_DAMAGE * 1.6)
       },
       {
         cost: TOWER_COST + 25,
-        range: TOWER_RANGE + 50,
+        range: 3,
         fireRate: Math.max(360, TOWER_FIRE_RATE - 160),
         damage: Math.round(TOWER_DAMAGE * 2.4)
       }
@@ -65,21 +65,21 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
     levels: [
       {
         cost: TOWER_COST + 5,
-        range: Math.round(TOWER_RANGE * 0.65),
+        range: 2,
         fireRate: TOWER_FIRE_RATE + 150,
         damage: Math.round(TOWER_DAMAGE * 0.6),
         projectileCount: 8
       },
       {
         cost: TOWER_COST + 20,
-        range: Math.round(TOWER_RANGE * 0.7),
+        range: 2.5,
         fireRate: TOWER_FIRE_RATE + 60,
         damage: Math.round(TOWER_DAMAGE * 0.75),
         projectileCount: 8
       },
       {
         cost: TOWER_COST + 35,
-        range: Math.round(TOWER_RANGE * 0.78),
+        range: 3,
         fireRate: Math.max(500, TOWER_FIRE_RATE - 40),
         damage: Math.round(TOWER_DAMAGE * 0.95),
         projectileCount: 8
@@ -95,21 +95,21 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
     levels: [
       {
         cost: TOWER_COST + 10,
-        range: TOWER_RANGE + 30,
+        range: 3,
         fireRate: TOWER_FIRE_RATE + 300,
         damage: Math.round(TOWER_DAMAGE * 1.8),
         aoeRadius: 70
       },
       {
         cost: TOWER_COST + 25,
-        range: TOWER_RANGE + 60,
+        range: 3.5,
         fireRate: TOWER_FIRE_RATE + 200,
         damage: Math.round(TOWER_DAMAGE * 2.4),
         aoeRadius: 90
       },
       {
         cost: TOWER_COST + 45,
-        range: TOWER_RANGE + 80,
+        range: 4,
         fireRate: TOWER_FIRE_RATE + 100,
         damage: Math.round(TOWER_DAMAGE * 3),
         aoeRadius: 110
@@ -126,7 +126,7 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
     levels: [
       {
         cost: TOWER_COST + 5,
-        range: TOWER_RANGE - 10,
+        range: 1.5,
         fireRate: TOWER_FIRE_RATE + 120,
         damage: Math.round(TOWER_DAMAGE * 0.4),
         slowFactor: 0.65,
@@ -134,7 +134,7 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
       },
       {
         cost: TOWER_COST + 18,
-        range: TOWER_RANGE + 10,
+        range: 2,
         fireRate: TOWER_FIRE_RATE + 40,
         damage: Math.round(TOWER_DAMAGE * 0.55),
         slowFactor: 0.5,
@@ -142,7 +142,7 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
       },
       {
         cost: TOWER_COST + 32,
-        range: TOWER_RANGE + 25,
+        range: 2.5,
         fireRate: Math.max(480, TOWER_FIRE_RATE - 40),
         damage: Math.round(TOWER_DAMAGE * 0.7),
         slowFactor: 0.4,
@@ -154,6 +154,8 @@ export const TOWER_DEFINITIONS: TowerDefinition[] = [
 
 export interface Tower {
   spotId: number
+  row: number
+  col: number
   sprite: Phaser.GameObjects.Sprite
   definition: TowerDefinition
   level: number
@@ -163,7 +165,10 @@ export interface Tower {
 
 export interface TowerEnemy {
   sprite: Phaser.GameObjects.Sprite
-  distance: number
+  xTiles: number
+  yTiles: number
+  sizeRadiusTiles: number
+  distanceTiles: number
   slowFactor: number
   slowUntil: number
   hp: number
@@ -326,8 +331,8 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
     return true
   }
 
-  private enemiesWithinCircle(x: number, y: number, radius: number) {
-    const radiusSq = radius * radius
+  private enemiesWithinCircle(x: number, y: number, radiusPx: number) {
+    const radiusSq = radiusPx * radiusPx
     return this.deps.getEnemies().filter((enemy) => {
       const distSq = Phaser.Math.Distance.Squared(x, y, enemy.sprite.x, enemy.sprite.y)
       return distSq <= radiusSq
@@ -338,13 +343,13 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
     let selection: TEnemy | undefined
     let selectionProgress = -Infinity
     for (const enemy of this.deps.getEnemies()) {
-      const distSq = Phaser.Math.Distance.Squared(tower.sprite.x, tower.sprite.y, enemy.sprite.x, enemy.sprite.y)
+      const distSq = Phaser.Math.Distance.Squared(tower.col + 0.5, tower.row + 0.5, enemy.xTiles, enemy.yTiles)
       if (distSq > tower.stats.range * tower.stats.range) {
         continue
       }
-      if (enemy.distance > selectionProgress) {
+      if (enemy.distanceTiles > selectionProgress) {
         selection = enemy
-        selectionProgress = enemy.distance
+        selectionProgress = enemy.distanceTiles
       }
     }
     return selection

@@ -5,8 +5,8 @@ import { TowerDefenseScene, type ExitStats } from './scene'
 
 const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 960,
-  height: 640,
+  width: 1080,
+  height: 720,
   backgroundColor: '#0b0f19',
   scene: TowerDefenseScene,
   fps: { target: 60 },
@@ -112,7 +112,7 @@ const TowerDefensePage = () => {
       const width = parent.clientWidth
       const height = parent.clientHeight
       if (width && height) {
-        game.scale.setGameSize(width, height)
+        // game.scale.setGameSize(width, height)
       }
     }
 
