@@ -163,8 +163,11 @@ export interface Tower {
   stats: TowerLevelStats
 }
 
+export type EnemyId = string
+
 export interface TowerEnemy {
   sprite: Phaser.GameObjects.Sprite
+  id: EnemyId
   xTiles: number
   yTiles: number
   sizeRadiusTiles: number
@@ -281,12 +284,17 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
       let closestEnemy: TEnemy | undefined
       let closestProjection = Infinity
       for (const enemy of enemiesInRange) {
-        const vecX = enemy.sprite.x - towerX
-        const vecY = enemy.sprite.y - towerY
+        const vecX = enemy.sprite!.x - towerX
+        const vecY = enemy.sprite!.y - towerY
         const projection = vecX * dirX + vecY * dirY
         if (projection <= 0 || projection > projectileRange) continue
         const perpendicular = Math.abs(dirX * vecY - dirY * vecX)
-        const enemySize = Math.max(enemy.sprite.displayWidth || 0, enemy.sprite.displayHeight || 0, tileSize * 0.5, 12)
+        const enemySize = Math.max(
+          enemy.sprite!.displayWidth || 0,
+          enemy.sprite!.displayHeight || 0,
+          tileSize * 0.5,
+          12
+        )
         const hitWidth = Math.max(6, enemySize * 0.3)
         if (perpendicular > hitWidth) continue
         if (projection < closestProjection) {
@@ -370,15 +378,15 @@ export class TowerController<TEnemy extends TowerEnemy = TowerEnemy> {
       if (!this.deps.getEnemies().includes(enemy)) continue
       enemy.slowFactor = Math.min(enemy.slowFactor, clampedFactor)
       enemy.slowUntil = Math.max(enemy.slowUntil, now + durationMs)
-      enemy.sprite.setTint(0x60a5fa)
+      enemy.sprite!.setTint(0x60a5fa)
     }
   }
 
   private spawnBombProjectile(tower: Tower, target: TEnemy, aoeRadius: number) {
     const startX = tower.sprite.x
     const startY = tower.sprite.y
-    const targetX = target.sprite.x
-    const targetY = target.sprite.y
+    const targetX = target.sprite!.x
+    const targetY = target.sprite!.y
     const distance = Phaser.Math.Distance.Between(startX, startY, targetX, targetY)
     const travelTime = Math.max(180, distance / TowerController.BOMB_SPEED_PX_PER_MS)
     this.activeBombs.push({

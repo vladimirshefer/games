@@ -185,7 +185,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       bottom: 24
     })
     this.mapRenderer.render()
-    this.enemyRenderer = new EnemyRendererImpl(this.mapRenderer)
+    this.enemyRenderer = new EnemyRendererImpl(this.mapRenderer, this.add, this.anims)
 
     this.createPath()
     this.createBaseMarker()
@@ -702,26 +702,10 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     const reward = ENEMY_BASE_REWARD + (this.wave - 1) * ENEMY_REWARD_PER_WAVE
     const startPointTiles = new Phaser.Math.Vector2()
     this.pathTiles.getPoint(0, startPointTiles)
-    const tileSize = this.mapRenderer ? this.mapRenderer.getTileSizePx() : 64
-    const enemySize = tileSize * 0.7
     const baseTint = 0xdd5577
-    const sprite = this.add
-      .sprite(
-        startPointTiles.x * tileSize,
-        startPointTiles.y * tileSize,
-        ONE_BIT_PACK.key,
-        ONE_BIT_PACK_KNOWN_FRAMES.mobWalk1
-      )
-      .setOrigin(0.5)
-      .setDisplaySize(enemySize, enemySize)
-      .setTint(baseTint)
-      .setDepth(6)
-    if (this.anims.exists('enemy-walk')) {
-      sprite.play('enemy-walk')
-      sprite.anims.setProgress(Math.random())
-    }
-    this.enemies.push({
-      sprite,
+    const enemy: Enemy = {
+      sprite: undefined as any, // TODO
+      id: crypto.randomUUID(),
       xTiles: startPointTiles.x,
       yTiles: startPointTiles.y,
       sizeRadiusTiles: 0.4,
@@ -734,7 +718,9 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       reward,
       leakDamage: 1,
       baseTint
-    })
+    }
+    this.enemyRenderer.spawnEnemy(enemy)
+    this.enemies.push(enemy)
   }
 
   // Places a tower on the chosen pad.
@@ -777,14 +763,14 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
   private updateEnemy(deltaSeconds: number, enemy: Enemy, pointTiles: Phaser.Math.Vector2, timeNow: number): boolean {
     if (enemy.slowUntil <= timeNow && enemy.slowFactor < 1) {
       enemy.slowFactor = 1
-      enemy.sprite.setTint(enemy.baseTint)
+      this.enemyRenderer.setEnemyTint(enemy.id, enemy.baseTint)
     }
     const speed = enemy.baseSpeed * enemy.slowFactor
     enemy.distanceTiles += speed * deltaSeconds
     const progress = enemy.distanceTiles / this.pathLengthTiles
     if (progress >= 1) {
       this.handleLeak(enemy)
-      enemy.sprite.destroy()
+      this.enemyRenderer.destroyEnemy(enemy.id)
       return false
     }
     this.pathTiles.getPoint(progress, pointTiles)
@@ -809,12 +795,12 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
     const barHeight = Math.max(4, tileSize * 0.12)
     for (const enemy of this.enemies) {
       const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1)
-      const offsetY = enemy.sprite.displayHeight / 2 + Math.max(6, tileSize * 0.15)
-      this.enemyOverlay.fillRect(enemy.sprite.x - barWidth / 2, enemy.sprite.y - offsetY, barWidth, barHeight)
+      const offsetY = enemy.sprite!.displayHeight / 2 + Math.max(6, tileSize * 0.15)
+      this.enemyOverlay.fillRect(enemy.sprite!.x - barWidth / 2, enemy.sprite!.y - offsetY, barWidth, barHeight)
       this.enemyOverlay.fillStyle(0xf97316, 0.9)
       this.enemyOverlay.fillRect(
-        enemy.sprite.x - barWidth / 2 + 1,
-        enemy.sprite.y - offsetY + 1,
+        enemy.sprite!.x - barWidth / 2 + 1,
+        enemy.sprite!.y - offsetY + 1,
         (barWidth - 2) * ratio,
         barHeight - 2
       )
@@ -835,15 +821,11 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
 
   // Rewards the player for a kill.
   private handleKill(enemy: Enemy) {
-    const { x, y } = enemy.sprite
-    enemy.sprite.destroy()
-    this.enemies = this.enemies.filter((candidate) => candidate !== enemy)
+    this.enemyRenderer.destroyEnemy(enemy.id)
+    this.enemies = this.enemies.filter((candidate) => candidate.id !== enemy.id)
     this.coins += enemy.reward
     this.coinsEarned += enemy.reward
     this.refreshHud()
-    const tileSize = this.mapRenderer.getTileSizePx()
-    const offset = Math.max(18, tileSize * 0.45)
-    this.showFloatingText(x, y - offset, `+${enemy.reward}`, '#34d399')
   }
 
   // Updates HUD stats each frame.
@@ -909,7 +891,7 @@ export class TowerDefenseScene extends Phaser.Scene implements Phaser.Types.Scen
       enemy.distanceTiles = progress * this.pathLengthTiles
       this.pathTiles.getPoint(progress, point)
       const positionPixels = this.mapRenderer.tileToPixels(point.x, point.y)
-      enemy.sprite.setPosition(positionPixels.x, positionPixels.y).setDisplaySize(enemySize, enemySize)
+      enemy.sprite!.setPosition(positionPixels.x, positionPixels.y).setDisplaySize(enemySize, enemySize)
     }
     this.exitButton?.setPosition(width - 20, 16)
     this.createSidebar()
